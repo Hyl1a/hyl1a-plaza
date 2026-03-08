@@ -100,10 +100,10 @@
 
 /* ===== 3D CANVAS AREA (LEFT) ===== */
 .mii-canvas-area {
-  flex: 1;
+  flex: 1.5;
   position: relative;
   background: radial-gradient(ellipse at 50% 60%, #2a2a4a 0%, #16162a 100%);
-  min-width: 0;
+  min-width: 55%;
 }
 .mii-canvas-area canvas {
   display: block;
@@ -182,8 +182,8 @@
 /* ===== STYLE / TYPE GRID ===== */
 .mii-style-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
   margin-bottom: 20px;
 }
 .mii-style-btn {
