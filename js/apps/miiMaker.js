@@ -389,7 +389,7 @@ function initMiiMaker(container) {
       model.position.y = 0; // API usually provides the neck correctly
       
       // Adjust scale to not be enormous
-      model.scale.set(0.8, 0.8, 0.8);
+      model.scale.set(0.3, 0.3, 0.3);
       
       model.traverse((child) => {
         if (child.isMesh) {

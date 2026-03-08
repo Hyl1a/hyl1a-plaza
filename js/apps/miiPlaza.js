@@ -148,7 +148,7 @@ async function initMiiPlaza(container) {
     
     loader.load(url, (gltf) => {
       const model = gltf.scene;
-      model.scale.set(0.8, 0.8, 0.8);
+      model.scale.set(0.25, 0.25, 0.25);
       
       model.traverse((child) => {
         if (child.isMesh) {
