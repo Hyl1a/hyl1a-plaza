@@ -429,68 +429,74 @@ function initMiiMaker(container) {
   const loader = new THREE.GLTFLoader();
   let bodyGroup = null; // holds body + head
 
-  // Build procedural body parts (Three.js r128 compatible — no CapsuleGeometry)
-  function createBody(shirtColor) {
+  // Build authentic-style Mii body (Wii/Wii U proportions, Three.js r128 compatible)
+  function createBody() {
     const group = new THREE.Group();
-    const color = SHIRTS[shirtColor || miiInstance.favoriteColor || 0] || '#ff3333';
+    const shirtCol = SHIRTS[miiInstance.favoriteColor || 0] || '#ff3333';
     const skinCol = SKINS[miiInstance.skinColor || 0] || '#feedcf';
-    const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
-    const skinMat = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.5 });
-    const shoeMat = new THREE.MeshStandardMaterial({ color: '#333333', roughness: 0.7 });
+    
+    const shirtMat = new THREE.MeshStandardMaterial({ color: shirtCol, roughness: 0.55, metalness: 0.0 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.45, metalness: 0.0 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: '#2b2b5e', roughness: 0.6 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.65 });
 
-    // Torso
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 0.9, 2.8, 16), mat);
-    torso.position.y = 1.4;
+    // --- TORSO (egg-shaped using LatheGeometry for authentic Mii look) ---
+    const torsoPoints = [];
+    for (let i = 0; i <= 16; i++) {
+      const t = i / 16;
+      const y = t * 2.6 - 1.3; // -1.3 to 1.3
+      // Egg-like profile: wider at top (shoulders), narrower at waist
+      const r = (0.85 + 0.15 * Math.cos(t * Math.PI * 0.8)) * (1.0 + 0.2 * Math.sin(t * Math.PI));
+      torsoPoints.push(new THREE.Vector2(r, y));
+    }
+    const torsoGeo = new THREE.LatheGeometry(torsoPoints, 20);
+    const torso = new THREE.Mesh(torsoGeo, shirtMat);
+    torso.position.y = 1.3;
     torso.castShadow = true;
     group.add(torso);
 
-    // Left arm (cylinder instead of capsule)
-    const lArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 2.0, 8), mat);
-    lArm.position.set(-1.4, 1.6, 0);
-    lArm.rotation.z = 0.15;
-    lArm.castShadow = true;
-    group.add(lArm);
-    // Left hand
-    const lHand = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), skinMat);
-    lHand.position.set(-1.5, 0.5, 0);
-    lHand.castShadow = true;
-    group.add(lHand);
+    // --- ARMS (short, stubby cylinders — Mii style) ---
+    function makeArm(xSide) {
+      const armGroup = new THREE.Group();
+      // Upper arm (shirt color)
+      const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 1.2, 10), shirtMat);
+      upper.position.y = -0.6;
+      upper.castShadow = true;
+      armGroup.add(upper);
+      // Hand (round sphere)
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), skinMat);
+      hand.position.y = -1.35;
+      hand.castShadow = true;
+      armGroup.add(hand);
+      
+      armGroup.position.set(xSide * 1.15, 2.1, 0);
+      armGroup.rotation.z = xSide * 0.12; // Slight outward angle
+      return armGroup;
+    }
+    group.add(makeArm(-1)); // Left
+    group.add(makeArm(1));  // Right
 
-    // Right arm
-    const rArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 2.0, 8), mat);
-    rArm.position.set(1.4, 1.6, 0);
-    rArm.rotation.z = -0.15;
-    rArm.castShadow = true;
-    group.add(rArm);
-    // Right hand
-    const rHand = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), skinMat);
-    rHand.position.set(1.5, 0.5, 0);
-    rHand.castShadow = true;
-    group.add(rHand);
-
-    // Pants / lower body
-    const pantsMat = new THREE.MeshStandardMaterial({ color: '#2a2a55', roughness: 0.6 });
-    // Left leg
-    const lLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.28, 1.8, 8), pantsMat);
-    lLeg.position.set(-0.4, -1.0, 0);
-    lLeg.castShadow = true;
-    group.add(lLeg);
-    // Right leg
-    const rLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.28, 1.8, 8), pantsMat);
-    rLeg.position.set(0.4, -1.0, 0);
-    rLeg.castShadow = true;
-    group.add(rLeg);
-
-    // Left shoe
-    const lShoe = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.3, 0.8), shoeMat);
-    lShoe.position.set(-0.4, -2.05, 0.1);
-    lShoe.castShadow = true;
-    group.add(lShoe);
-    // Right shoe
-    const rShoe = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.3, 0.8), shoeMat);
-    rShoe.position.set(0.4, -2.05, 0.1);
-    rShoe.castShadow = true;
-    group.add(rShoe);
+    // --- LEGS (short, slightly tapered) ---
+    function makeLeg(xSide) {
+      const legGroup = new THREE.Group();
+      // Leg cylinder
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 1.4, 10), pantsMat);
+      leg.position.y = -0.7;
+      leg.castShadow = true;
+      legGroup.add(leg);
+      // Shoe (rounded box)
+      const shoe = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), shoeMat);
+      shoe.scale.set(1, 0.6, 1.4);
+      shoe.position.y = -1.5;
+      shoe.position.z = 0.05;
+      shoe.castShadow = true;
+      legGroup.add(shoe);
+      
+      legGroup.position.set(xSide * 0.38, -0.05, 0);
+      return legGroup;
+    }
+    group.add(makeLeg(-1)); // Left
+    group.add(makeLeg(1));  // Right
 
     return group;
   }

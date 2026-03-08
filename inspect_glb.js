@@ -1,5 +1,5 @@
 const fs = require('fs');
-const data = fs.readFileSync('test_body.glb');
+const data = fs.readFileSync('test_fullbody.glb');
 
 // GLB header: magic(4) + version(4) + length(4) + JSON chunk header(8)
 const jsonLength = data.readUInt32LE(12);
