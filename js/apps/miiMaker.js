@@ -178,7 +178,26 @@ function initMiiMaker(container) {
     items.forEach(item => {
       const btn = document.createElement('button');
       btn.className = 'mii-style-btn' + (miiInstance[stateKey] === item.v ? ' active' : '');
-      btn.textContent = item.n;
+      btn.style.cssText = 'padding:4px;display:flex;align-items:center;justify-content:center;min-height:64px;min-width:64px;';
+      btn.title = item.n;
+
+      // Create a temporary Mii with this style applied for the thumbnail
+      const tempMii = Object.assign(Object.create(Object.getPrototypeOf(miiInstance)), miiInstance);
+      tempMii[stateKey] = item.v;
+      try {
+        const enc = tempMii.encode();
+        let b64 = btoa(String.fromCharCode(...new Uint8Array(enc.slice(0, 96))));
+        const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=96&shaderType=wiiu`;
+        const img = document.createElement('img');
+        img.src = thumbUrl;
+        img.alt = item.n;
+        img.style.cssText = 'width:56px;height:56px;object-fit:contain;border-radius:4px;';
+        img.loading = 'lazy';
+        btn.appendChild(img);
+      } catch(e) {
+        btn.textContent = item.n;
+      }
+
       btn.addEventListener('click', () => {
         grid.querySelectorAll('.mii-style-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
