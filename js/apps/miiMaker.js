@@ -253,8 +253,9 @@ function initMiiMaker(container) {
   // Helper to re-encode the Mii into base64 for saving or rendering
   function encodeMiiBase64() {
     const enc = miiInstance.encode();
+    const limit = Math.min(enc.length, 96); // The API strictly rejects >96 bytes
     let res = "";
-    for(let i=0; i<enc.length; i++) res+=String.fromCharCode(enc[i]);
+    for(let i=0; i<limit; i++) res+=String.fromCharCode(enc[i]);
     return btoa(res);
   }
 

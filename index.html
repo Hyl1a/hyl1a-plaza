@@ -145,9 +145,12 @@
   <script src="js/core/audio.js"></script>
   <script src="js/core/windowManager.js"></script>
   <script src="js/core/themeManager.js"></script>
+  <script>
+    window.process = { env: { NODE_ENV: 'production' } };
+    window.global = window;
+  </script>
   <script type="module">
     import Mii from './js/external/mii.js';
-    import { Buffer } from './js/external/buffer-browser.js'; // We'll need a browser Buffer or we can rely on MiiJS internal imports if they work.
     window.Mii = Mii;
   </script>
   <script src="js/core/miiBuilder.js"></script>
