@@ -427,44 +427,128 @@ function initMiiMaker(container) {
 
   // GLTF Loader
   const loader = new THREE.GLTFLoader();
+  let bodyGroup = null; // holds body + head
+
+  // Build procedural body parts
+  function createBody(shirtColor) {
+    const group = new THREE.Group();
+    const color = SHIRTS[shirtColor || miiInstance.favoriteColor || 0] || '#ff3333';
+    const skinCol = SKINS[miiInstance.skinColor || 0] || '#feedcf';
+    const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.6 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.5 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: '#333333', roughness: 0.7 });
+
+    // Torso
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 0.9, 2.8, 16), mat);
+    torso.position.y = 1.4;
+    torso.castShadow = true;
+    group.add(torso);
+
+    // Left arm
+    const lArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 1.8, 8, 8), mat);
+    lArm.position.set(-1.4, 1.6, 0);
+    lArm.rotation.z = 0.15;
+    lArm.castShadow = true;
+    group.add(lArm);
+    // Left hand
+    const lHand = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), skinMat);
+    lHand.position.set(-1.5, 0.5, 0);
+    lHand.castShadow = true;
+    group.add(lHand);
+
+    // Right arm
+    const rArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 1.8, 8, 8), mat);
+    rArm.position.set(1.4, 1.6, 0);
+    rArm.rotation.z = -0.15;
+    rArm.castShadow = true;
+    group.add(rArm);
+    // Right hand
+    const rHand = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), skinMat);
+    rHand.position.set(1.5, 0.5, 0);
+    rHand.castShadow = true;
+    group.add(rHand);
+
+    // Pants / lower body
+    const pantsMat = new THREE.MeshStandardMaterial({ color: '#2a2a55', roughness: 0.6 });
+    // Left leg
+    const lLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.6, 8, 8), pantsMat);
+    lLeg.position.set(-0.4, -1.0, 0);
+    lLeg.castShadow = true;
+    group.add(lLeg);
+    // Right leg
+    const rLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.6, 8, 8), pantsMat);
+    rLeg.position.set(0.4, -1.0, 0);
+    rLeg.castShadow = true;
+    group.add(rLeg);
+
+    // Left shoe
+    const lShoe = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.3, 0.8), shoeMat);
+    lShoe.position.set(-0.4, -2.05, 0.1);
+    lShoe.castShadow = true;
+    group.add(lShoe);
+    // Right shoe
+    const rShoe = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.3, 0.8), shoeMat);
+    rShoe.position.set(0.4, -2.05, 0.1);
+    rShoe.castShadow = true;
+    group.add(rShoe);
+
+    return group;
+  }
 
   function fetch3DModel() {
     const overlay = document.getElementById('mii-loading-overlay');
     if(overlay) overlay.style.display = 'flex';
 
     const b64 = encodeMiiBase64();
-    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=all_body`;
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=face`;
 
     loader.load(url, (gltf) => {
-      if (currentGLBModel) scene.remove(currentGLBModel);
-      const model = gltf.scene;
+      // Remove previous full body
+      if (bodyGroup) scene.remove(bodyGroup);
 
-      // Auto-fit: compute bounding box and scale to a target height of 8 units
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const targetHeight = 8;
-      const scaleFactor = targetHeight / size.y;
-      model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+      const fullBody = new THREE.Group();
+      const head = gltf.scene;
 
-      // Re-center: put feet on the platform
-      const box2 = new THREE.Box3().setFromObject(model);
-      model.position.y = -box2.min.y; // align feet to y=0
-      model.position.x = -center.x * scaleFactor;
-      model.position.z = -center.z * scaleFactor;
+      // Scale head to a natural proportion (~2.2 units tall)
+      const headBox = new THREE.Box3().setFromObject(head);
+      const headSize = headBox.getSize(new THREE.Vector3());
+      const headTarget = 2.2;
+      const hScale = headTarget / headSize.y;
+      head.scale.set(hScale, hScale, hScale);
 
-      model.traverse((child) => {
+      // Position head on top of body (body top is at y ~2.8)
+      const headBox2 = new THREE.Box3().setFromObject(head);
+      const headCenter = headBox2.getCenter(new THREE.Vector3());
+      head.position.y = 2.8 - headBox2.min.y;
+      head.position.x = -headCenter.x;
+      head.position.z = -headCenter.z;
+
+      head.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if(child.material) child.material.side = THREE.DoubleSide;
         }
       });
-      scene.add(model);
-      currentGLBModel = model;
 
-      // Adjust camera target to center of the model
-      controls.target.set(0, targetHeight / 2, 0);
+      // Create procedural body
+      const body = createBody();
+
+      fullBody.add(body);
+      fullBody.add(head);
+
+      // Position: feet on the platform
+      const fullBox = new THREE.Box3().setFromObject(fullBody);
+      fullBody.position.y = -fullBox.min.y + 0.05;
+
+      scene.add(fullBody);
+      bodyGroup = fullBody;
+      currentGLBModel = fullBody;
+
+      // Adjust camera
+      const finalBox = new THREE.Box3().setFromObject(fullBody);
+      const finalCenter = finalBox.getCenter(new THREE.Vector3());
+      controls.target.set(0, finalCenter.y, 0);
       controls.update();
 
       if(overlay) overlay.style.display = 'none';
