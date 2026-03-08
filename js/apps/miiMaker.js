@@ -28,37 +28,20 @@ const CATEGORIES = [
   { id:'profile', icon:'📝', label:'Profile' },
 ];
 
-// --- Hair / Eye / Brow / Mouth / Nose style data ---
-const HAIR_STYLES = [
-  {v:33,n:'Normal'},{v:14,n:'Spiky'},{v:13,n:'Messy'},{v:46,n:'Swept'},{v:18,n:'Short'},
-  {v:90,n:'Bowl'},{v:73,n:'Long'},{v:57,n:'Pigtails'},{v:26,n:'Ponytail'},{v:34,n:'Cap'},
-  {v:76,n:'Curly'},{v:0,n:'Bald'}
-];
-const EYE_STYLES = [
-  {v:2,n:'Normal'},{v:4,n:'Thick'},{v:23,n:'Narrow'},{v:8,n:'Round'},
-  {v:11,n:'Wink'},{v:18,n:'Star'},{v:36,n:'Cute'},{v:47,n:'Sad'}
-];
-const BROW_STYLES = [
-  {v:0,n:'Normal'},{v:1,n:'Thick'},{v:4,n:'Thin'},{v:6,n:'Angled'},
-  {v:7,n:'Round'},{v:9,n:'Short'},{v:12,n:'Flat'},{v:14,n:'Sad'}
-];
-const MOUTH_STYLES = [
-  {v:0,n:'Normal'},{v:3,n:'Smile'},{v:6,n:'Wide'},{v:13,n:'Open'},
-  {v:19,n:'Thin'},{v:23,n:'Pout'},{v:30,n:'Grin'},{v:35,n:'Cat'}
-];
-const NOSE_STYLES = [
-  {v:0,n:'Normal'},{v:1,n:'Button'},{v:3,n:'Pointed'},{v:5,n:'Wide'},
-  {v:7,n:'Long'},{v:9,n:'Low'},{v:11,n:'Flat'},{v:17,n:'Round'}
-];
-const GLASSES_STYLES = [
-  {v:0,n:'None'},{v:1,n:'Classic'},{v:2,n:'Round'},{v:3,n:'Oval'},
-  {v:4,n:'Square'},{v:5,n:'Half'},{v:6,n:'Narrow'},{v:8,n:'Sporty'}
-];
-const FACE_STYLES = [
-  {v:0,n:'Round'},{v:1,n:'Oval'},{v:2,n:'Square'},{v:3,n:'Wide'},
-  {v:4,n:'Long'},{v:5,n:'Narrow'},{v:6,n:'Triangle'},{v:7,n:'Heart'},
-  {v:8,n:'Diamond'},{v:9,n:'Flat'},{v:10,n:'Sharp'},{v:11,n:'Soft'}
-];
+// --- Hair / Eye / Brow / Mouth / Nose style data (ALL valid values) ---
+// Helper to generate style arrays from a range
+function makeStyles(max) {
+  const arr = [];
+  for (let i = 0; i <= max; i++) arr.push({v:i, n:'Style ' + i});
+  return arr;
+}
+const HAIR_STYLES = makeStyles(131);
+const EYE_STYLES = makeStyles(59);
+const BROW_STYLES = makeStyles(23);
+const MOUTH_STYLES = makeStyles(35);
+const NOSE_STYLES = makeStyles(17);
+const GLASSES_STYLES = [{v:0,n:'None'}].concat(makeStyles(8).slice(1));
+const FACE_STYLES = makeStyles(11);
 
 let miiInstance = null;
 let currentGLBModel = null;
