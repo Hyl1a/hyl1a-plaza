@@ -435,10 +435,36 @@ function initMiiMaker(container) {
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
-  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;';
+  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;animation:miiFloat 3s ease-in-out infinite;';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
+
+  // Inject animation keyframes
+  if (!document.getElementById('mii-anim-styles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'mii-anim-styles';
+    styleEl.textContent = `
+      @keyframes miiFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      @keyframes miiBounce {
+        0% { transform: scale(1) translateY(0); }
+        20% { transform: scale(1.06) translateY(-12px); }
+        40% { transform: scale(0.97) translateY(2px); }
+        60% { transform: scale(1.02) translateY(-3px); }
+        80% { transform: scale(0.99) translateY(1px); }
+        100% { transform: scale(1) translateY(0); }
+      }
+      @keyframes miiEntrance {
+        0% { transform: scale(0.3) translateY(40px); opacity: 0; }
+        60% { transform: scale(1.08) translateY(-5px); opacity: 1; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
 
   // Arrow buttons
   const arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);color:#fff;border:none;font-size:28px;width:40px;height:60px;cursor:pointer;border-radius:8px;z-index:5;transition:background 0.2s;display:flex;align-items:center;justify-content:center;';
@@ -475,6 +501,10 @@ function initMiiMaker(container) {
     newImg.onload = () => {
       previewImg.src = newImg.src;
       previewImg.style.opacity = '1';
+      // Trigger bounce animation
+      previewImg.style.animation = 'none';
+      previewImg.offsetHeight; // force reflow
+      previewImg.style.animation = 'miiBounce 0.5s ease-out, miiFloat 3s ease-in-out 0.5s infinite';
       if(overlay) overlay.style.display = 'none';
     };
     newImg.onerror = () => {
@@ -488,6 +518,8 @@ function initMiiMaker(container) {
   function fetch3DModel() {
     const overlay = document.getElementById('mii-loading-overlay');
     if(overlay) overlay.style.display = 'flex';
+    // Entrance animation on first load
+    previewImg.style.animation = 'miiEntrance 0.6s ease-out forwards';
     fetchMiiRender();
   }
 
