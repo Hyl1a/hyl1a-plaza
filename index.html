@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hylia Plaza</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/hub.css" />
+  <link rel="stylesheet" href="css/window.css" />
+  <link rel="stylesheet" href="css/mii.css" />
+  
+  <!-- Three.js and OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+
+<body>
+  <!-- Background Environment (Skies, bubbles, particles) -->
+  <!-- Top Bar -->
+  <div id="top-bar">
+    <div class="top-section left">
+      <div class="profile-group">
+        <div class="profile-icon"></div>
+        <div class="profile-icon"></div>
+        <div class="profile-icon"></div>
+        <div class="profile-count">+ 4</div>
+      </div>
+      <div class="bumper-btn">L</div>
+    </div>
+
+    <div id="dynamic-title-pill" class="glossy-glass">
+      Hylia Plaza
+    </div>
+
+    <div class="top-section right">
+      <div class="bumper-btn">R</div>
+      <div class="status-group">
+        <span class="status-icon">🕐</span>
+        <span id="top-time">12:00 PM</span> | <span id="top-date">08/25</span>
+        <span class="battery-icon">🔋</span>
+      </div>
+      <div id="user-avatar-badge">
+        <!-- Main avatar will be injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Central Container -->
+  <div id="main-container" class="glossy-glass">
+    <div id="app-grid">
+      <!-- Row 1 -->
+      <div class="grid-tile tile-wide app-trigger" data-app="gallery" data-title="Memory Gallery" tabindex="0">
+        <div class="tile-inner gallery-bg">🖼️</div>
+      </div>
+      <div class="grid-tile tile-square app-trigger" data-app="music" data-title="Radio Station" tabindex="0">
+        <div class="tile-inner music-bg">📻</div>
+      </div>
+      <div class="grid-tile tile-square" id="theme-tile" data-title="Themes" tabindex="0">
+        <div class="tile-inner settings-bg">🎨</div>
+      </div>
+      <div class="grid-tile tile-square placeholder-app" data-title="System Transfer" tabindex="0">
+        <div class="tile-inner transfer-bg">Wii</div>
+      </div>
+      <div class="grid-tile tile-square app-trigger" data-app="miiMaker" data-title="Mii Maker" tabindex="0">
+        <div class="tile-inner mii-bg">Mii</div>
+      </div>
+      <!-- Mii Plaza Tile -->
+      <div class="grid-tile tile-square app-trigger" data-app="miiPlaza" data-title="Mii Plaza" tabindex="0">
+        <div class="tile-inner mii-plaza-bg" style="font-size: 45px; background: linear-gradient(135deg, #7ec4ff, #4a9fff); color: white; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 12px;">🏕️</div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="grid-tile tile-square app-trigger" data-app="arcade" data-title="Classic Arcade" tabindex="0">
+        <div class="tile-inner arcade-bg">👾</div>
+      </div>
+      <div class="grid-tile tile-square app-trigger" data-app="notes" data-title="Notepad" tabindex="0">
+        <div class="tile-inner notes-bg">📓</div>
+      </div>
+      <div class="grid-tile tile-wide placeholder-app" data-title="Animal Crossing Plaza" tabindex="0">
+        <div class="tile-inner ac-bg">🏕️</div>
+      </div>
+      <!-- Row 2/3 Spanning Tile -->
+      <div class="grid-tile tile-large app-trigger" data-app="guestbook" data-title="Super Smash Bros. Hub"
+        tabindex="0">
+        <div class="tile-inner smash-bg">📝</div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="grid-tile tile-square placeholder-app" data-title="Sports Mix" tabindex="0">
+        <div class="tile-inner sports-bg">🎳</div>
+      </div>
+      <div class="grid-tile tile-square placeholder-app" data-title="Zelda Collection" tabindex="0">
+        <div class="tile-inner zelda-bg">🗡️</div>
+      </div>
+      <div class="grid-tile tile-wide placeholder-app" data-title="Miiverse Sketching" tabindex="0">
+        <div class="tile-inner miiverse-bg">🖍️</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Music Player Bar -->
+  <div id="music-bar">
+    <div class="music-bar-inner glossy-glass">
+      <div class="music-bar-icon">🎵</div>
+      <div class="music-bar-info">
+        <div id="music-track-name">Aucune musique</div>
+        <div class="music-bar-subtitle">Hylia Plaza</div>
+      </div>
+      <div class="music-bar-controls">
+        <button id="music-prev" class="music-ctrl-btn">⏮</button>
+        <button id="music-play" class="music-ctrl-btn play-btn">▶</button>
+        <button id="music-next" class="music-ctrl-btn">⏭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar Controls -->
+  <div id="bottom-bar">
+    <div class="bottom-group left">
+      <button class="btn-prompt"><span class="btn-key">Y</span> Edit</button>
+      <button class="btn-prompt"><span class="btn-key">-</span> Details</button>
+    </div>
+
+    <div class="pagination-dots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="bottom-group right">
+      <button class="btn-prompt"><span class="btn-key">A</span> Select</button>
+      <button class="btn-prompt"><span class="btn-key">+</span> Menu</button>
+    </div>
+  </div>
+
+  <!-- Container for dynamic OS windows -->
+  <div id="window-layer"></div>
+
+  <!-- Script imports: Core -> Components -> Apps -> Init -->
+  <script src="js/core/audio.js"></script>
+  <script src="js/core/windowManager.js"></script>
+  <script src="js/core/themeManager.js"></script>
+  <script src="js/core/miiBuilder.js"></script>
+  <script src="js/components/avatar.js"></script>
+
+  <script src="js/apps/gallery.js"></script>
+  <script src="js/apps/music.js"></script>
+  <script src="js/apps/hallOfFame.js"></script>
+  <script src="js/apps/notes.js"></script>
+  <script src="js/apps/guestbook.js"></script>
+  <script src="js/apps/miiMaker.js"></script>
+  <script src="js/apps/miiPlaza.js"></script>
+
+  <script src="js/core/app.js"></script>
+</body>
+
+</html>

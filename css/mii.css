@@ -1,0 +1,239 @@
+/* mii.css - Styles for Mii Maker and Mii Plaza */
+
+.mii-fullscreen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: #f0f4f8; /* Mii maker classic aesthetic */
+  display: flex;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  animation: miiFadeIn 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes miiFadeIn {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes miiFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.97); }
+}
+
+.mii-fullscreen-container.closing {
+  animation: miiFadeOut 0.3s cubic-bezier(0.8, 0, 0.9, 0.1) forwards;
+}
+
+.mii-close-btn {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid #ddd;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  backdrop-filter: blur(5px);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mii-close-btn:hover {
+  transform: scale(1.15) rotate(90deg);
+  background: #ff5252;
+  color: white;
+  border-color: #ff5252;
+  box-shadow: 0 6px 15px rgba(255, 82, 82, 0.4);
+}
+
+/* 3D Canvas Area */
+.mii-canvas-area {
+  flex: 1;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #d4e1ed 100%);
+}
+
+.mii-canvas-area canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Controls Area for Mii Maker */
+.mii-controls-area {
+  width: 420px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: -10px 0 30px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  z-index: 10;
+  overflow-y: auto;
+  border-left: 1px solid rgba(255,255,255,0.5);
+  backdrop-filter: blur(10px);
+}
+
+.mii-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.mii-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  background: #eee;
+  border-radius: 12px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mii-tab.active {
+  background: #5db0f2;
+  color: white;
+  box-shadow: 0 4px 10px rgba(93, 176, 242, 0.3);
+}
+
+.mii-tab-content {
+  display: none;
+  flex-direction: column;
+  gap: 20px;
+}
+.mii-tab-content.active {
+  display: flex;
+}
+
+.mii-header {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 5px;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.mii-subtitle {
+  text-align: center;
+  color: #888;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+.mii-control-group {
+  margin-bottom: 5px;
+}
+.mii-control-group label {
+  display: block;
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.mii-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.mii-color-btn {
+  height: 45px;
+  border-radius: 12px;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.mii-color-btn:hover { 
+  transform: scale(1.1); 
+  box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+}
+.mii-color-btn.active { 
+  border: 3px solid #222; 
+  transform: scale(1.1); 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.mii-input, .mii-textarea {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background: #fafafa;
+  font-family: inherit;
+}
+.mii-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+.mii-input:focus, .mii-textarea:focus {
+  outline: none;
+  border-color: #5db0f2;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(93, 176, 242, 0.15);
+}
+
+.mii-range {
+  width: 100%;
+  accent-color: #5db0f2;
+}
+
+.mii-save-btn {
+  margin-top: auto;
+  padding: 18px;
+  background: linear-gradient(135deg, #66b8ff, #3895ff);
+  color: white;
+  font-size: 20px;
+  font-weight: 800;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 6px 15px rgba(56, 149, 255, 0.4);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.mii-save-btn:hover {
+  background: linear-gradient(135deg, #7ec4ff, #4a9fff);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(56, 149, 255, 0.5);
+}
+.mii-save-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 5px rgba(56, 149, 255, 0.4);
+}
+
+/* Loading Overlay for Plaza */
+#plaza-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #5db0f2;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
