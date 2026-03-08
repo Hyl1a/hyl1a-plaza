@@ -1,0 +1,4 @@
+# Ignore generated files
+public/dist/*.js linguist-generated=true
+public/dist/*.css linguist-generated=true
+public/dist/lang/*.js linguist-generated=true
