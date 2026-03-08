@@ -388,8 +388,8 @@ function initMiiMaker(container) {
       const model = gltf.scene;
       model.position.y = 0; // API usually provides the neck correctly
       
-      // Make it slightly bigger
-      model.scale.set(1.5, 1.5, 1.5);
+      // Adjust scale to not be enormous
+      model.scale.set(0.8, 0.8, 0.8);
       
       model.traverse((child) => {
         if (child.isMesh) {
