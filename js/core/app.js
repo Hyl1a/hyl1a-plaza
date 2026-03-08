@@ -13,6 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
   initAppTriggers();
   initClockWidget();
   initMusicBar();
+
+  // Auto-play music on first user interaction (browser requires user gesture)
+  function autoPlayOnce() {
+    if (typeof AudioManager !== 'undefined' && !AudioManager.isPlayingMusic) {
+      AudioManager.playNextMusic();
+      // Update music bar display
+      const playBtn = document.getElementById('music-play');
+      const trackName = document.getElementById('music-track-name');
+      if (playBtn) { playBtn.textContent = '⏸'; playBtn.classList.add('playing'); }
+      if (trackName && AudioManager.playlist[AudioManager.currentTrackIndex]) {
+        trackName.textContent = AudioManager.playlist[AudioManager.currentTrackIndex].name;
+      }
+    }
+    document.removeEventListener('click', autoPlayOnce);
+    document.removeEventListener('keydown', autoPlayOnce);
+  }
+  document.addEventListener('click', autoPlayOnce);
+  document.addEventListener('keydown', autoPlayOnce);
 });
 
 function initMusicBar() {

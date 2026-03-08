@@ -62,6 +62,7 @@ function initMiiMaker(container) {
       <div class="mii-topbar-title">Mii Maker</div>
       ${catBtns}
       <div class="mii-topbar-spacer"></div>
+      <button class="mii-music-toggle" id="mii-music-toggle" title="Couper/Activer la musique" style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:2px solid #2a2a4a;background:#22223a;color:#7eb8ff;font-size:18px;cursor:pointer;margin-right:8px;transition:all 0.15s;">🔊</button>
       <button class="mii-close-btn" title="Close">✕</button>
     </div>
     <div class="mii-body">
@@ -80,8 +81,58 @@ function initMiiMaker(container) {
     </div>
   `;
 
+  // --- Mii Maker Music (crossfade with main music) ---
+  let miiMusic = null;
+  let mainMusicWasPlaying = false;
+
+  function startMiiMusic() {
+    miiMusic = new Audio('Son/Mii Maker.mp3');
+    miiMusic.volume = 0.3;
+    miiMusic.loop = true;
+
+    if (typeof AudioManager !== 'undefined' && AudioManager.isPlayingMusic) {
+      mainMusicWasPlaying = true;
+      AudioManager.fadeOut(800).then(() => {
+        miiMusic.play().catch(() => {});
+      });
+    } else {
+      mainMusicWasPlaying = false;
+      miiMusic.play().catch(() => {});
+    }
+  }
+
+  function stopMiiMusic() {
+    if (miiMusic) {
+      miiMusic.pause();
+      miiMusic.currentTime = 0;
+      miiMusic = null;
+    }
+    // Restore main music if it was playing before
+    if (mainMusicWasPlaying && typeof AudioManager !== 'undefined' && AudioManager.currentMusicAudio) {
+      AudioManager.fadeIn(800);
+    }
+  }
+
+  // Start Mii music on open
+  startMiiMusic();
+
+  // Mute/unmute toggle
+  const musicToggle = container.querySelector('#mii-music-toggle');
+  musicToggle.addEventListener('click', () => {
+    if (miiMusic) {
+      if (miiMusic.paused) {
+        miiMusic.play().catch(() => {});
+        musicToggle.textContent = '🔊';
+      } else {
+        miiMusic.pause();
+        musicToggle.textContent = '🔇';
+      }
+    }
+  });
+
   // Close
   container.querySelector('.mii-close-btn').addEventListener('click', () => {
+    stopMiiMusic();
     container.classList.add('closing');
     setTimeout(() => { if(container.parentNode) container.parentNode.removeChild(container); }, 300);
   });

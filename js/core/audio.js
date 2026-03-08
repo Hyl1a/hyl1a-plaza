@@ -110,5 +110,41 @@ const AudioManager = {
       this.currentMusicAudio = null;
     }
     this.isPlayingMusic = false;
+  },
+
+  // --- Crossfade helpers ---
+  _savedVolume: 0.3,
+
+  fadeOut: function (duration) {
+    return new Promise((resolve) => {
+      if (!this.currentMusicAudio) { resolve(); return; }
+      const audio = this.currentMusicAudio;
+      this._savedVolume = audio.volume;
+      const steps = 20;
+      const stepTime = (duration || 800) / steps;
+      const volStep = audio.volume / steps;
+      let i = 0;
+      const iv = setInterval(() => {
+        i++;
+        audio.volume = Math.max(0, this._savedVolume - volStep * i);
+        if (i >= steps) { clearInterval(iv); audio.pause(); resolve(); }
+      }, stepTime);
+    });
+  },
+
+  fadeIn: function (duration) {
+    if (!this.currentMusicAudio) return;
+    const audio = this.currentMusicAudio;
+    const target = this._savedVolume || 0.3;
+    audio.volume = 0;
+    audio.play().catch(() => {});
+    const steps = 20;
+    const stepTime = (duration || 800) / steps;
+    let i = 0;
+    const iv = setInterval(() => {
+      i++;
+      audio.volume = Math.min(target, (target / steps) * i);
+      if (i >= steps) clearInterval(iv);
+    }, stepTime);
   }
 };
