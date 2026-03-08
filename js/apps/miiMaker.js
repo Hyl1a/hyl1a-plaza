@@ -429,7 +429,7 @@ function initMiiMaker(container) {
   const loader = new THREE.GLTFLoader();
   let bodyGroup = null; // holds body + head
 
-  // Build procedural body parts
+  // Build procedural body parts (Three.js r128 compatible — no CapsuleGeometry)
   function createBody(shirtColor) {
     const group = new THREE.Group();
     const color = SHIRTS[shirtColor || miiInstance.favoriteColor || 0] || '#ff3333';
@@ -444,8 +444,8 @@ function initMiiMaker(container) {
     torso.castShadow = true;
     group.add(torso);
 
-    // Left arm
-    const lArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 1.8, 8, 8), mat);
+    // Left arm (cylinder instead of capsule)
+    const lArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 2.0, 8), mat);
     lArm.position.set(-1.4, 1.6, 0);
     lArm.rotation.z = 0.15;
     lArm.castShadow = true;
@@ -457,7 +457,7 @@ function initMiiMaker(container) {
     group.add(lHand);
 
     // Right arm
-    const rArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 1.8, 8, 8), mat);
+    const rArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 2.0, 8), mat);
     rArm.position.set(1.4, 1.6, 0);
     rArm.rotation.z = -0.15;
     rArm.castShadow = true;
@@ -471,12 +471,12 @@ function initMiiMaker(container) {
     // Pants / lower body
     const pantsMat = new THREE.MeshStandardMaterial({ color: '#2a2a55', roughness: 0.6 });
     // Left leg
-    const lLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.6, 8, 8), pantsMat);
+    const lLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.28, 1.8, 8), pantsMat);
     lLeg.position.set(-0.4, -1.0, 0);
     lLeg.castShadow = true;
     group.add(lLeg);
     // Right leg
-    const rLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 1.6, 8, 8), pantsMat);
+    const rLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.28, 1.8, 8), pantsMat);
     rLeg.position.set(0.4, -1.0, 0);
     rLeg.castShadow = true;
     group.add(rLeg);
@@ -503,6 +503,7 @@ function initMiiMaker(container) {
     const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=face`;
 
     loader.load(url, (gltf) => {
+      try {
       // Remove previous full body
       if (bodyGroup) scene.remove(bodyGroup);
 
@@ -552,6 +553,10 @@ function initMiiMaker(container) {
       controls.update();
 
       if(overlay) overlay.style.display = 'none';
+      } catch(e) {
+        console.error('Mii body build error:', e);
+        if(overlay) { overlay.textContent = 'Error: ' + e.message; overlay.style.color = '#ff5555'; }
+      }
     }, undefined, (error) => {
       console.error('Error loading GLB:', error);
       if(overlay) overlay.textContent = 'Failed to load model.';
