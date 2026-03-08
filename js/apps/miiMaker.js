@@ -427,79 +427,6 @@ function initMiiMaker(container) {
 
   // GLTF Loader
   const loader = new THREE.GLTFLoader();
-  let bodyGroup = null; // holds body + head
-
-  // Build authentic-style Mii body (Wii/Wii U proportions, Three.js r128 compatible)
-  function createBody() {
-    const group = new THREE.Group();
-    const shirtCol = SHIRTS[miiInstance.favoriteColor || 0] || '#ff3333';
-    const skinCol = SKINS[miiInstance.skinColor || 0] || '#feedcf';
-    
-    const shirtMat = new THREE.MeshStandardMaterial({ color: shirtCol, roughness: 0.55, metalness: 0.0 });
-    const skinMat = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.45, metalness: 0.0 });
-    const pantsMat = new THREE.MeshStandardMaterial({ color: '#2b2b5e', roughness: 0.6 });
-    const shoeMat = new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.65 });
-
-    // --- TORSO (egg-shaped using LatheGeometry for authentic Mii look) ---
-    const torsoPoints = [];
-    for (let i = 0; i <= 16; i++) {
-      const t = i / 16;
-      const y = t * 2.6 - 1.3; // -1.3 to 1.3
-      // Egg-like profile: wider at top (shoulders), narrower at waist
-      const r = (0.85 + 0.15 * Math.cos(t * Math.PI * 0.8)) * (1.0 + 0.2 * Math.sin(t * Math.PI));
-      torsoPoints.push(new THREE.Vector2(r, y));
-    }
-    const torsoGeo = new THREE.LatheGeometry(torsoPoints, 20);
-    const torso = new THREE.Mesh(torsoGeo, shirtMat);
-    torso.position.y = 1.3;
-    torso.castShadow = true;
-    group.add(torso);
-
-    // --- ARMS (short, stubby cylinders — Mii style) ---
-    function makeArm(xSide) {
-      const armGroup = new THREE.Group();
-      // Upper arm (shirt color)
-      const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 1.2, 10), shirtMat);
-      upper.position.y = -0.6;
-      upper.castShadow = true;
-      armGroup.add(upper);
-      // Hand (round sphere)
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), skinMat);
-      hand.position.y = -1.35;
-      hand.castShadow = true;
-      armGroup.add(hand);
-      
-      armGroup.position.set(xSide * 1.15, 2.1, 0);
-      armGroup.rotation.z = xSide * 0.12; // Slight outward angle
-      return armGroup;
-    }
-    group.add(makeArm(-1)); // Left
-    group.add(makeArm(1));  // Right
-
-    // --- LEGS (short, slightly tapered) ---
-    function makeLeg(xSide) {
-      const legGroup = new THREE.Group();
-      // Leg cylinder
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 1.4, 10), pantsMat);
-      leg.position.y = -0.7;
-      leg.castShadow = true;
-      legGroup.add(leg);
-      // Shoe (rounded box)
-      const shoe = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), shoeMat);
-      shoe.scale.set(1, 0.6, 1.4);
-      shoe.position.y = -1.5;
-      shoe.position.z = 0.05;
-      shoe.castShadow = true;
-      legGroup.add(shoe);
-      
-      legGroup.position.set(xSide * 0.38, -0.05, 0);
-      return legGroup;
-    }
-    group.add(makeLeg(-1)); // Left
-    group.add(makeLeg(1));  // Right
-
-    return group;
-  }
 
   function fetch3DModel() {
     const overlay = document.getElementById('mii-loading-overlay');
@@ -510,57 +437,45 @@ function initMiiMaker(container) {
 
     loader.load(url, (gltf) => {
       try {
-      // Remove previous full body
-      if (bodyGroup) scene.remove(bodyGroup);
+        // Remove previous model
+        if (currentGLBModel) scene.remove(currentGLBModel);
 
-      const fullBody = new THREE.Group();
-      const head = gltf.scene;
+        const model = gltf.scene;
 
-      // Scale head to a natural proportion (~2.2 units tall)
-      const headBox = new THREE.Box3().setFromObject(head);
-      const headSize = headBox.getSize(new THREE.Vector3());
-      const headTarget = 2.2;
-      const hScale = headTarget / headSize.y;
-      head.scale.set(hScale, hScale, hScale);
+        // Auto-scale: measure the model and fit it to ~5 units tall
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const targetHeight = 5;
+        const s = targetHeight / size.y;
+        model.scale.set(s, s, s);
 
-      // Position head on top of body (body top is at y ~2.8)
-      const headBox2 = new THREE.Box3().setFromObject(head);
-      const headCenter = headBox2.getCenter(new THREE.Vector3());
-      head.position.y = 2.8 - headBox2.min.y;
-      head.position.x = -headCenter.x;
-      head.position.z = -headCenter.z;
+        // Center on platform
+        const box2 = new THREE.Box3().setFromObject(model);
+        model.position.y = -box2.min.y + 0.15; // sit on platform
+        model.position.x = -center.x * s;
+        model.position.z = -center.z * s;
 
-      head.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          if(child.material) child.material.side = THREE.DoubleSide;
-        }
-      });
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            if(child.material) child.material.side = THREE.DoubleSide;
+          }
+        });
 
-      // Create procedural body
-      const body = createBody();
+        scene.add(model);
+        currentGLBModel = model;
 
-      fullBody.add(body);
-      fullBody.add(head);
+        // Center camera on model
+        const finalBox = new THREE.Box3().setFromObject(model);
+        const finalCenter = finalBox.getCenter(new THREE.Vector3());
+        controls.target.set(0, finalCenter.y, 0);
+        controls.update();
 
-      // Position: feet on the platform
-      const fullBox = new THREE.Box3().setFromObject(fullBody);
-      fullBody.position.y = -fullBox.min.y + 0.05;
-
-      scene.add(fullBody);
-      bodyGroup = fullBody;
-      currentGLBModel = fullBody;
-
-      // Adjust camera
-      const finalBox = new THREE.Box3().setFromObject(fullBody);
-      const finalCenter = finalBox.getCenter(new THREE.Vector3());
-      controls.target.set(0, finalCenter.y, 0);
-      controls.update();
-
-      if(overlay) overlay.style.display = 'none';
+        if(overlay) overlay.style.display = 'none';
       } catch(e) {
-        console.error('Mii body build error:', e);
+        console.error('Mii render error:', e);
         if(overlay) { overlay.textContent = 'Error: ' + e.message; overlay.style.color = '#ff5555'; }
       }
     }, undefined, (error) => {
