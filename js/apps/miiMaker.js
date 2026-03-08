@@ -375,32 +375,91 @@ function initMiiMaker(container) {
     }
   });
 
-  // --- MII PREVIEW (Full body 2D render from API) ---
+  // --- MII PREVIEW (Full body 2D render from API + drag-to-rotate) ---
   const canvasArea = container.querySelector('#mii-canvas-container');
   
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
-  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.3s;';
+  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;cursor:grab;user-select:none;-webkit-user-drag:none;';
   previewImg.alt = 'Mii Preview';
+  previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
 
+  // Rotation state
+  let rotationY = 0; // degrees
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartRotation = 0;
+  let renderTimeout = null;
+
+  // Drag handlers
+  canvasArea.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartRotation = rotationY;
+    previewImg.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartX;
+    rotationY = dragStartRotation + dx * 0.8; // sensitivity
+    // Debounce API calls
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => fetchMiiRender(), 150);
+  });
+  
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      previewImg.style.cursor = 'grab';
+    }
+  });
+
+  // Touch support
+  canvasArea.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartRotation = rotationY;
+    e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const dx = e.touches[0].clientX - dragStartX;
+    rotationY = dragStartRotation + dx * 0.8;
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => fetchMiiRender(), 150);
+  });
+
+  window.addEventListener('touchend', () => { isDragging = false; });
+
+  function fetchMiiRender() {
+    const overlay = document.getElementById('mii-loading-overlay');
+    const b64 = encodeMiiBase64();
+    const angle = ((rotationY % 360) + 360) % 360; // normalize 0-360
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=512&clothesColor=default&shaderType=wiiu&characterYRotate=${Math.round(angle)}`;
+
+    const newImg = new Image();
+    newImg.onload = () => {
+      previewImg.src = newImg.src;
+      previewImg.style.opacity = '1';
+      if(overlay) overlay.style.display = 'none';
+    };
+    newImg.onerror = () => {
+      if(overlay) overlay.textContent = 'Failed to load Mii preview.';
+    };
+    previewImg.style.opacity = '0.7';
+    newImg.src = url;
+  }
+
+  // Alias for compatibility with existing code that calls fetch3DModel
   function fetch3DModel() {
     const overlay = document.getElementById('mii-loading-overlay');
     if(overlay) overlay.style.display = 'flex';
-
-    const b64 = encodeMiiBase64();
-    const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=512&clothesColor=default&shaderType=wiiu`;
-
-    previewImg.onload = () => {
-      if(overlay) overlay.style.display = 'none';
-      previewImg.style.opacity = '1';
-    };
-    previewImg.onerror = () => {
-      if(overlay) overlay.textContent = 'Failed to load Mii preview.';
-    };
-    previewImg.style.opacity = '0.5';
-    previewImg.src = url;
+    fetchMiiRender();
   }
 
   fetch3DModel();
