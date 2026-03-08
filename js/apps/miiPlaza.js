@@ -144,11 +144,11 @@ async function initMiiPlaza(container) {
 
     // Fetch Native Authentic GLB
     const b64 = av.visual_data || "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
-    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=face`;
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=all_body`;
     
     loader.load(url, (gltf) => {
       const model = gltf.scene;
-      model.scale.set(0.25, 0.25, 0.25);
+      model.scale.set(0.12, 0.12, 0.12);
       
       model.traverse((child) => {
         if (child.isMesh) {

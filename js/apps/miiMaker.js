@@ -1,4 +1,4 @@
-// Mii Maker Implementation
+// Mii Maker Implementation – Redesigned to match datkat21/mii-creator style
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry) {
@@ -9,358 +9,412 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 100);
 });
 
-// --- Mii Maker (Custom UI + Native FFSD Encoding) ---
-const SKINS = ['#feedcf', '#f7d3a0', '#edb278', '#d38b58', '#9d6343', '#834c31', '#512f1f'];
-const HAIRS = ['#1d1c1a', '#3f3123', '#663b21', '#85512b', '#7c6d66', '#a98059', '#b5a16d', '#bc9c65'];
-const EYES_COLORS = ['#3f3530', '#7a818c', '#533c30', '#837b2d', '#426899', '#5d8050'];
-const SHIRTS = ['#ff3333', '#3366ff', '#33cc33', '#ffcc00', '#ff6600', '#9933cc', '#ffffff', '#222222'];
+// --- Asset Colors ---
+const SKINS = ['#feedcf','#f7d3a0','#edb278','#d38b58','#9d6343','#834c31','#512f1f'];
+const HAIRS = ['#1d1c1a','#3f3123','#663b21','#85512b','#7c6d66','#a98059','#b5a16d','#bc9c65'];
+const EYES_COLORS = ['#3f3530','#7a818c','#533c30','#837b2d','#426899','#5d8050'];
+const SHIRTS = ['#ff3333','#ff6600','#ffcc00','#33cc33','#3366ff','#66ccff','#9933cc','#ff66cc','#ffffff','#888888','#222222'];
+
+// --- Category Definitions ---
+const CATEGORIES = [
+  { id:'face', icon:'😊', label:'Face' },
+  { id:'hair', icon:'💇', label:'Hair' },
+  { id:'eyebrows', icon:'🤨', label:'Brows' },
+  { id:'eyes', icon:'👁️', label:'Eyes' },
+  { id:'nose', icon:'👃', label:'Nose' },
+  { id:'mouth', icon:'👄', label:'Mouth' },
+  { id:'glasses', icon:'🤓', label:'Glasses' },
+  { id:'body', icon:'👕', label:'Body' },
+  { id:'profile', icon:'📝', label:'Profile' },
+];
+
+// --- Hair / Eye / Brow / Mouth / Nose style data ---
+const HAIR_STYLES = [
+  {v:33,n:'Normal'},{v:14,n:'Spiky'},{v:13,n:'Messy'},{v:46,n:'Swept'},{v:18,n:'Short'},
+  {v:90,n:'Bowl'},{v:73,n:'Long'},{v:57,n:'Pigtails'},{v:26,n:'Ponytail'},{v:34,n:'Cap'},
+  {v:76,n:'Curly'},{v:0,n:'Bald'}
+];
+const EYE_STYLES = [
+  {v:2,n:'Normal'},{v:4,n:'Thick'},{v:23,n:'Narrow'},{v:8,n:'Round'},
+  {v:11,n:'Wink'},{v:18,n:'Star'},{v:36,n:'Cute'},{v:47,n:'Sad'}
+];
+const BROW_STYLES = [
+  {v:0,n:'Normal'},{v:1,n:'Thick'},{v:4,n:'Thin'},{v:6,n:'Angled'},
+  {v:7,n:'Round'},{v:9,n:'Short'},{v:12,n:'Flat'},{v:14,n:'Sad'}
+];
+const MOUTH_STYLES = [
+  {v:0,n:'Normal'},{v:3,n:'Smile'},{v:6,n:'Wide'},{v:13,n:'Open'},
+  {v:19,n:'Thin'},{v:23,n:'Pout'},{v:30,n:'Grin'},{v:35,n:'Cat'}
+];
+const NOSE_STYLES = [
+  {v:0,n:'Normal'},{v:1,n:'Button'},{v:3,n:'Pointed'},{v:5,n:'Wide'},
+  {v:7,n:'Long'},{v:9,n:'Low'},{v:11,n:'Flat'},{v:17,n:'Round'}
+];
+const GLASSES_STYLES = [
+  {v:0,n:'None'},{v:1,n:'Classic'},{v:2,n:'Round'},{v:3,n:'Oval'},
+  {v:4,n:'Square'},{v:5,n:'Half'},{v:6,n:'Narrow'},{v:8,n:'Sporty'}
+];
+const FACE_STYLES = [
+  {v:0,n:'Round'},{v:1,n:'Oval'},{v:2,n:'Square'},{v:3,n:'Wide'},
+  {v:4,n:'Long'},{v:5,n:'Narrow'},{v:6,n:'Triangle'},{v:7,n:'Heart'},
+  {v:8,n:'Diamond'},{v:9,n:'Flat'},{v:10,n:'Sharp'},{v:11,n:'Soft'}
+];
 
 let miiInstance = null;
 let currentGLBModel = null;
 
 function initMiiMaker(container) {
-  // Wait for the Mii module to be globally available
   if (!window.Mii) {
     setTimeout(() => initMiiMaker(container), 100);
     return;
   }
 
-  // 1. Build DOM Structure
+  // Build category buttons HTML
+  const catBtns = CATEGORIES.map((c,i) =>
+    `<button class="mii-cat-btn${i===0?' active':''}" data-cat="${c.id}" title="${c.label}">${c.icon}</button>`
+  ).join('');
+
   container.innerHTML = `
-    <button class="mii-close-btn" title="Close Mii Maker">✖</button>
-    <div class="mii-canvas-area" id="mii-canvas-container">
-      <div id="mii-loading-overlay" style="position:absolute; inset:0; display:flex; justify-content:center; align-items:center; background:rgba(255,255,255,0.7); font-weight:bold; font-size:18px; color:#555; z-index:10; border-radius:12px;">Loading 3D Model...</div>
+    <div class="mii-topbar">
+      <div class="mii-topbar-title">Mii Maker</div>
+      ${catBtns}
+      <div class="mii-topbar-spacer"></div>
+      <button class="mii-close-btn" title="Close">✕</button>
     </div>
-    <div class="mii-controls-area">
-      <div class="mii-header">Mii Maker</div>
-      <div class="mii-subtitle">Detailed Customization</div>
-      
-      <div class="mii-tabs" style="flex-wrap: wrap;">
-        <div class="mii-tab active" data-tab="head" style="font-size: 13px;">Head</div>
-        <div class="mii-tab" data-tab="hair" style="font-size: 13px;">Hair</div>
-        <div class="mii-tab" data-tab="eyes" style="font-size: 13px;">Eyes</div>
-        <div class="mii-tab" data-tab="brows" style="font-size: 13px;">Brows</div>
-        <div class="mii-tab" data-tab="mouth" style="font-size: 13px;">Mouth</div>
-        <div class="mii-tab" data-tab="body" style="font-size: 13px;">Body</div>
-        <div class="mii-tab" data-tab="profile" style="font-size: 13px;">Profile</div>
+    <div class="mii-body">
+      <div class="mii-canvas-area" id="mii-canvas-container">
+        <div id="mii-loading-overlay">Loading 3D Model...</div>
       </div>
-      
-      <!-- Head Tab -->
-      <div class="mii-tab-content active" id="tab-head">
-        <div class="mii-control-group">
-          <label>Skin Color</label>
-          <div class="mii-btn-grid" id="grid-skin"></div>
+      <div class="mii-controls-area">
+        <div class="mii-subtabs">
+          <div class="mii-subtab active" data-sub="type">Type</div>
+          <div class="mii-subtab" data-sub="color">Color</div>
+          <div class="mii-subtab" data-sub="position">Position</div>
         </div>
+        <div class="mii-panel-content" id="mii-panel"></div>
+        <button class="mii-save-btn" id="btn-save">Save & Quit</button>
       </div>
-
-      <!-- Hair Tab -->
-      <div class="mii-tab-content" id="tab-hair">
-        <div class="mii-control-group">
-          <label>Hair Style</label>
-          <div class="mii-btn-grid" id="grid-hair-style">
-            <button class="mii-color-btn" style="background:#ddd" data-val="33">Normal</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="14">Spiky</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="13">Messy</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="46">Swept</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="18">Bald</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="90">Bowl</button>
-          </div>
-        </div>
-        <div class="mii-control-group">
-          <label>Hair Color</label>
-          <div class="mii-btn-grid" id="grid-hair-color"></div>
-        </div>
-      </div>
-
-      <!-- Eyes Tab -->
-      <div class="mii-tab-content" id="tab-eyes">
-        <div class="mii-control-group">
-          <label>Eye Style</label>
-          <div class="mii-btn-grid" id="grid-eye-style">
-            <button class="mii-color-btn" style="background:#ddd" data-val="2">Normal</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="14">Big</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="8">Dots</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="16">Angry</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="36">Sleepy</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="52">Happy</button>
-          </div>
-        </div>
-        <div class="mii-control-group">
-          <label>Eye Color</label>
-          <div class="mii-btn-grid" id="grid-eye-color"></div>
-        </div>
-      </div>
-
-      <!-- Brows Tab -->
-      <div class="mii-tab-content" id="tab-brows">
-        <div class="mii-control-group">
-          <label>Eyebrow Style</label>
-          <div class="mii-btn-grid" id="grid-brow-style">
-            <button class="mii-color-btn" style="background:#ddd" data-val="6">Arc</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="1">Thick</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="9">Dot</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="13">Angry</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="4">Sad</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="24">None</button>
-          </div>
-        </div>
-        <div class="mii-control-group">
-          <label>Eyebrow Color</label>
-          <div class="mii-btn-grid" id="grid-brow-color"></div>
-        </div>
-      </div>
-
-      <!-- Mouth & Nose Tab -->
-      <div class="mii-tab-content" id="tab-mouth">
-        <div class="mii-control-group">
-          <label>Mouth Style</label>
-          <div class="mii-btn-grid" id="grid-mouth-style">
-            <button class="mii-color-btn" style="background:#ddd" data-val="23">Smile</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="2">Open</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="10">Teeth</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="18">Frown</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="21">Line</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="13">Surprise</button>
-          </div>
-        </div>
-        <div class="mii-control-group">
-          <label>Nose Style</label>
-          <div class="mii-btn-grid" id="grid-nose-style">
-            <button class="mii-color-btn" style="background:#ddd" data-val="1">Normal</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="2">Pointy</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="8">Big</button>
-            <button class="mii-color-btn" style="background:#ddd" data-val="0">Button</button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Body Tab -->
-      <div class="mii-tab-content" id="tab-body">
-        <div class="mii-control-group">
-          <label>Favorite Color (Shirt)</label>
-          <div class="mii-btn-grid" id="grid-shirt"></div>
-        </div>
-      </div>
-      
-      <!-- Profile Tab -->
-      <div class="mii-tab-content" id="tab-profile">
-        <div class="mii-control-group">
-          <label>First Name</label>
-          <input type="text" class="mii-input" id="inp-first" placeholder="e.g. Mario">
-        </div>
-        <div class="mii-control-group">
-          <label>Last Name</label>
-          <input type="text" class="mii-input" id="inp-last" placeholder="e.g. Mario">
-        </div>
-        <div class="mii-control-group">
-          <label>Nickname</label>
-          <input type="text" class="mii-input" id="inp-nick" placeholder="e.g. Jumpman">
-        </div>
-        <div class="mii-control-group">
-          <label>Birthday</label>
-          <input type="date" class="mii-input" id="inp-birth">
-        </div>
-        <div class="mii-control-group">
-          <label>Short Bio</label>
-          <textarea class="mii-textarea" id="inp-bio" placeholder="It's-a me!"></textarea>
-        </div>
-      </div>
-      
-      <button class="mii-save-btn" id="btn-save">Save & Quit</button>
     </div>
   `;
 
-  // Close Button
+  // Close
   container.querySelector('.mii-close-btn').addEventListener('click', () => {
     container.classList.add('closing');
-    setTimeout(() => {
-      if (container.parentNode) container.parentNode.removeChild(container);
-    }, 400); // Wait for CSS animation
+    setTimeout(() => { if(container.parentNode) container.parentNode.removeChild(container); }, 300);
   });
 
-  // Tabs Logic
-  const tabs = container.querySelectorAll('.mii-tab');
-  const contents = container.querySelectorAll('.mii-tab-content');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => c.classList.remove('active'));
-      tab.classList.add('active');
-      container.querySelector('#tab-' + tab.dataset.tab).classList.add('active');
-    });
-  });
+  // State
+  let activeCategory = 'face';
+  let activeSubtab = 'type';
 
-  // Default Base64 Mii Studio representation of a blank Mii Maker Mii
+  // Default Mii
   const defaultMiiStr = "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
   const rawData = atob(defaultMiiStr);
   const u8 = new Uint8Array(rawData.length);
   for(let i = 0; i < rawData.length; i++) u8[i] = rawData.charCodeAt(i);
   miiInstance = new window.Mii(u8);
 
-  // Populate Color Grids
-  function populateGrid(gridId, colors, stateKey) {
-    const grid = container.querySelector('#' + gridId);
-    if (!grid) return;
-    colors.forEach((c, index) => {
-      const btn = document.createElement('div');
-      let defaultIdx = 0;
-      if (stateKey === 'eyeColor') defaultIdx = 1;
-      if (stateKey === 'shirtColor') defaultIdx = 0; // usually red
+  // Category switching
+  const catButtons = container.querySelectorAll('.mii-cat-btn');
+  catButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      catButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      activeSubtab = 'type';
+      container.querySelectorAll('.mii-subtab').forEach(s => s.classList.remove('active'));
+      container.querySelector('.mii-subtab[data-sub="type"]').classList.add('active');
+      renderPanel();
+    });
+  });
 
-      btn.className = 'mii-color-btn' + (index === defaultIdx ? ' active' : '');
-      btn.style.backgroundColor = c;
+  // Sub-tab switching
+  container.querySelectorAll('.mii-subtab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      container.querySelectorAll('.mii-subtab').forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      activeSubtab = tab.dataset.sub;
+      renderPanel();
+    });
+  });
+
+  const panel = container.querySelector('#mii-panel');
+
+  // --- RENDER PANEL ---
+  function renderPanel() {
+    panel.innerHTML = '';
+
+    if (activeCategory === 'profile') {
+      renderProfilePanel();
+      return;
+    }
+
+    if (activeSubtab === 'type') renderTypePanel();
+    else if (activeSubtab === 'color') renderColorPanel();
+    else if (activeSubtab === 'position') renderPositionPanel();
+  }
+
+  function renderTypePanel() {
+    let items = [];
+    let stateKey = '';
+    switch(activeCategory) {
+      case 'face':    items = FACE_STYLES;    stateKey = 'faceType'; break;
+      case 'hair':    items = HAIR_STYLES;    stateKey = 'hairType'; break;
+      case 'eyebrows':items = BROW_STYLES;    stateKey = 'eyebrowType'; break;
+      case 'eyes':    items = EYE_STYLES;     stateKey = 'eyeType'; break;
+      case 'nose':    items = NOSE_STYLES;    stateKey = 'noseType'; break;
+      case 'mouth':   items = MOUTH_STYLES;   stateKey = 'mouthType'; break;
+      case 'glasses': items = GLASSES_STYLES; stateKey = 'glassesType'; break;
+      case 'body':    renderBodyPanel(); return;
+    }
+
+    const label = document.createElement('div');
+    label.className = 'mii-section-label';
+    label.textContent = activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) + ' Style';
+    panel.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'mii-style-grid';
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'mii-style-btn' + (miiInstance[stateKey] === item.v ? ' active' : '');
+      btn.textContent = item.n;
       btn.addEventListener('click', () => {
-        grid.querySelectorAll('.mii-color-btn').forEach(b => b.classList.remove('active'));
+        grid.querySelectorAll('.mii-style-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        // Update Mii Instance Value
-        if(stateKey === "skinColor") miiInstance.skinColor = index;
-        if(stateKey === "hairColor") miiInstance.hairColor = index;
-        if(stateKey === "eyeColor") miiInstance.eyeColor = index;
-        if(stateKey === "eyebrowColor") miiInstance.eyebrowColor = index;
-        if(stateKey === "shirtColor") miiInstance.favoriteColor = index;
+        miiInstance[stateKey] = item.v;
         fetch3DModel();
       });
       grid.appendChild(btn);
     });
+    panel.appendChild(grid);
   }
-  populateGrid('grid-skin', SKINS, 'skinColor');
-  populateGrid('grid-hair-color', HAIRS, 'hairColor');
-  populateGrid('grid-eye-color', EYES_COLORS, 'eyeColor');
-  populateGrid('grid-brow-color', HAIRS, 'eyebrowColor');
-  populateGrid('grid-shirt', SHIRTS, 'shirtColor');
 
-  // Option Grid Helpers
-  function bindOptionGrid(gridId, stateKey) {
-    const grid = container.querySelector('#' + gridId);
-    if (!grid) return;
-    const btns = grid.querySelectorAll('button');
-    btns.forEach(btn => {
-      if (parseInt(btn.getAttribute('data-val')) === miiInstance[stateKey]) btn.classList.add('active');
-      btn.addEventListener('click', () => {
-        btns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        miiInstance[stateKey] = parseInt(btn.getAttribute('data-val'));
+  function renderColorPanel() {
+    let colors = []; let stateKey = '';
+    switch(activeCategory) {
+      case 'face':     colors = SKINS;       stateKey = 'skinColor'; break;
+      case 'hair':     colors = HAIRS;       stateKey = 'hairColor'; break;
+      case 'eyebrows': colors = HAIRS;       stateKey = 'eyebrowColor'; break;
+      case 'eyes':     colors = EYES_COLORS; stateKey = 'eyeColor'; break;
+      case 'mouth':    colors = ['#de7e58','#cc5544','#e87070','#d45e7e','#c94040','#a03030']; stateKey = 'mouthColor'; break;
+      case 'body':     colors = SHIRTS;      stateKey = 'favoriteColor'; break;
+      case 'glasses':  colors = ['#222222','#994433','#4455aa','#cc5555','#ffffff','#886644']; stateKey = 'glassesColor'; break;
+      default:
+        panel.innerHTML = '<div class="mii-section-label" style="color:#666;">No colors for this category.</div>';
+        return;
+    }
+
+    const label = document.createElement('div');
+    label.className = 'mii-section-label';
+    label.textContent = activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) + ' Color';
+    panel.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'mii-color-grid';
+    colors.forEach((c, idx) => {
+      const swatch = document.createElement('div');
+      swatch.className = 'mii-color-swatch' + (miiInstance[stateKey] === idx ? ' active' : '');
+      swatch.style.backgroundColor = c;
+      swatch.addEventListener('click', () => {
+        grid.querySelectorAll('.mii-color-swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        miiInstance[stateKey] = idx;
         fetch3DModel();
       });
+      grid.appendChild(swatch);
+    });
+    panel.appendChild(grid);
+  }
+
+  function renderPositionPanel() {
+    const sliders = [];
+    switch(activeCategory) {
+      case 'eyes':
+        sliders.push({label:'Vertical', key:'eyeVertical', min:0, max:18});
+        sliders.push({label:'Size', key:'eyeScale', min:0, max:7});
+        sliders.push({label:'Stretch', key:'eyeStretch', min:0, max:6});
+        sliders.push({label:'Spacing', key:'eyeSpacing', min:0, max:12});
+        sliders.push({label:'Rotation', key:'eyeRotation', min:0, max:7});
+        break;
+      case 'eyebrows':
+        sliders.push({label:'Vertical', key:'eyebrowVertical', min:0, max:18});
+        sliders.push({label:'Size', key:'eyebrowScale', min:0, max:8});
+        sliders.push({label:'Stretch', key:'eyebrowStretch', min:0, max:6});
+        sliders.push({label:'Spacing', key:'eyebrowSpacing', min:0, max:12});
+        sliders.push({label:'Rotation', key:'eyebrowRotation', min:0, max:11});
+        break;
+      case 'nose':
+        sliders.push({label:'Vertical', key:'noseVertical', min:0, max:18});
+        sliders.push({label:'Size', key:'noseScale', min:0, max:8});
+        break;
+      case 'mouth':
+        sliders.push({label:'Vertical', key:'mouthVertical', min:0, max:18});
+        sliders.push({label:'Size', key:'mouthScale', min:0, max:8});
+        sliders.push({label:'Stretch', key:'mouthStretch', min:0, max:6});
+        break;
+      default:
+        panel.innerHTML = '<div class="mii-section-label" style="color:#666;">No position controls for this category.</div>';
+        return;
+    }
+    sliders.forEach(s => {
+      const group = document.createElement('div');
+      group.className = 'mii-slider-group';
+      const val = miiInstance[s.key] || 0;
+      group.innerHTML = `
+        <div class="mii-slider-label"><span>${s.label}</span><span id="val-${s.key}">${val}</span></div>
+        <input type="range" class="mii-slider" min="${s.min}" max="${s.max}" value="${val}" data-key="${s.key}">
+      `;
+      group.querySelector('input').addEventListener('input', (e) => {
+        miiInstance[s.key] = parseInt(e.target.value);
+        group.querySelector(`#val-${s.key}`).textContent = e.target.value;
+        fetch3DModel();
+      });
+      panel.appendChild(group);
     });
   }
-  bindOptionGrid('grid-hair-style', 'hairType');
-  bindOptionGrid('grid-eye-style', 'eyeType');
-  bindOptionGrid('grid-brow-style', 'eyebrowType');
-  bindOptionGrid('grid-mouth-style', 'mouthType');
-  bindOptionGrid('grid-nose-style', 'noseType');
 
-  // Helper to re-encode the Mii into base64 for saving or rendering
+  function renderBodyPanel() {
+    const label = document.createElement('div');
+    label.className = 'mii-section-label';
+    label.textContent = 'Body Settings';
+    panel.appendChild(label);
+
+    // Height slider
+    const hg = document.createElement('div'); hg.className = 'mii-slider-group';
+    const hv = miiInstance.height || 64;
+    hg.innerHTML = `<div class="mii-slider-label"><span>Height</span><span id="val-height">${hv}</span></div>
+      <input type="range" class="mii-slider" min="0" max="127" value="${hv}">`;
+    hg.querySelector('input').addEventListener('input', e => {
+      miiInstance.height = parseInt(e.target.value);
+      hg.querySelector('#val-height').textContent = e.target.value;
+      fetch3DModel();
+    });
+    panel.appendChild(hg);
+
+    // Build slider
+    const bg = document.createElement('div'); bg.className = 'mii-slider-group';
+    const bv = miiInstance.build || 64;
+    bg.innerHTML = `<div class="mii-slider-label"><span>Build</span><span id="val-build">${bv}</span></div>
+      <input type="range" class="mii-slider" min="0" max="127" value="${bv}">`;
+    bg.querySelector('input').addEventListener('input', e => {
+      miiInstance.build = parseInt(e.target.value);
+      bg.querySelector('#val-build').textContent = e.target.value;
+      fetch3DModel();
+    });
+    panel.appendChild(bg);
+
+    // Shirt Color
+    const sl = document.createElement('div'); sl.className = 'mii-section-label'; sl.textContent = 'Shirt Color'; sl.style.marginTop = '20px'; panel.appendChild(sl);
+    const grid = document.createElement('div'); grid.className = 'mii-color-grid';
+    SHIRTS.forEach((c, idx) => {
+      const swatch = document.createElement('div');
+      swatch.className = 'mii-color-swatch' + (miiInstance.favoriteColor === idx ? ' active' : '');
+      swatch.style.backgroundColor = c;
+      swatch.addEventListener('click', () => {
+        grid.querySelectorAll('.mii-color-swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        miiInstance.favoriteColor = idx;
+        fetch3DModel();
+      });
+      grid.appendChild(swatch);
+    });
+    panel.appendChild(grid);
+  }
+
+  function renderProfilePanel() {
+    panel.innerHTML = `
+      <div class="mii-control-group"><label>First Name</label><input type="text" class="mii-input" id="inp-first" placeholder="e.g. Luigi"></div>
+      <div class="mii-control-group"><label>Last Name</label><input type="text" class="mii-input" id="inp-last" placeholder="e.g. Mario"></div>
+      <div class="mii-control-group"><label>Nickname</label><input type="text" class="mii-input" id="inp-nick" placeholder="e.g. Jumpman"></div>
+      <div class="mii-control-group"><label>Birthday</label><input type="date" class="mii-input" id="inp-birth"></div>
+      <div class="mii-control-group"><label>Short Bio</label><textarea class="mii-textarea" id="inp-bio" placeholder="It's-a me!"></textarea></div>
+    `;
+  }
+
+  // Initial render
+  renderPanel();
+
+  // Base64 encoder
   function encodeMiiBase64() {
     const enc = miiInstance.encode();
-    const limit = Math.min(enc.length, 96); // The API strictly rejects >96 bytes
+    const limit = Math.min(enc.length, 96);
     let res = "";
     for(let i=0; i<limit; i++) res+=String.fromCharCode(enc[i]);
     return btoa(res);
   }
 
-  // Profile Data Fetcher
+  // Profile data getter
   const getProfileData = () => ({
-    first_name: container.querySelector('#inp-first').value.trim(),
-    last_name: container.querySelector('#inp-last').value.trim(),
-    username: container.querySelector('#inp-nick').value.trim(),
-    birthday: container.querySelector('#inp-birth').value, // YYYY-MM-DD
-    bio: container.querySelector('#inp-bio').value.trim(),
+    first_name: (container.querySelector('#inp-first')?.value||'').trim(),
+    last_name:  (container.querySelector('#inp-last')?.value||'').trim(),
+    username:   (container.querySelector('#inp-nick')?.value||'').trim(),
+    birthday:   (container.querySelector('#inp-birth')?.value||''),
+    bio:        (container.querySelector('#inp-bio')?.value||'').trim(),
     visual_base64: encodeMiiBase64()
   });
 
-  // Save via API
+  // Save
   container.querySelector('#btn-save').addEventListener('click', async () => {
     const btn = container.querySelector('#btn-save');
     const data = getProfileData();
-    if (!data.username) {
-      alert("Please enter a Nickname before saving!");
-      return;
-    }
-
-    // Set Mii name byte encoding safely
+    if (!data.username) { alert("Please enter a Nickname before saving!"); return; }
     if (data.first_name) miiInstance.miiName = data.first_name;
-
     try {
-      btn.textContent = "Saving...";
-      btn.disabled = true;
-      const res = await fetch('http://localhost:3000/api/avatars', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      
+      btn.textContent = "Saving..."; btn.disabled = true;
+      const res = await fetch('/api/avatars', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
       if (res.ok) {
-        if (typeof AudioManager !== 'undefined') AudioManager.playPop(); // Play success
+        if (typeof AudioManager !== 'undefined') AudioManager.playPop();
         btn.textContent = "Saved!";
-        setTimeout(() => {
-          container.querySelector('.mii-close-btn').click();
-        }, 1000);
+        setTimeout(() => container.querySelector('.mii-close-btn').click(), 1000);
       } else {
-        const errInfo = await res.json();
-        alert('Error saving avatar: ' + (errInfo.error || 'Server error'));
-        btn.textContent = "Save & Quit";
-        btn.disabled = false;
+        const e = await res.json(); alert('Error: ' + (e.error||'Server error')); btn.textContent = "Save & Quit"; btn.disabled = false;
       }
     } catch(err) {
-      console.error(err);
-      alert("Failed to connect to the local Node server. Have you run 'node server.js'?");
-      btn.textContent = "Save & Quit";
-      btn.disabled = false;
+      console.error(err); alert("Failed to connect. Is server running?"); btn.textContent = "Save & Quit"; btn.disabled = false;
     }
   });
 
-  // --- THREE.JS SCENE SETUP ---
+  // --- THREE.JS SCENE ---
   const canvasArea = container.querySelector('#mii-canvas-container');
   const scene = new THREE.Scene();
-  
-  const camera = new THREE.PerspectiveCamera(45, canvasArea.clientWidth / canvasArea.clientHeight, 0.1, 100);
-  camera.position.set(0, 4, 15);
-  
+  const camera = new THREE.PerspectiveCamera(30, canvasArea.clientWidth / canvasArea.clientHeight, 0.1, 100);
+  camera.position.set(0, 10, 30);
+
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
   renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight);
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.shadowMap.enabled = true;
+  renderer.setClearColor(0x000000, 0);
   canvasArea.appendChild(renderer.domElement);
 
   // Lighting
-  const ambient = new THREE.AmbientLight(0xffffff, 0.7);
-  scene.add(ambient);
-  
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-  dirLight.position.set(2, 5, 5);
-  dirLight.castShadow = true;
-  scene.add(dirLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+  dir.position.set(3, 8, 5);
+  scene.add(dir);
+  scene.add(new THREE.DirectionalLight(0xffffff, 0.25).position.set(-5, 2, -3) && new THREE.DirectionalLight(0xffffff, 0.25));
 
-  const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
-  backLight.position.set(-5, 0, -5);
-  scene.add(backLight);
-
-  // Platform
-  const padGeo = new THREE.CylinderGeometry(3, 3, 0.2, 32);
-  const padMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0 });
+  // Platform disc
+  const padGeo = new THREE.CylinderGeometry(2.5, 2.5, 0.15, 32);
+  const padMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.8 });
   const pad = new THREE.Mesh(padGeo, padMat);
-  pad.position.y = -0.1;
+  pad.position.y = -0.08;
   pad.receiveShadow = true;
   scene.add(pad);
 
   // Controls
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enablePan = true;
+  controls.enablePan = false;
   controls.enableZoom = true;
-  controls.minDistance = 3;
-  controls.maxDistance = 20;
-  controls.target.set(0, 3.5, 0);
+  controls.minDistance = 10;
+  controls.maxDistance = 50;
+  controls.target.set(0, 5, 0);
 
-  // Resize handler
+  // Resize
   const onResize = () => {
     if (!container.parentNode) return;
-    const w = canvasArea.clientWidth || window.innerWidth - 420; // fallback if flex layout isn't ready
-    const h = canvasArea.clientHeight || window.innerHeight;
+    const w = canvasArea.clientWidth; const h = canvasArea.clientHeight;
     if (w === 0 || h === 0) return;
-    
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
@@ -368,56 +422,42 @@ function initMiiMaker(container) {
   window.addEventListener('resize', onResize);
   setTimeout(onResize, 50);
 
-  // GLTF Loader instance
+  // GLTF Loader
   const loader = new THREE.GLTFLoader();
 
-  // Async model fetcher from authentic API
   function fetch3DModel() {
-    const loadingOverlay = document.getElementById('mii-loading-overlay');
-    if(loadingOverlay) loadingOverlay.style.display = 'flex';
+    const overlay = document.getElementById('mii-loading-overlay');
+    if(overlay) overlay.style.display = 'flex';
 
     const b64 = encodeMiiBase64();
-    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=face`;
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=all_body`;
 
     loader.load(url, (gltf) => {
-      // Remove previous model
-      if (currentGLBModel) {
-        scene.remove(currentGLBModel);
-      }
-      
+      if (currentGLBModel) scene.remove(currentGLBModel);
       const model = gltf.scene;
-      model.position.y = 0; // API usually provides the neck correctly
-      
-      // Adjust scale to not be enormous
-      model.scale.set(0.3, 0.3, 0.3);
-      
+      model.position.y = 0;
+      model.scale.set(0.15, 0.15, 0.15);
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          if(child.material) {
-            child.material.side = THREE.DoubleSide;
-          }
+          if(child.material) child.material.side = THREE.DoubleSide;
         }
       });
-      
       scene.add(model);
       currentGLBModel = model;
-      if(loadingOverlay) loadingOverlay.style.display = 'none';
-
+      if(overlay) overlay.style.display = 'none';
     }, undefined, (error) => {
-      console.error('An error happened loading the remote GLB', error);
-      if(loadingOverlay) loadingOverlay.textContent = 'Failed to load model.';
+      console.error('Error loading GLB:', error);
+      if(overlay) overlay.textContent = 'Failed to load model.';
     });
   }
 
-  // Load the first preview 
   fetch3DModel();
 
-  // Animation Loop
-  let reqId;
+  // Animation
   function animate() {
-    reqId = requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
   }
