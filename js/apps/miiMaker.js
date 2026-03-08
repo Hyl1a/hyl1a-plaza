@@ -375,122 +375,33 @@ function initMiiMaker(container) {
     }
   });
 
-  // --- THREE.JS SCENE ---
+  // --- MII PREVIEW (Full body 2D render from API) ---
   const canvasArea = container.querySelector('#mii-canvas-container');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(35, canvasArea.clientWidth / canvasArea.clientHeight, 0.1, 500);
-  camera.position.set(0, 5, 18);
-
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-  renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight);
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.setClearColor(0x000000, 0);
-  canvasArea.appendChild(renderer.domElement);
-
-  // Lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-  dir.position.set(3, 10, 8);
-  dir.castShadow = true;
-  scene.add(dir);
-  const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
-  backLight.position.set(-5, 3, -5);
-  scene.add(backLight);
-
-  // Platform disc
-  const padGeo = new THREE.CylinderGeometry(3, 3, 0.12, 48);
-  const padMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.7, metalness: 0.1 });
-  const pad = new THREE.Mesh(padGeo, padMat);
-  pad.position.y = -0.06;
-  pad.receiveShadow = true;
-  scene.add(pad);
-
-  // Controls
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enablePan = false;
-  controls.enableZoom = true;
-  controls.minDistance = 5;
-  controls.maxDistance = 40;
-  controls.target.set(0, 4, 0);
-
-  // Resize
-  const onResize = () => {
-    if (!container.parentNode) return;
-    const w = canvasArea.clientWidth; const h = canvasArea.clientHeight;
-    if (w === 0 || h === 0) return;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  };
-  window.addEventListener('resize', onResize);
-  setTimeout(onResize, 50);
-
-  // GLTF Loader
-  const loader = new THREE.GLTFLoader();
+  
+  // Create the preview image
+  const previewImg = document.createElement('img');
+  previewImg.id = 'mii-preview-img';
+  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.3s;';
+  previewImg.alt = 'Mii Preview';
+  canvasArea.appendChild(previewImg);
 
   function fetch3DModel() {
     const overlay = document.getElementById('mii-loading-overlay');
     if(overlay) overlay.style.display = 'flex';
 
     const b64 = encodeMiiBase64();
-    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=face`;
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=512&clothesColor=default&shaderType=wiiu`;
 
-    loader.load(url, (gltf) => {
-      try {
-        // Remove previous model
-        if (currentGLBModel) scene.remove(currentGLBModel);
-
-        const model = gltf.scene;
-
-        // Auto-scale: measure the model and fit it to ~5 units tall
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
-        const targetHeight = 5;
-        const s = targetHeight / size.y;
-        model.scale.set(s, s, s);
-
-        // Center on platform
-        const box2 = new THREE.Box3().setFromObject(model);
-        model.position.y = -box2.min.y + 0.15; // sit on platform
-        model.position.x = -center.x * s;
-        model.position.z = -center.z * s;
-
-        model.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            if(child.material) child.material.side = THREE.DoubleSide;
-          }
-        });
-
-        scene.add(model);
-        currentGLBModel = model;
-
-        // Center camera on model
-        const finalBox = new THREE.Box3().setFromObject(model);
-        const finalCenter = finalBox.getCenter(new THREE.Vector3());
-        controls.target.set(0, finalCenter.y, 0);
-        controls.update();
-
-        if(overlay) overlay.style.display = 'none';
-      } catch(e) {
-        console.error('Mii render error:', e);
-        if(overlay) { overlay.textContent = 'Error: ' + e.message; overlay.style.color = '#ff5555'; }
-      }
-    }, undefined, (error) => {
-      console.error('Error loading GLB:', error);
-      if(overlay) overlay.textContent = 'Failed to load model.';
-    });
+    previewImg.onload = () => {
+      if(overlay) overlay.style.display = 'none';
+      previewImg.style.opacity = '1';
+    };
+    previewImg.onerror = () => {
+      if(overlay) overlay.textContent = 'Failed to load Mii preview.';
+    };
+    previewImg.style.opacity = '0.5';
+    previewImg.src = url;
   }
 
   fetch3DModel();
-
-  // Animation
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  animate();
 }

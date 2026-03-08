@@ -1,59 +1,58 @@
 const fs = require('fs');
 
-async function testEndpoint(name, url) {
+async function test(params, label) {
+  const base = 'https://mii-unsecure.ariankordi.net/miis/image.glb?data=AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn&verifyCharInfo=0';
+  const url = base + '&' + params;
   try {
     const r = await fetch(url);
     if (r.ok) {
-      const ct = r.headers.get('content-type') || '';
       const buf = await r.arrayBuffer();
-      if (ct.includes('octet') || ct.includes('gltf') || buf.byteLength < 200000) {
-        try {
-          const data = Buffer.from(buf);
-          const magic = data.toString('ascii', 0, 4);
-          if (magic === 'glTF') {
-            const jsonLength = data.readUInt32LE(12);
-            const jsonStr = data.toString('utf8', 20, 20 + jsonLength);
-            const json = JSON.parse(jsonStr);
-            const meshNames = (json.meshes || []).map(m => m.name || '(unnamed)');
-            console.log(`${name}: OK ${buf.byteLength}b GLB | ${meshNames.length} meshes: [${meshNames.join(', ')}]`);
-            return;
-          }
-        } catch(e) {}
+      const data = Buffer.from(buf);
+      const magic = data.toString('ascii', 0, 4);
+      if (magic === 'glTF') {
+        const jsonLength = data.readUInt32LE(12);
+        const jsonStr = data.toString('utf8', 20, 20 + jsonLength);
+        const json = JSON.parse(jsonStr);
+        const meshNames = (json.meshes || []).map(m => m.name);
+        console.log(`[${label}] ${buf.byteLength}b | ${meshNames.length} meshes: ${meshNames.join(', ')}`);
+        // Save if body meshes found (more than 5 meshes or different size)
+        if (meshNames.length > 5 || buf.byteLength > 80000) {
+          const fn = `glb_${label.replace(/[^a-z0-9]/gi, '_')}.glb`;
+          fs.writeFileSync(fn, data);
+          console.log(`   >>> SAVED ${fn} (DIFFERENT!)`);
+        }
+      } else {
+        console.log(`[${label}] ${buf.byteLength}b | NOT GLB`);
       }
-      console.log(`${name}: ${r.status} ${buf.byteLength}b ct="${ct}" (not GLB)`);
     } else {
       const txt = await r.text();
-      console.log(`${name}: ${r.status} ${txt.substring(0, 60)}`);
+      console.log(`[${label}] HTTP ${r.status}: ${txt.substring(0, 50)}`);
     }
   } catch(e) {
-    console.log(`${name}: FAILED ${e.message.substring(0, 60)}`);
+    console.log(`[${label}] ERROR: ${e.message.substring(0, 50)}`);
   }
 }
 
-const miiData = 'AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn';
-
 async function main() {
-  // Try various known FFL-Testing servers
-  await testEndpoint('ariankordi-face',     `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${miiData}&type=face&shaderType=wiiu`);
-  await testEndpoint('ariankordi-all_body', `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${miiData}&type=all_body&shaderType=wiiu`);
+  // Test different combos of drawStageMode and bodyType 
+  const drawModes = ['all', 'body_only', 'body_inv_depth_mask'];
+  const bodyTypes = ['wiiu', 'switch', '3ds', 'ffliconwithbody'];
+  const types = ['face', 'all_body', 'all_body_sugar'];
   
-  // Try without shaderType to see if default includes body
-  await testEndpoint('ariankordi-no-shader', `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${miiData}&type=all_body`);
+  for (const dm of drawModes) {
+    for (const bt of bodyTypes) {
+      for (const t of types) {
+        await test(`type=${t}&shaderType=wiiu&bodyType=${bt}&drawStageMode=${dm}`, `${t}_${bt}_${dm}`);
+      }
+    }
+  }
   
-  // Try with instanceCount and clothesColor - maybe these trigger body
-  await testEndpoint('ariankordi-clothes',   `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${miiData}&type=face&clothesColor=default&instanceCount=1`);
+  // Also test without shaderType
+  await test('type=all_body&bodyType=wiiu&drawStageMode=all', 'allbody_wiiu_all_noshader');
+  await test('type=all_body&bodyType=ffliconwithbody&drawStageMode=all', 'allbody_ffliconwithbody_all');
   
-  // Try nn-cdn which some projects use
-  await testEndpoint('studio-api',           `https://studio.mii.nintendo.com/miis/image.png?data=${miiData}&type=all_body&width=512`);
-  
-  // Try the secure version
-  await testEndpoint('ariankordi-secure',    `https://mii.ariankordi.net/miis/image.glb?data=${miiData}&type=all_body&shaderType=wiiu`);
-
-  // Try mii-renderer.nxw.pw
-  await testEndpoint('nxw-renderer',         `https://mii-renderer.nxw.pw/miis/image.glb?data=${miiData}&type=all_body&shaderType=wiiu`);
-  
-  // Try without verifyCharInfo
-  await testEndpoint('ariankordi-noverify',  `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${miiData}&type=all_body&shaderType=wiiu&verifyCharInfo=0`);
+  // Try clothesColor and pantsColor
+  await test('type=all_body&shaderType=wiiu&bodyType=wiiu&drawStageMode=all&clothesColor=red&pantsColor=blue', 'all_body_with_clothes');
 }
 
-main();
+main().then(() => console.log('\nDONE'));
