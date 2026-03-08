@@ -375,71 +375,47 @@ function initMiiMaker(container) {
     }
   });
 
-  // --- MII PREVIEW (Full body 2D render from API + drag-to-rotate) ---
+  // --- MII PREVIEW (Full body 2D render from API + arrow rotation) ---
   const canvasArea = container.querySelector('#mii-canvas-container');
+  canvasArea.style.position = 'relative';
   
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
-  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;cursor:grab;user-select:none;-webkit-user-drag:none;';
+  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
 
+  // Arrow buttons
+  const arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);color:#fff;border:none;font-size:28px;width:40px;height:60px;cursor:pointer;border-radius:8px;z-index:5;transition:background 0.2s;display:flex;align-items:center;justify-content:center;';
+  
+  const leftBtn = document.createElement('button');
+  leftBtn.innerHTML = '◀';
+  leftBtn.style.cssText = arrowStyle + 'left:6px;';
+  leftBtn.title = 'Tourner à gauche';
+  leftBtn.onmouseenter = () => leftBtn.style.background = 'rgba(255,255,255,0.3)';
+  leftBtn.onmouseleave = () => leftBtn.style.background = 'rgba(255,255,255,0.15)';
+  canvasArea.appendChild(leftBtn);
+
+  const rightBtn = document.createElement('button');
+  rightBtn.innerHTML = '▶';
+  rightBtn.style.cssText = arrowStyle + 'right:6px;';
+  rightBtn.title = 'Tourner à droite';
+  rightBtn.onmouseenter = () => rightBtn.style.background = 'rgba(255,255,255,0.3)';
+  rightBtn.onmouseleave = () => rightBtn.style.background = 'rgba(255,255,255,0.15)';
+  canvasArea.appendChild(rightBtn);
+
   // Rotation state
-  let rotationY = 0; // degrees
-  let isDragging = false;
-  let dragStartX = 0;
-  let dragStartRotation = 0;
-  let renderTimeout = null;
+  let rotationY = 0;
 
-  // Drag handlers
-  canvasArea.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartRotation = rotationY;
-    previewImg.style.cursor = 'grabbing';
-    e.preventDefault();
-  });
-  
-  window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - dragStartX;
-    rotationY = dragStartRotation + dx * 0.8; // sensitivity
-    // Debounce API calls
-    clearTimeout(renderTimeout);
-    renderTimeout = setTimeout(() => fetchMiiRender(), 150);
-  });
-  
-  window.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      previewImg.style.cursor = 'grab';
-    }
-  });
-
-  // Touch support
-  canvasArea.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    dragStartX = e.touches[0].clientX;
-    dragStartRotation = rotationY;
-    e.preventDefault();
-  }, { passive: false });
-
-  window.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    const dx = e.touches[0].clientX - dragStartX;
-    rotationY = dragStartRotation + dx * 0.8;
-    clearTimeout(renderTimeout);
-    renderTimeout = setTimeout(() => fetchMiiRender(), 150);
-  });
-
-  window.addEventListener('touchend', () => { isDragging = false; });
+  leftBtn.addEventListener('click', () => { rotationY -= 30; fetchMiiRender(); });
+  rightBtn.addEventListener('click', () => { rotationY += 30; fetchMiiRender(); });
 
   function fetchMiiRender() {
     const overlay = document.getElementById('mii-loading-overlay');
     const b64 = encodeMiiBase64();
-    const angle = ((rotationY % 360) + 360) % 360; // normalize 0-360
+    const angle = ((rotationY % 360) + 360) % 360;
     const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=512&clothesColor=default&shaderType=wiiu&characterYRotate=${Math.round(angle)}`;
 
     const newImg = new Image();
