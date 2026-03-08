@@ -148,7 +148,17 @@ async function initMiiPlaza(container) {
     
     loader.load(url, (gltf) => {
       const model = gltf.scene;
-      model.scale.set(0.12, 0.12, 0.12);
+
+      // Auto-fit: compute bounding box and scale to a target height
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const targetHeight = 3;
+      const scaleFactor = targetHeight / size.y;
+      model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+      // Align feet to y=0
+      const box2 = new THREE.Box3().setFromObject(model);
+      model.position.y = -box2.min.y;
       
       model.traverse((child) => {
         if (child.isMesh) {

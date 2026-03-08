@@ -378,8 +378,8 @@ function initMiiMaker(container) {
   // --- THREE.JS SCENE ---
   const canvasArea = container.querySelector('#mii-canvas-container');
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(30, canvasArea.clientWidth / canvasArea.clientHeight, 0.1, 100);
-  camera.position.set(0, 10, 30);
+  const camera = new THREE.PerspectiveCamera(35, canvasArea.clientWidth / canvasArea.clientHeight, 0.1, 500);
+  camera.position.set(0, 5, 18);
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
   renderer.setSize(canvasArea.clientWidth, canvasArea.clientHeight);
@@ -388,17 +388,20 @@ function initMiiMaker(container) {
   canvasArea.appendChild(renderer.domElement);
 
   // Lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
-  dir.position.set(3, 8, 5);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(3, 10, 8);
+  dir.castShadow = true;
   scene.add(dir);
-  scene.add(new THREE.DirectionalLight(0xffffff, 0.25).position.set(-5, 2, -3) && new THREE.DirectionalLight(0xffffff, 0.25));
+  const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+  backLight.position.set(-5, 3, -5);
+  scene.add(backLight);
 
   // Platform disc
-  const padGeo = new THREE.CylinderGeometry(2.5, 2.5, 0.15, 32);
-  const padMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.8 });
+  const padGeo = new THREE.CylinderGeometry(3, 3, 0.12, 48);
+  const padMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.7, metalness: 0.1 });
   const pad = new THREE.Mesh(padGeo, padMat);
-  pad.position.y = -0.08;
+  pad.position.y = -0.06;
   pad.receiveShadow = true;
   scene.add(pad);
 
@@ -406,9 +409,9 @@ function initMiiMaker(container) {
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;
   controls.enableZoom = true;
-  controls.minDistance = 10;
-  controls.maxDistance = 50;
-  controls.target.set(0, 5, 0);
+  controls.minDistance = 5;
+  controls.maxDistance = 40;
+  controls.target.set(0, 4, 0);
 
   // Resize
   const onResize = () => {
@@ -435,8 +438,21 @@ function initMiiMaker(container) {
     loader.load(url, (gltf) => {
       if (currentGLBModel) scene.remove(currentGLBModel);
       const model = gltf.scene;
-      model.position.y = 0;
-      model.scale.set(0.15, 0.15, 0.15);
+
+      // Auto-fit: compute bounding box and scale to a target height of 8 units
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const targetHeight = 8;
+      const scaleFactor = targetHeight / size.y;
+      model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+      // Re-center: put feet on the platform
+      const box2 = new THREE.Box3().setFromObject(model);
+      model.position.y = -box2.min.y; // align feet to y=0
+      model.position.x = -center.x * scaleFactor;
+      model.position.z = -center.z * scaleFactor;
+
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
@@ -446,6 +462,11 @@ function initMiiMaker(container) {
       });
       scene.add(model);
       currentGLBModel = model;
+
+      // Adjust camera target to center of the model
+      controls.target.set(0, targetHeight / 2, 0);
+      controls.update();
+
       if(overlay) overlay.style.display = 'none';
     }, undefined, (error) => {
       console.error('Error loading GLB:', error);
