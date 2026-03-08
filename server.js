@@ -11,9 +11,6 @@ app.use(cors());
 app.use(express.json());
 // Serve the static frontend files
 app.use(express.static(path.join(__dirname)));
-// Serve Mii Creator app static files
-app.use('/mii-creator', express.static(path.join(__dirname, 'mii-creator', 'public')));
-
 // Fallback to index.html for SPA-like behavior if needed (Optional)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

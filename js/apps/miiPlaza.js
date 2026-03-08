@@ -101,27 +101,24 @@ async function initMiiPlaza(container) {
 
   // Populate Avatars
   const miiEntities = [];
+  const loader = new THREE.GLTFLoader();
 
   avatars.forEach(av => {
-    let mesh;
-    if (window.MiiBuilder) {
-      mesh = window.MiiBuilder.buildAvatar(av.visual_data);
-    } else {
-      mesh = new THREE.Group(); // fallback
-    }
+    // Parent group for positioning
+    const group = new THREE.Group();
     
     // Random position in circle
     const angle = Math.random() * Math.PI * 2;
     const radius = Math.random() * 15;
-    mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-    mesh.rotation.y = Math.random() * Math.PI * 2;
-    scene.add(mesh);
+    group.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+    group.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(group);
 
     // Create 2D Label
     const label = document.createElement('div');
     label.textContent = av.username;
     label.style.position = 'absolute';
-    label.style.background = 'rgba(255,255,255,0.8)';
+    label.style.background = 'rgba(255,255,255,0.85)';
     label.style.padding = '4px 8px';
     label.style.borderRadius = '12px';
     label.style.fontSize = '12px';
@@ -129,16 +126,42 @@ async function initMiiPlaza(container) {
     label.style.transform = 'translate(-50%, -50%)';
     label.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
     label.style.color = '#333';
+    label.style.display = 'none'; // hide until first render
     labelsArea.appendChild(label);
 
-    miiEntities.push({
-      mesh,
+    const miiData = {
+      group,
       label,
-      targetX: mesh.position.x,
-      targetZ: mesh.position.z,
-      state: 'idle', // idle, walk
-      timer: Math.random() * 100
-    });
+      targetX: group.position.x,
+      targetZ: group.position.z,
+      state: 'idle', // idle, move
+      timer: Math.random() * 100,
+      bob: Math.random() * Math.PI * 2,
+      modelLoaded: false,
+      modelMesh: null
+    };
+    miiEntities.push(miiData);
+
+    // Fetch Native Authentic GLB
+    const b64 = av.visual_data || "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.glb?data=${encodeURIComponent(b64)}&verifyCharInfo=0&shaderType=wiiu&type=face`;
+    
+    loader.load(url, (gltf) => {
+      const model = gltf.scene;
+      model.scale.set(1.5, 1.5, 1.5);
+      
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if(child.material) child.material.side = THREE.DoubleSide;
+        }
+      });
+      
+      group.add(model);
+      miiData.modelMesh = model;
+      miiData.modelLoaded = true;
+    }, undefined, (err) => console.error("Could not load Mii GLB:", err));
   });
 
   // Animation Loop
@@ -153,11 +176,17 @@ async function initMiiPlaza(container) {
     // Animate avatars
     miiEntities.forEach(ent => {
       ent.timer--;
+      ent.bob += 0.05;
+
+      // Bobbing floating head animation
+      if (ent.modelLoaded && ent.modelMesh) {
+         ent.modelMesh.position.y = Math.sin(ent.bob) * 0.5 + 4; // float at height 4
+      }
 
       if (ent.timer <= 0) {
         // State switch
         if (ent.state === 'idle') {
-          ent.state = 'walk';
+          ent.state = 'move';
           ent.timer = 100 + Math.random() * 200;
           // Pick new target
           const angle = Math.random() * Math.PI * 2;
@@ -170,59 +199,48 @@ async function initMiiPlaza(container) {
         }
       }
 
-      const ud = ent.mesh.userData;
-
-      if (ent.state === 'walk') {
-        const dx = ent.targetX - ent.mesh.position.x;
-        const dz = ent.targetZ - ent.mesh.position.z;
+      if (ent.state === 'move') {
+        const dx = ent.targetX - ent.group.position.x;
+        const dz = ent.targetZ - ent.group.position.z;
         const dist = Math.sqrt(dx*dx + dz*dz);
         
         if (dist > 0.1) {
           // Move
-          ent.mesh.position.x += (dx/dist) * 0.05;
-          ent.mesh.position.z += (dz/dist) * 0.05;
+          ent.group.position.x += (dx/dist) * 0.05;
+          ent.group.position.z += (dz/dist) * 0.05;
           
-          // Rotate towards target
+          // Rotate towards target smoothly
           const targetRot = Math.atan2(dx, dz);
-          // Simple rotation smoothing
-          ent.mesh.rotation.y += (targetRot - ent.mesh.rotation.y) * 0.1;
-
-          // Walk animation (swing limbs)
-          ud.walkCycle += 0.2;
-          ud.leftLeg.rotation.x = Math.sin(ud.walkCycle) * 0.5;
-          ud.rightLeg.rotation.x = Math.sin(ud.walkCycle + Math.PI) * 0.5;
-          ud.leftArm.rotation.x = Math.sin(ud.walkCycle + Math.PI) * 0.5;
-          ud.rightArm.rotation.x = Math.sin(ud.walkCycle) * 0.5;
+          // Angle wrapping for smooth rotation
+          let diff = targetRot - ent.group.rotation.y;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          ent.group.rotation.y += diff * 0.05;
         } else {
           ent.state = 'idle';
         }
-      } else {
-        // Idle animation (return limbs to normal)
-        ud.walkCycle = 0;
-        ud.leftLeg.rotation.x *= 0.8;
-        ud.rightLeg.rotation.x *= 0.8;
-        ud.leftArm.rotation.x *= 0.8;
-        ud.rightArm.rotation.x *= 0.8;
       }
 
       // Update 2D Label position
-      const vector = new THREE.Vector3();
-      const heightOffset = 6 * (ent.mesh.scale.y); // dynamic depending on config.height
-      vector.setFromMatrixPosition(ent.mesh.matrixWorld);
-      vector.y += heightOffset;
-      vector.project(camera);
+      if (ent.modelLoaded) {
+        const vector = new THREE.Vector3();
+        // Project at the top of the head
+        vector.setFromMatrixPosition(ent.group.matrixWorld);
+        vector.y += 8; // Adjust based on float height + model size
+        vector.project(camera);
 
-      // Map to 2D screen coordinates
-      const x = (vector.x * .5 + .5) * canvasArea.clientWidth;
-      const y = (vector.y * -.5 + .5) * canvasArea.clientHeight;
+        // Map to 2D screen coordinates
+        const x = (vector.x * .5 + .5) * canvasArea.clientWidth;
+        const y = (vector.y * -.5 + .5) * canvasArea.clientHeight;
 
-      // Only show if in front of camera
-      if (vector.z < 1) {
-        ent.label.style.display = 'block';
-        ent.label.style.left = `${x}px`;
-        ent.label.style.top = `${y}px`;
-      } else {
-        ent.label.style.display = 'none';
+        // Show if in front of camera
+        if (vector.z < 1) {
+          ent.label.style.display = 'block';
+          ent.label.style.left = `${x}px`;
+          ent.label.style.top = `${y}px`;
+        } else {
+          ent.label.style.display = 'none';
+        }
       }
     });
 
