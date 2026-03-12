@@ -2,8 +2,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry) {
-      window.AppRegistry['miiMaker'].render = function(container) {
-        initMiiMaker(container);
+      window.AppRegistry['miiMaker'].render = async function(container) {
+        if (typeof AudioManager !== 'undefined') AudioManager.isExternalMusicPlaying = true;
+        await initMiiMaker(container);
       };
     }
   }, 100);
@@ -46,7 +47,7 @@ const FACE_STYLES = makeStyles(11);
 let miiInstance = null;
 let currentGLBModel = null;
 
-function initMiiMaker(container) {
+async function initMiiMaker(container) {
   if (!window.Mii) {
     setTimeout(() => initMiiMaker(container), 100);
     return;
@@ -67,7 +68,7 @@ function initMiiMaker(container) {
     </div>
     <div class="mii-body">
       <div class="mii-canvas-area" id="mii-canvas-container">
-        <div id="mii-loading-overlay">Loading 3D Model...</div>
+        <div id="mii-loading-overlay">Loading Preview...</div>
       </div>
       <div class="mii-controls-area">
         <div class="mii-subtabs">
@@ -78,6 +79,15 @@ function initMiiMaker(container) {
         <div class="mii-panel-content" id="mii-panel"></div>
         <button class="mii-save-btn" id="btn-save">Save & Quit</button>
       </div>
+    </div>
+    <div id="mii-tutorial-bubble" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000; animation: bounce 2s infinite;">
+      Bienvenue ! Commençons par créer votre Mii.
+      <style>
+        @keyframes bounce {
+          0%, 100% { transform: translate(-50%, 0); }
+          50% { transform: translate(-50%, -10px); }
+        }
+      </style>
     </div>
   `;
 
@@ -90,18 +100,27 @@ function initMiiMaker(container) {
     miiMusic.volume = 0.3;
     miiMusic.loop = true;
 
-    if (typeof AudioManager !== 'undefined' && AudioManager.isPlayingMusic) {
-      mainMusicWasPlaying = true;
-      AudioManager.fadeOut(800).then(() => {
-        miiMusic.play().catch(() => {});
-      });
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.isExternalMusicPlaying = true;
+      if (AudioManager.isPlayingMusic) {
+        mainMusicWasPlaying = true;
+        AudioManager.fadeOut(800).then(() => {
+          miiMusic.play().catch(() => { });
+        });
+      } else {
+        mainMusicWasPlaying = false;
+        miiMusic.play().catch(() => { });
+      }
     } else {
       mainMusicWasPlaying = false;
-      miiMusic.play().catch(() => {});
+      miiMusic.play().catch(() => { });
     }
   }
 
   function stopMiiMusic() {
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.isExternalMusicPlaying = false;
+    }
     if (miiMusic) {
       miiMusic.pause();
       miiMusic.currentTime = 0;
@@ -130,8 +149,15 @@ function initMiiMaker(container) {
     }
   });
 
-  // Close
+  // Close Logic with Forced Creation Check
+  const currentUser = window.Auth ? window.Auth.getCurrentUser() : null;
+  const isForcedCreation = currentUser && window.Auth ? !(await window.Auth.hasMii(currentUser)) : false;
+
   container.querySelector('.mii-close-btn').addEventListener('click', () => {
+    if (isForcedCreation) {
+      alert("Veuillez d'abord créer et sauvegarder votre Mii !");
+      return;
+    }
     stopMiiMusic();
     container.classList.add('closing');
     setTimeout(() => { if(container.parentNode) container.parentNode.removeChild(container); }, 300);
@@ -140,6 +166,41 @@ function initMiiMaker(container) {
   // State
   let activeCategory = 'face';
   let activeSubtab = 'type';
+
+  // --- TUTORIAL LOGIC ---
+  const tutorialBubble = container.querySelector('#mii-tutorial-bubble');
+  
+  if (isForcedCreation) {
+    tutorialBubble.style.display = 'block';
+  }
+
+  function updateTutorialMessage() {
+    if (!isForcedCreation) return;
+    let msg = "Bienvenue !";
+    if (activeCategory === 'face') msg = "Choisissez la forme du visage et le teint qui vous correspondent !";
+    else if (activeCategory === 'hair') msg = "Trouvez votre coiffure idéale et sa couleur.";
+    else if (activeCategory === 'eyebrows') msg = "Les sourcils donnent beaucoup de personnalité !";
+    else if (activeCategory === 'eyes') msg = "Des yeux perçants ou endormis ?";
+    else if (activeCategory === 'nose') msg = "Un petit nez retroussé ou imposant ?";
+    else if (activeCategory === 'mouth') msg = "Veuillez choisir une bouche à votre style !";
+    else if (activeCategory === 'glasses') msg = "Besoin de lunettes ?";
+    else if (activeCategory === 'body') msg = "Ajustez votre taille, votre corpulence et votre couleur préférée !";
+    else if (activeCategory === 'profile') msg = "Enfin, donnez un nom à votre Mii pour sauvegarder !";
+    
+    if (activeCategory !== 'body' && activeCategory !== 'profile') {
+        if (activeSubtab === 'color') msg += " (N'oubliez pas les couleurs !)";
+        if (activeSubtab === 'position') msg += " (Ajustez la position finement !)";
+    }
+    
+    tutorialBubble.innerHTML = msg + `
+      <style>
+        @keyframes bounce {
+          0%, 100% { transform: translate(-50%, 0); }
+          50% { transform: translate(-50%, -10px); }
+        }
+      </style>
+    `;
+  }
 
   // Default Mii
   const defaultMiiStr = "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
@@ -177,6 +238,7 @@ function initMiiMaker(container) {
   // --- RENDER PANEL ---
   function renderPanel() {
     panel.innerHTML = '';
+    updateTutorialMessage();
 
     if (activeCategory === 'profile') {
       renderProfilePanel();
@@ -215,7 +277,6 @@ function initMiiMaker(container) {
       btn.style.cssText = 'padding:4px;display:flex;align-items:center;justify-content:center;min-height:80px;min-width:80px;';;
       btn.title = item.n;
 
-      // Create a temporary Mii with this style applied for the thumbnail
       const tempMii = Object.assign(Object.create(Object.getPrototypeOf(miiInstance)), miiInstance);
       tempMii[stateKey] = item.v;
       try {
@@ -333,7 +394,6 @@ function initMiiMaker(container) {
     label.textContent = 'Body Settings';
     panel.appendChild(label);
 
-    // Height slider
     const hg = document.createElement('div'); hg.className = 'mii-slider-group';
     const hv = miiInstance.height || 64;
     hg.innerHTML = `<div class="mii-slider-label"><span>Height</span><span id="val-height">${hv}</span></div>
@@ -345,7 +405,6 @@ function initMiiMaker(container) {
     });
     panel.appendChild(hg);
 
-    // Build slider
     const bg = document.createElement('div'); bg.className = 'mii-slider-group';
     const bv = miiInstance.build || 64;
     bg.innerHTML = `<div class="mii-slider-label"><span>Build</span><span id="val-build">${bv}</span></div>
@@ -357,7 +416,6 @@ function initMiiMaker(container) {
     });
     panel.appendChild(bg);
 
-    // Shirt Color
     const sl = document.createElement('div'); sl.className = 'mii-section-label'; sl.textContent = 'Shirt Color'; sl.style.marginTop = '20px'; panel.appendChild(sl);
     const grid = document.createElement('div'); grid.className = 'mii-color-grid';
     SHIRTS.forEach((c, idx) => {
@@ -375,14 +433,29 @@ function initMiiMaker(container) {
     panel.appendChild(grid);
   }
 
+  // Profile data state
+  const currentProfile = {
+    first_name: "",
+    last_name: "",
+    username: currentUser || "",
+    birthday: "",
+    bio: ""
+  };
+
   function renderProfilePanel() {
     panel.innerHTML = `
-      <div class="mii-control-group"><label>First Name</label><input type="text" class="mii-input" id="inp-first" placeholder="e.g. Luigi"></div>
-      <div class="mii-control-group"><label>Last Name</label><input type="text" class="mii-input" id="inp-last" placeholder="e.g. Mario"></div>
-      <div class="mii-control-group"><label>Nickname</label><input type="text" class="mii-input" id="inp-nick" placeholder="e.g. Jumpman"></div>
-      <div class="mii-control-group"><label>Birthday</label><input type="date" class="mii-input" id="inp-birth"></div>
-      <div class="mii-control-group"><label>Short Bio</label><textarea class="mii-textarea" id="inp-bio" placeholder="It's-a me!"></textarea></div>
+      <div class="mii-control-group"><label>First Name</label><input type="text" class="mii-input" id="inp-first" placeholder="e.g. Luigi" value="${currentProfile.first_name}"></div>
+      <div class="mii-control-group"><label>Last Name</label><input type="text" class="mii-input" id="inp-last" placeholder="e.g. Mario" value="${currentProfile.last_name}"></div>
+      <div class="mii-control-group"><label>Nickname (Account)</label><input type="text" class="mii-input" id="inp-nick" value="${currentProfile.username}" readonly style="background:rgba(255,255,255,0.05); color:#888;"></div>
+      <div class="mii-control-group"><label>Birthday</label><input type="date" class="mii-input" id="inp-birth" value="${currentProfile.birthday}"></div>
+      <div class="mii-control-group"><label>Short Bio</label><textarea class="mii-textarea" id="inp-bio" placeholder="It's-a me!">${currentProfile.bio}</textarea></div>
     `;
+
+    // Listeners to update state in real-time
+    panel.querySelector('#inp-first').addEventListener('input', e => currentProfile.first_name = e.target.value.trim());
+    panel.querySelector('#inp-last').addEventListener('input', e => currentProfile.last_name = e.target.value.trim());
+    panel.querySelector('#inp-birth').addEventListener('change', e => currentProfile.birthday = e.target.value);
+    panel.querySelector('#inp-bio').addEventListener('input', e => currentProfile.bio = e.target.value.trim());
   }
 
   // Initial render
@@ -399,15 +472,11 @@ function initMiiMaker(container) {
 
   // Profile data getter
   const getProfileData = () => ({
-    first_name: (container.querySelector('#inp-first')?.value||'').trim(),
-    last_name:  (container.querySelector('#inp-last')?.value||'').trim(),
-    username:   (container.querySelector('#inp-nick')?.value||'').trim(),
-    birthday:   (container.querySelector('#inp-birth')?.value||''),
-    bio:        (container.querySelector('#inp-bio')?.value||'').trim(),
+    ...currentProfile,
     visual_base64: encodeMiiBase64()
   });
 
-  // Save
+  // Save with Forced Creation Bypass
   container.querySelector('#btn-save').addEventListener('click', async () => {
     const btn = container.querySelector('#btn-save');
     const data = getProfileData();
@@ -415,11 +484,26 @@ function initMiiMaker(container) {
     if (data.first_name) miiInstance.miiName = data.first_name;
     try {
       btn.textContent = "Saving..."; btn.disabled = true;
-      const res = await fetch('/api/avatars', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      const apiUrl = (window.Auth && window.Auth.API_BASE) ? `${window.Auth.API_BASE}/api/avatars` : '/api/avatars';
+      const res = await fetch(apiUrl, { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body:JSON.stringify(data),
+        mode: 'cors'
+      });
       if (res.ok) {
         if (typeof AudioManager !== 'undefined') AudioManager.playPop();
         btn.textContent = "Saved!";
-        setTimeout(() => container.querySelector('.mii-close-btn').click(), 1000);
+        
+        // Stop music and close correctly
+        stopMiiMusic();
+        
+        container.classList.add('closing');
+        setTimeout(() => { 
+            if(container.parentNode) container.parentNode.removeChild(container);
+            // Reload if it was the first time creating a Mii to unlock the site
+            if (isForcedCreation) window.location.reload();
+        }, 1000);
       } else {
         const e = await res.json(); alert('Error: ' + (e.error||'Server error')); btn.textContent = "Save & Quit"; btn.disabled = false;
       }
@@ -435,36 +519,10 @@ function initMiiMaker(container) {
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
-  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;animation:miiFloat 3s ease-in-out infinite;';
+  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;z-index:1;';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
-
-  // Inject animation keyframes
-  if (!document.getElementById('mii-anim-styles')) {
-    const styleEl = document.createElement('style');
-    styleEl.id = 'mii-anim-styles';
-    styleEl.textContent = `
-      @keyframes miiFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
-      }
-      @keyframes miiBounce {
-        0% { transform: scale(1) translateY(0); }
-        20% { transform: scale(1.06) translateY(-12px); }
-        40% { transform: scale(0.97) translateY(2px); }
-        60% { transform: scale(1.02) translateY(-3px); }
-        80% { transform: scale(0.99) translateY(1px); }
-        100% { transform: scale(1) translateY(0); }
-      }
-      @keyframes miiEntrance {
-        0% { transform: scale(0.3) translateY(40px); opacity: 0; }
-        60% { transform: scale(1.08) translateY(-5px); opacity: 1; }
-        100% { transform: scale(1) translateY(0); opacity: 1; }
-      }
-    `;
-    document.head.appendChild(styleEl);
-  }
 
   // Arrow buttons
   const arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);color:#fff;border:none;font-size:28px;width:40px;height:60px;cursor:pointer;border-radius:8px;z-index:5;transition:background 0.2s;display:flex;align-items:center;justify-content:center;';
@@ -501,10 +559,6 @@ function initMiiMaker(container) {
     newImg.onload = () => {
       previewImg.src = newImg.src;
       previewImg.style.opacity = '1';
-      // Trigger bounce animation
-      previewImg.style.animation = 'none';
-      previewImg.offsetHeight; // force reflow
-      previewImg.style.animation = 'miiBounce 0.5s ease-out, miiFloat 3s ease-in-out 0.5s infinite';
       if(overlay) overlay.style.display = 'none';
     };
     newImg.onerror = () => {
@@ -518,8 +572,6 @@ function initMiiMaker(container) {
   function fetch3DModel() {
     const overlay = document.getElementById('mii-loading-overlay');
     if(overlay) overlay.style.display = 'flex';
-    // Entrance animation on first load
-    previewImg.style.animation = 'miiEntrance 0.6s ease-out forwards';
     fetchMiiRender();
   }
 

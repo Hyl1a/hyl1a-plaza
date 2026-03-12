@@ -39,45 +39,69 @@ const AvatarSystem = {
     `
   },
 
-  init: function() {
+  init: async function() {
     this.container = document.getElementById('avatar-container');
     if (!this.container) return;
     
-    // Spawn 5 avatars
-    for (let i = 0; i < 5; i++) {
-      this.spawnAvatar(i);
+    let avatarsData = [];
+    try {
+      const apiBase = (window.Auth && window.Auth.API_BASE) ? window.Auth.API_BASE : 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/api/avatars`);
+      if (response.ok) {
+        avatarsData = await response.json();
+      }
+    } catch (e) {
+      console.error("Error fetching avatars for plaza:", e);
+    }
+
+    // Spawn at least 5 avatars. Mix saved Miis with random ones if needed.
+    const spawnCount = Math.max(5, avatarsData.length);
+    for (let i = 0; i < spawnCount; i++) {
+        this.spawnAvatar(i, avatarsData[i] || null);
     }
   },
 
-  spawnAvatar: function(id) {
+  spawnAvatar: function(id, miiData) {
     const avatar = document.createElement('div');
     avatar.className = 'avatar';
     
-    const hue = Math.floor(Math.random() * 360);
-    avatar.innerHTML = `
-      <div class="avatar-dialogue">Hello!</div>
-      <div class="avatar-body" style="filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));">
-        <svg viewBox="0 0 60 90" width="60" height="90">
-          <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
-          <path d="M17 46 Q30 41 43 46 L38 84 Q30 88 22 84 Z" fill="hsl(${hue}, 70%, 60%)" />
-          <path d="M20 48 Q30 43 40 48 L35 80 Q30 84 25 80 Z" fill="hsl(${hue}, 70%, 75%)" />
-          <circle cx="30" cy="25" r="20" fill="#e6c2a5" />
-          <circle cx="28" cy="23" r="18" fill="#ffdfc4" />
-          <g class="avatar-face">
-            ${this.faces.normal}
-          </g>
-        </svg>
-      </div>
-    `;
+    if (miiData && miiData.visual_data && miiData.visual_data.visual_base64) {
+      const b64 = miiData.visual_data.visual_base64;
+      const bodyUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=256&shaderType=wiiu`;
+      
+      avatar.innerHTML = `
+        <div class="avatar-dialogue">${miiData.username || 'Mii'}</div>
+        <div class="avatar-body" style="filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));">
+           <img src="${bodyUrl}" style="width: 100px; height: 150px; object-fit: contain;">
+        </div>
+      `;
+    } else {
+      const hue = Math.floor(Math.random() * 360);
+      avatar.innerHTML = `
+        <div class="avatar-dialogue">Hello!</div>
+        <div class="avatar-body" style="filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));">
+          <svg viewBox="0 0 60 90" width="60" height="90">
+            <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
+            <path d="M17 46 Q30 41 43 46 L38 84 Q30 88 22 84 Z" fill="hsl(${hue}, 70%, 60%)" />
+            <path d="M20 48 Q30 43 40 48 L35 80 Q30 84 25 80 Z" fill="hsl(${hue}, 70%, 75%)" />
+            <circle cx="30" cy="25" r="20" fill="#e6c2a5" />
+            <circle cx="28" cy="23" r="18" fill="#ffdfc4" />
+            <g class="avatar-face">
+              ${this.faces.normal}
+            </g>
+          </svg>
+        </div>
+      `;
+    }
     
     this.container.appendChild(avatar);
     
-    const obj = { id, el: avatar };
+    const obj = { id, el: avatar, isMii: !!miiData };
     this.avatars.push(obj);
     
     // Interaction logic
     avatar.addEventListener('click', (e) => {
-      e.stopPropagation(); // prevent opening the app window from the tile click
+      e.stopPropagation(); 
       this.interact(obj);
     });
     

@@ -13,10 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initAppTriggers();
   initClockWidget();
   initMusicBar();
+  initAuth(); // Initialize authentication system
 
   // Auto-play music on first user interaction (browser requires user gesture)
   function autoPlayOnce() {
-    if (typeof AudioManager !== 'undefined' && !AudioManager.isPlayingMusic) {
+    if (typeof AudioManager !== 'undefined' && !AudioManager.isPlayingMusic && !AudioManager.isExternalMusicPlaying) {
       AudioManager.playNextMusic();
       // Update music bar display
       const playBtn = document.getElementById('music-play');
@@ -128,7 +129,8 @@ function initAppTriggers() {
     'notes': { title: '📓 Personal Notes', render: null },
     'hallOfFame': { title: '👾 Hall of Fame Arcade', render: null },
     'miiMaker': { title: '👤 Mii Maker', render: null },
-    'miiPlaza': { title: '🏕️ Mii Plaza', render: null }
+    'miiPlaza': { title: '🏕️ Mii Plaza', render: null },
+    'gba': { title: '🎮 Émulateur GBA', render: null }
   };
 
   const dynamicTitle = document.getElementById('dynamic-title-pill');
@@ -189,4 +191,179 @@ function initAppTriggers() {
       }
     });
   });
+}
+
+function initAuth() {
+  const overlay = document.getElementById('auth-overlay');
+  const loginBtn = document.getElementById('btn-login');
+  const registerBtn = document.getElementById('btn-register');
+  const logoutBtn = document.getElementById('btn-logout');
+  const usernameInput = document.getElementById('auth-username');
+  const passwordInput = document.getElementById('auth-password');
+  const errorMsg = document.getElementById('auth-error');
+  const topUsername = document.getElementById('top-username');
+
+  // Check if logged in
+  const currentUser = Auth.getCurrentUser();
+  if (currentUser) {
+    overlay.style.display = 'none';
+    if (topUsername) topUsername.textContent = currentUser;
+    loadUserMii();
+    checkForcedMiiCreation();
+  } else {
+    overlay.style.display = 'flex';
+    generateAuthBackground();
+  }
+
+  async function loadUserMii() {
+    const user = Auth.getCurrentUser();
+    const container = document.getElementById('top-avatar-container');
+    if (!user || !container) return;
+
+    try {
+      const response = await fetch(`${Auth.API_BASE}/api/avatars`);
+      if (!response.ok) return;
+      const avatars = await response.json();
+      const myAvatar = avatars.find(av => av.username.toLowerCase() === user.toLowerCase());
+
+      if (myAvatar && myAvatar.visual_data && myAvatar.visual_data.visual_base64) {
+        const b64 = myAvatar.visual_data.visual_base64;
+        const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=96&shaderType=wiiu`;
+        container.innerHTML = `<img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: contain;">`;
+      } else {
+        container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
+      }
+    } catch (e) {
+      console.error("Error loading user Mii for top bar:", e);
+      container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
+    }
+  }
+
+  async function checkForcedMiiCreation() {
+    const user = Auth.getCurrentUser();
+    if (user) {
+      const hasMii = await Auth.hasMii(user);
+      if (!hasMii) {
+        // Simulate click on the Mii Maker tile
+        setTimeout(() => {
+          const miiMakerTile = document.querySelector('.app-trigger[data-app="miiMaker"]');
+          if (miiMakerTile) miiMakerTile.click();
+        }, 500); // Small delay to let plaza render first
+      }
+    }
+  }
+
+  function generateAuthBackground() {
+    const bgContainer = document.getElementById('auth-bg');
+    if (!bgContainer || bgContainer.children.length > 2) return; // Prevent regenerating
+
+    const faces = [
+      // Normal
+      '<circle cx="22" cy="22" r="2" fill="#333" /><circle cx="38" cy="22" r="2" fill="#333" /><path d="M25 32 Q30 35 35 32" stroke="#333" stroke-width="2" fill="none" />',
+      // Happy
+      '<path d="M18 22 Q22 18 26 22" stroke="#333" stroke-width="2" fill="none" /><path d="M34 22 Q38 18 42 22" stroke="#333" stroke-width="2" fill="none" /><path d="M25 30 Q30 36 35 30 Z" fill="#333" />',
+      // Surprised
+      '<circle cx="22" cy="20" r="3" fill="#333" /><circle cx="38" cy="20" r="3" fill="#333" /><circle cx="30" cy="32" r="4" fill="#333" />',
+      // Sleepy
+      '<path d="M18 22 L26 22" stroke="#333" stroke-width="2" fill="none" /><path d="M34 22 L42 22" stroke="#333" stroke-width="2" fill="none" /><circle cx="30" cy="32" r="2" fill="#333" />'
+    ];
+
+    const phrases = [
+      "J'adore la Wii...",
+      "C'est quoi ton jeu préféré ?",
+      "Il fait beau aujourd'hui !",
+      "Zzz...",
+      "Où est la place Mii ?",
+      "Nintendo !",
+      "Je vais jouer à Pokémon.",
+      "Hello !",
+      "Tu as vu le nouveau thème ?"
+    ];
+
+    for (let i = 0; i < 40; i++) {
+      const hue = Math.floor(Math.random() * 360);
+      const face = faces[Math.floor(Math.random() * faces.length)];
+      
+      const svg = document.createElement('div');
+      svg.className = 'auth-mii';
+      
+      // Random position and animation properties
+      const left = Math.random() * 100;
+      const size = 0.5 + Math.random() * 1.5; // Scale between 0.5 and 2
+      const duration = 10 + Math.random() * 20; // 10 to 30 seconds
+      const delay = Math.random() * -30; // Negative delay to start at random points
+      
+      svg.style.left = `${left}%`;
+      svg.style.transform = `scale(${size})`;
+      svg.style.animationDuration = `${duration}s`;
+      svg.style.animationDelay = `${delay}s`;
+      // Small random z-index so they overlap interestingly
+      svg.style.zIndex = Math.floor(Math.random() * 10);
+      
+      // Randomly decide if this Mii gets a bubble (20% chance)
+      let bubbleHtml = '';
+      if (Math.random() > 0.8) {
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+        const bubbleDelay = Math.random() * 5; // offset bubble animation
+        bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${phrase}</div>`;
+      }
+      
+      svg.innerHTML = `
+        ${bubbleHtml}
+        <svg viewBox="0 0 60 90" width="60" height="90" style="filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));">
+          <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
+          <path d="M17 46 Q30 41 43 46 L38 84 Q30 88 22 84 Z" fill="hsl(${hue}, 70%, 60%)" />
+          <path d="M20 48 Q30 43 40 48 L35 80 Q30 84 25 80 Z" fill="hsl(${hue}, 70%, 75%)" />
+          <circle cx="30" cy="25" r="20" fill="#e6c2a5" />
+          <circle cx="28" cy="23" r="18" fill="#ffdfc4" />
+          <g class="avatar-face">
+            ${face}
+          </g>
+        </svg>
+      `;
+      bgContainer.appendChild(svg);
+    }
+  }
+
+  function handleAuthResponse(res) {
+    if (res.success) {
+      errorMsg.style.display = 'none';
+      errorMsg.style.color = '#7eff7e'; // green success
+      errorMsg.textContent = res.message;
+      
+      // Short delay for user feedback on successful registration/login
+      setTimeout(() => {
+        const user = Auth.getCurrentUser();
+        if (user) {
+          overlay.style.display = 'none';
+          if (topUsername) topUsername.textContent = user;
+          checkForcedMiiCreation();
+        }
+      }, 500);
+    } else {
+      errorMsg.style.color = '#ff6b6b';
+      errorMsg.style.display = 'block';
+      errorMsg.textContent = res.message;
+    }
+  }
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      const res = Auth.login(usernameInput.value, passwordInput.value);
+      handleAuthResponse(res);
+    });
+  }
+
+  if (registerBtn) {
+    registerBtn.addEventListener('click', () => {
+      const res = Auth.register(usernameInput.value, passwordInput.value);
+      handleAuthResponse(res);
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      Auth.logout();
+    });
+  }
 }

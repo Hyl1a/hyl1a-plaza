@@ -32,6 +32,7 @@ const AudioManager = {
   isPlayingMusic: false,
   currentMusicAudio: null,
   currentTrackIndex: -1,
+  isExternalMusicPlaying: false, // Flag for Mii Maker etc.
 
   // Sound file mapping
   soundFiles: {

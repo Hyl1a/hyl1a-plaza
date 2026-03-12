@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #game {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game">Loading Emulator...</div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const romUrl = urlParams.get('rom');
+        let gameName = urlParams.get('name') || 'Unknown Game';
+        
+        // Isolate save states by user profile
+        const currentUser = localStorage.getItem('nostalgia_current_user') || 'Guest';
+        gameName = `${currentUser}_${gameName}`;
+
+        if (romUrl) {
+            window.EJS_player = '#game';
+            window.EJS_core = 'mgba'; // GBA
+            window.EJS_gameUrl = romUrl;
+            window.EJS_gameName = gameName; // Ensures save states are tied to the specific game AND user
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+            window.EJS_startOnLoaded = true;
+            
+            // Forcer la sauvegarde dans le navigateur au lieu de télécharger un fichier
+            window.EJS_defaultOptions = {
+                'save-state-location': 'browser'
+            };
+            
+            // Forcer l'écriture automatique de la sauvegarde (SRAM) toutes les 5 secondes
+            // Cela évite de perdre la progression en cas de rafraîchissement soudain
+            window.EJS_fixedSaveInterval = 5000;
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
+            document.body.appendChild(script);
+        } else {
+            document.getElementById('game').innerText = "No ROM provided!";
+        }
+    </script>
+</body>
+
+</html>

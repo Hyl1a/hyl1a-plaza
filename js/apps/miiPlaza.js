@@ -152,7 +152,7 @@ async function initMiiPlaza(container) {
       // Auto-fit: compute bounding box and scale to a target height
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
-      const targetHeight = 3;
+      const targetHeight = 2.2;
       const scaleFactor = targetHeight / size.y;
       model.scale.set(scaleFactor, scaleFactor, scaleFactor);
 

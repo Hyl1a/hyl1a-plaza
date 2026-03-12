@@ -58,21 +58,39 @@ app.get('/api/avatars', (req, res) => {
 });
 
 app.post('/api/avatars', (req, res) => {
-  const { first_name, last_name, username, birthday, bio, visual_data } = req.body;
-  const visual_data_str = JSON.stringify(visual_data || {});
+  const { first_name, last_name, username, birthday, bio, visual_base64 } = req.body;
+  const visual_data_str = JSON.stringify({ visual_base64 } || {});
   
-  const sql = `INSERT INTO avatars (first_name, last_name, username, birthday, bio, visual_data) VALUES (?, ?, ?, ?, ?, ?)`;
-  const params = [first_name, last_name, username, birthday, bio, visual_data_str];
-  
-  db.run(sql, params, function(err) {
+  // Check if an avatar already exists for this username
+  db.get('SELECT id FROM avatars WHERE username = ?', [username], (err, row) => {
     if (err) {
-      res.status(400).json({ error: err.message });
+      res.status(500).json({ error: err.message });
       return;
     }
-    res.json({
-      message: 'Avatar saved successfully',
-      id: this.lastID
-    });
+
+    if (row) {
+      // Update existing avatar
+      const sql = `UPDATE avatars SET first_name = ?, last_name = ?, birthday = ?, bio = ?, visual_data = ? WHERE id = ?`;
+      const params = [first_name, last_name, birthday, bio, visual_data_str, row.id];
+      db.run(sql, params, function(err) {
+        if (err) {
+          res.status(400).json({ error: err.message });
+          return;
+        }
+        res.json({ message: 'Avatar updated successfully', id: row.id });
+      });
+    } else {
+      // Insert new avatar
+      const sql = `INSERT INTO avatars (first_name, last_name, username, birthday, bio, visual_data) VALUES (?, ?, ?, ?, ?, ?)`;
+      const params = [first_name, last_name, username, birthday, bio, visual_data_str];
+      db.run(sql, params, function(err) {
+        if (err) {
+          res.status(400).json({ error: err.message });
+          return;
+        }
+        res.json({ message: 'Avatar saved successfully', id: this.lastID });
+      });
+    }
   });
 });
 
