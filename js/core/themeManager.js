@@ -3,7 +3,6 @@
  * Handles switching between visual themes (backgrounds + color accents).
  * Themes: Default, Zelda (Link), Mario, Dragon Ball
  */
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const ThemeManager = {
   themes: {
@@ -50,8 +49,8 @@ const ThemeManager = {
     
     if (fbUser) {
       try {
-        const docRef = doc(window.FirebaseDB, "settings", fbUser.uid);
-        const docSnap = await getDoc(docRef);
+        const docRef = window.Firestore.doc(window.FirebaseDB, "settings", fbUser.uid);
+        const docSnap = await window.Firestore.getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.theme_id && this.themes[data.theme_id]) {
@@ -82,7 +81,7 @@ const ThemeManager = {
       const fbUser = window.Auth ? window.Auth.currentUser : null;
       if (fbUser) {
         try {
-          await setDoc(doc(window.FirebaseDB, "settings", fbUser.uid), {
+          await window.Firestore.setDoc(window.Firestore.doc(window.FirebaseDB, "settings", fbUser.uid), {
             theme_id: themeId
           }, { merge: true });
         } catch (e) {

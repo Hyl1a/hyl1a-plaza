@@ -1,5 +1,4 @@
 // Mii Maker Implementation – Redesigned to match datkat21/mii-creator style
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry) {
@@ -491,8 +490,8 @@ async function initMiiMaker(container) {
       if (!fbUser) throw new Error("User not authenticated in Firebase");
 
       // Save complete avatar blob in "avatars" collection using their UID
-      const docRef = doc(window.FirebaseDB, "avatars", fbUser.uid);
-      await setDoc(docRef, data, { merge: true });
+      const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", fbUser.uid);
+      await window.Firestore.setDoc(docRef, data, { merge: true });
 
       if (typeof AudioManager !== 'undefined') AudioManager.playPop();
       btn.textContent = "Saved!";

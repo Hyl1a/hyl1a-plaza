@@ -222,8 +222,8 @@ function initAuth() {
     if (!fbUser || !container) return;
 
     try {
-      const docRef = doc(window.FirebaseDB, "avatars", fbUser.uid);
-      const docSnap = await getDoc(docRef);
+      const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", fbUser.uid);
+      const docSnap = await window.Firestore.getDoc(docRef);
       
       if (docSnap.exists()) {
         const myAvatar = docSnap.data();
