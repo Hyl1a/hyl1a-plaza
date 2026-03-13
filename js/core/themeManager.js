@@ -3,6 +3,7 @@
  * Handles switching between visual themes (backgrounds + color accents).
  * Themes: Default, Zelda (Link), Mario, Dragon Ball
  */
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const ThemeManager = {
   themes: {
@@ -42,20 +43,53 @@ const ThemeManager = {
 
   currentTheme: 'default',
 
-  init() {
+  async init() {
     // Load saved theme
+    const user = window.Auth ? window.Auth.getCurrentUser() : null;
+    const fbUser = window.Auth ? window.Auth.currentUser : null;
+    
+    if (fbUser) {
+      try {
+        const docRef = doc(window.FirebaseDB, "settings", fbUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.theme_id && this.themes[data.theme_id]) {
+            this.apply(data.theme_id, false); // false = don't save back
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch theme from DB", e);
+      }
+    }
+    
+    // Fallback
     const saved = localStorage.getItem('nostalgia-theme');
     if (saved && this.themes[saved]) {
-      this.apply(saved);
+      this.apply(saved, false);
     }
   },
 
-  apply(themeId) {
+  async apply(themeId, saveToDb = true) {
     const theme = this.themes[themeId];
     if (!theme) return;
 
     this.currentTheme = themeId;
-    localStorage.setItem('nostalgia-theme', themeId);
+    localStorage.setItem('nostalgia-theme', themeId); // Keep as local fallback
+
+    if (saveToDb) {
+      const fbUser = window.Auth ? window.Auth.currentUser : null;
+      if (fbUser) {
+        try {
+          await setDoc(doc(window.FirebaseDB, "settings", fbUser.uid), {
+            theme_id: themeId
+          }, { merge: true });
+        } catch (e) {
+          console.error("Failed to save theme to DB", e);
+        }
+      }
+    }
 
     const root = document.documentElement.style;
 
@@ -128,6 +162,9 @@ const ThemeManager = {
     });
   }
 };
+
+// Make it global so it can be called elsewhere
+window.ThemeManager = ThemeManager;
 
 // Register the theme selector as an app
 document.addEventListener('DOMContentLoaded', () => {

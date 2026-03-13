@@ -20,7 +20,7 @@
  *  musique_shop_ambient.wav   → Musique d'ambiance #3 "Shop Ambient"
  *
  *  💡 Pour changer un son: remplacez simplement le fichier dans
- *     le dossier Son/ par votre propre fichier MP3 ou WAV
+ *     le dossier assets/audio/ par votre propre fichier MP3 ou WAV
  *     en gardant le MÊME NOM de fichier.
  *
  * ═══════════════════════════════════════════════════════════
@@ -36,17 +36,17 @@ const AudioManager = {
 
   // Sound file mapping
   soundFiles: {
-    click: 'Son/click_survol_tuile.wav',
-    pop: 'Son/pop_interaction.wav',
-    windowOpen: 'Son/ouverture_fenetre.wav',
-    windowClose: 'Son/fermeture_fenetre.wav'
+    click: 'assets/audio/click_survol_tuile.wav',
+    pop: 'assets/audio/pop_interaction.wav',
+    windowOpen: 'assets/audio/ouverture_fenetre.wav',
+    windowClose: 'assets/audio/fermeture_fenetre.wav'
   },
 
   // Music playlist
   playlist: [
-    { name: 'Eshop January 2016', file: 'Son/Eshop January 2016.wav' },
-    { name: 'Eshop July 2014', file: 'Son/Eshop July 2014.wav' },
-    { name: 'Eshop June 2015', file: 'Son/Eshop June 2015.wav' }
+    { name: 'Eshop January 2016', file: 'assets/audio/Eshop January 2016.wav' },
+    { name: 'Eshop July 2014', file: 'assets/audio/Eshop July 2014.wav' },
+    { name: 'Eshop June 2015', file: 'assets/audio/Eshop June 2015.wav' }
   ],
 
   init: function () {

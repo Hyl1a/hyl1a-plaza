@@ -217,19 +217,23 @@ function initAuth() {
 
   async function loadUserMii() {
     const user = Auth.getCurrentUser();
+    const fbUser = window.Auth ? window.Auth.currentUser : null;
     const container = document.getElementById('top-avatar-container');
-    if (!user || !container) return;
+    if (!fbUser || !container) return;
 
     try {
-      const response = await fetch(`${Auth.API_BASE}/api/avatars`);
-      if (!response.ok) return;
-      const avatars = await response.json();
-      const myAvatar = avatars.find(av => av.username.toLowerCase() === user.toLowerCase());
-
-      if (myAvatar && myAvatar.visual_data && myAvatar.visual_data.visual_base64) {
-        const b64 = myAvatar.visual_data.visual_base64;
-        const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=96&shaderType=wiiu`;
-        container.innerHTML = `<img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: contain;">`;
+      const docRef = doc(window.FirebaseDB, "avatars", fbUser.uid);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const myAvatar = docSnap.data();
+        if (myAvatar && myAvatar.visual_base64) {
+          const b64 = myAvatar.visual_base64;
+          const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=96&shaderType=wiiu`;
+          container.innerHTML = `<img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: contain;">`;
+        } else {
+          container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
+        }
       } else {
         container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
       }
@@ -348,15 +352,23 @@ function initAuth() {
   }
 
   if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-      const res = Auth.login(usernameInput.value, passwordInput.value);
+    loginBtn.addEventListener('click', async () => {
+      loginBtn.disabled = true;
+      loginBtn.textContent = '...';
+      const res = await Auth.login(usernameInput.value, passwordInput.value);
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
       handleAuthResponse(res);
     });
   }
 
   if (registerBtn) {
-    registerBtn.addEventListener('click', () => {
-      const res = Auth.register(usernameInput.value, passwordInput.value);
+    registerBtn.addEventListener('click', async () => {
+      registerBtn.disabled = true;
+      registerBtn.textContent = '...';
+      const res = await Auth.register(usernameInput.value, passwordInput.value);
+      registerBtn.disabled = false;
+      registerBtn.textContent = 'Créer un compte';
       handleAuthResponse(res);
     });
   }

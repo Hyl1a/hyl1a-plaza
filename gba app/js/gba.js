@@ -4,10 +4,10 @@
  */
 
 // User can add games here. Ensure the ROM files (.gba) are placed in the correct folder,
-// for example relative to the index.html file: 'roms/gba/mygame.gba'
+// for example relative to the index.html file: 'assets/roms/gba/mygame.gba'
 const GBA_GAMES = [
-  { name: 'Pokémon Émeraude', file: 'roms/gba/Pokemon - Version Emeraude (France).gba' },
-  { name: 'Pokémon Rouge Feu', file: 'roms/gba/Pokemon - Version Rouge Feu (France).gba' }
+  { name: 'Pokémon Émeraude', file: 'assets/roms/gba/Pokemon - Version Emeraude (France).gba' },
+  { name: 'Pokémon Rouge Feu', file: 'assets/roms/gba/Pokemon - Version Rouge Feu (France).gba' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -48,9 +48,9 @@ function renderGbaMenu(container) {
   html += `
         <div style="margin-top: 30px; padding: 20px; background: #333; border-radius: 8px; font-size: 13px; color: #ccc; line-height: 1.5; border-left: 4px solid #7a5cf2;">
           <strong style="color: white; font-size: 14px;">Comment ajouter vos propres jeux :</strong><br>
-          1. Créez un dossier <code>roms/gba</code> à la racine de votre projet.<br>
+          1. Créez un dossier <code>gba app/assets/roms/gba</code> à la racine de votre projet.<br>
           2. Placez vos fichiers <code>.gba</code> à l'intérieur de ce dossier.<br>
-          3. Pour modifier la liste des jeux affichés, ouvrez le fichier <code>js/apps/gba.js</code> et modifiez la variable <strong>GBA_GAMES</strong> située tout en haut.
+          3. Pour modifier la liste des jeux affichés, ouvrez le fichier <code>gba app/js/gba.js</code> et modifiez la variable <strong>GBA_GAMES</strong> située tout en haut.
         </div>
       </div>
     </div>
@@ -80,7 +80,7 @@ function launchEmulator(container, game) {
         <div style="width: 80px;"></div> <!-- Spacer so title is centered -->
       </div>
       <div style="flex: 1; position: relative;">
-        <iframe src="gba_player.html?rom=${romUrl}&name=${gameName}" style="border: none; width: 100%; height: 100%;" allow="autoplay; fullscreen"></iframe>
+        <iframe src="gba app/gba_player.html?rom=${romUrl}&name=${gameName}" style="border: none; width: 100%; height: 100%;" allow="autoplay; fullscreen"></iframe>
       </div>
     </div>
   `;

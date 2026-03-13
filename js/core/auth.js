@@ -1,87 +1,129 @@
 /**
  * Authentication System
- * Handles login, registration, and session management using localStorage.
+ * Handles login, registration, and session management using Firebase Auth & Firestore.
  */
 
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { 
+  doc, 
+  setDoc, 
+  getDoc,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 window.Auth = {
-  API_BASE: 'http://localhost:3000',
+  currentUser: null,
+  currentUsername: null,
 
   init() {
-    const users = this.getUsers();
-    // Pre-create 'hyl1a' account if it doesn't exist yet
-    if (!users.find(u => u.username.toLowerCase() === 'hyl1a')) {
-      users.push({ username: 'hyl1a', password: '375513' });
-      this.saveUsers(users);
-    }
-  },
-
-  getUsers() {
-    return JSON.parse(localStorage.getItem('nostalgia_users') || '[]');
-  },
-
-  saveUsers(users) {
-    localStorage.setItem('nostalgia_users', JSON.stringify(users));
+    // Listen to Firebase Auth state changes
+    onAuthStateChanged(window.FirebaseAuth, async (user) => {
+      if (user) {
+        this.currentUser = user;
+        // Fetch username from Firestore profile
+        try {
+          const docRef = doc(window.FirebaseDB, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            this.currentUsername = docSnap.data().username;
+            localStorage.setItem('nostalgia_current_user', this.currentUsername);
+            
+            // Trigger UI updates in app.js if they are ready
+            if (document.getElementById('top-username')) {
+               document.getElementById('top-username').textContent = this.currentUsername;
+               document.getElementById('auth-overlay').style.display = 'none';
+               // Re-trigger loadUserMii via document event or direct call if available
+               if (window.loadUserMii) window.loadUserMii();
+            }
+          }
+        } catch(e) { console.error("Error fetching user profile:", e); }
+      } else {
+        this.currentUser = null;
+        this.currentUsername = null;
+        localStorage.removeItem('nostalgia_current_user');
+      }
+    });
   },
 
   getCurrentUser() {
-    return localStorage.getItem('nostalgia_current_user');
+    return this.currentUsername || localStorage.getItem('nostalgia_current_user');
   },
 
-  setCurrentUser(username) {
-    if (username) {
-      localStorage.setItem('nostalgia_current_user', username);
-    } else {
-      localStorage.removeItem('nostalgia_current_user');
-    }
-  },
-
+  // Note: hasMii will scan Firestore instead of local API
   async hasMii(username) {
     if (!username) return false;
     try {
-      const response = await fetch(`${this.API_BASE}/api/avatars`);
-      if (!response.ok) return false;
-      const avatars = await response.json();
-      return avatars.some(av => av.username.toLowerCase() === username.toLowerCase());
+      const avatarsRef = collection(window.FirebaseDB, "avatars");
+      const qSnap = await getDocs(avatarsRef);
+      // Client side filtering since we don't have complex queries setup yet
+      let found = false;
+      qSnap.forEach((doc) => {
+        if (doc.data().username.toLowerCase() === username.toLowerCase()) {
+          found = true;
+        }
+      });
+      return found;
     } catch (e) {
       console.error("Error checking Mii:", e);
       return false;
     }
   },
 
-  register(username, password) {
+  async register(username, password) {
     if (!username || !password) return { success: false, message: 'Nom d\'utilisateur et mot de passe requis.' };
+    // Firebase Auth requires email format, so we fake one using the username
+    const fakeEmail = `${username.toLowerCase()}@hyliaplaza.local`;
     
-    const users = this.getUsers();
-    if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-      return { success: false, message: 'Ce nom d\'utilisateur existe déjà.' };
-    }
+    try {
+      // 1. Create Auth Account
+      const userCredential = await createUserWithEmailAndPassword(window.FirebaseAuth, fakeEmail, password);
+      const user = userCredential.user;
+      
+      // 2. Create User Profile Document in Firestore
+      await setDoc(doc(window.FirebaseDB, "users", user.uid), {
+        username: username,
+        createdAt: new Date().toISOString()
+      });
 
-    users.push({ username, password });
-    this.saveUsers(users);
-    
-    return { success: true, message: 'Compte créé avec succès !' };
+      return { success: true, message: 'Compte Firebase créé avec succès !' };
+    } catch (e) {
+      console.error(e);
+      let errorMsg = 'Erreur lors de la création.';
+      if (e.code === 'auth/email-already-in-use') errorMsg = 'Ce nom d\'utilisateur existe déjà.';
+      if (e.code === 'auth/weak-password') errorMsg = 'Le mot de passe doit faire au moins 6 caractères.';
+      return { success: false, message: errorMsg };
+    }
   },
 
-  login(username, password) {
+  async login(username, password) {
     if (!username || !password) return { success: false, message: 'Nom d\'utilisateur et mot de passe requis.' };
+    const fakeEmail = `${username.toLowerCase()}@hyliaplaza.local`;
 
-    const users = this.getUsers();
-    const user = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
-    
-    if (user) {
-      this.setCurrentUser(user.username);
+    try {
+      await signInWithEmailAndPassword(window.FirebaseAuth, fakeEmail, password);
       return { success: true, message: 'Connexion réussie.' };
-    } else {
+    } catch (e) {
+      console.error(e);
       return { success: false, message: 'Identifiants incorrects.' };
     }
   },
 
-  logout() {
-    this.setCurrentUser(null);
-    localStorage.removeItem('nostalgia_current_user'); // Explicitly remove to be safe
-    window.location.reload(); 
+  async logout() {
+    try {
+      await signOut(window.FirebaseAuth);
+      localStorage.removeItem('nostalgia_current_user');
+      window.location.reload(); 
+    } catch(e) {
+      console.error("Logout Error:", e);
+    }
   }
 };
 
-// Initialize immediately to seed accounts before UI attaches
+// Initialize listener
 window.Auth.init();

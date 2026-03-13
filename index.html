@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/hub.css" />
   <link rel="stylesheet" href="css/window.css" />
-  <link rel="stylesheet" href="css/mii.css" />
+  <link rel="stylesheet" href="mii maker app/css/mii.css" />
   
   <!-- Three.js and OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -212,8 +212,11 @@
   <!-- Container for dynamic OS windows -->
   <div id="window-layer"></div>
 
+  <!-- Firebase Core Initialization -->
+  <script type="module" src="js/core/firebase.js"></script>
+
   <!-- Script imports: Core -> Components -> Apps -> Init -->
-  <script src="js/core/auth.js"></script>
+  <script type="module" src="js/core/auth.js"></script>
   <script src="js/core/audio.js"></script>
   <script src="js/core/windowManager.js"></script>
   <script src="js/core/themeManager.js"></script>
@@ -222,20 +225,20 @@
     window.global = window;
   </script>
   <script type="module">
-    import Mii from './js/external/mii.js';
+    import Mii from './mii maker app/js/mii.js';
     window.Mii = Mii;
   </script>
-  <script src="js/core/miiBuilder.js"></script>
-  <script src="js/components/avatar.js"></script>
+  <script src="mii maker app/js/miiBuilder.js"></script>
+  <script src="mii maker app/js/avatar.js"></script>
 
   <script src="js/apps/gallery.js"></script>
   <script src="js/apps/music.js"></script>
   <script src="js/apps/hallOfFame.js"></script>
   <script src="js/apps/notes.js"></script>
   <script src="js/apps/guestbook.js"></script>
-  <script src="js/apps/miiMaker.js?v=17"></script>
-  <script src="js/apps/miiPlaza.js?v=17"></script>
-  <script src="js/apps/gba.js"></script>
+  <script src="mii maker app/js/miiMaker.js?v=17"></script>
+  <script src="mii maker app/js/miiPlaza.js?v=17"></script>
+  <script src="gba app/js/gba.js"></script>
 
   <script src="js/core/app.js"></script>
 </body>

@@ -1,4 +1,5 @@
 // Mii Maker Implementation – Redesigned to match datkat21/mii-creator style
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry) {
@@ -96,7 +97,7 @@ async function initMiiMaker(container) {
   let mainMusicWasPlaying = false;
 
   function startMiiMusic() {
-    miiMusic = new Audio('Son/Mii Maker.mp3');
+    miiMusic = new Audio('assets/audio/Mii Maker.mp3');
     miiMusic.volume = 0.3;
     miiMusic.loop = true;
 
@@ -482,31 +483,30 @@ async function initMiiMaker(container) {
     const data = getProfileData();
     if (!data.username) { alert("Please enter a Nickname before saving!"); return; }
     if (data.first_name) miiInstance.miiName = data.first_name;
+    
     try {
       btn.textContent = "Saving..."; btn.disabled = true;
-      const apiUrl = (window.Auth && window.Auth.API_BASE) ? `${window.Auth.API_BASE}/api/avatars` : '/api/avatars';
-      const res = await fetch(apiUrl, { 
-        method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
-        body:JSON.stringify(data),
-        mode: 'cors'
-      });
-      if (res.ok) {
-        if (typeof AudioManager !== 'undefined') AudioManager.playPop();
-        btn.textContent = "Saved!";
-        
-        // Stop music and close correctly
-        stopMiiMusic();
-        
-        container.classList.add('closing');
-        setTimeout(() => { 
-            if(container.parentNode) container.parentNode.removeChild(container);
-            // Reload if it was the first time creating a Mii to unlock the site
-            if (isForcedCreation) window.location.reload();
-        }, 1000);
-      } else {
-        const e = await res.json(); alert('Error: ' + (e.error||'Server error')); btn.textContent = "Save & Quit"; btn.disabled = false;
-      }
+      const fbUser = window.Auth ? window.Auth.currentUser : null;
+      
+      if (!fbUser) throw new Error("User not authenticated in Firebase");
+
+      // Save complete avatar blob in "avatars" collection using their UID
+      const docRef = doc(window.FirebaseDB, "avatars", fbUser.uid);
+      await setDoc(docRef, data, { merge: true });
+
+      if (typeof AudioManager !== 'undefined') AudioManager.playPop();
+      btn.textContent = "Saved!";
+      
+      // Stop music and close correctly
+      stopMiiMusic();
+      
+      container.classList.add('closing');
+      setTimeout(() => { 
+          if(container.parentNode) container.parentNode.removeChild(container);
+          // Reload if it was the first time creating a Mii to unlock the site
+          if (isForcedCreation) window.location.reload();
+      }, 1000);
+
     } catch(err) {
       console.error(err); alert("Failed to connect. Is server running?"); btn.textContent = "Save & Quit"; btn.disabled = false;
     }
