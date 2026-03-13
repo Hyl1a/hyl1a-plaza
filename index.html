@@ -123,263 +123,129 @@
   <div id="main-container" class="glossy-glass">
     <div id="app-grid">
 
-      <!-- Gallery (2x1) - Film with photo mountains -->
+      <!-- Gallery (2x1) - Daily Log icon (bar chart) -->
       <div class="grid-tile tile-wide app-trigger" data-app="gallery" data-title="Memory Gallery" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="8" y="22" width="84" height="56" rx="8" fill="#3498db"/>
-            <!-- Film holes left -->
-            <rect x="8" y="22" width="14" height="56" fill="#1a6fa8"/>
-            <circle cx="15" cy="35" r="4" fill="#aee6ff"/>
-            <circle cx="15" cy="50" r="4" fill="#aee6ff"/>
-            <circle cx="15" cy="65" r="4" fill="#aee6ff"/>
-            <!-- Film holes right -->
-            <rect x="78" y="22" width="14" height="56" fill="#1a6fa8"/>
-            <circle cx="85" cy="35" r="4" fill="#aee6ff"/>
-            <circle cx="85" cy="50" r="4" fill="#aee6ff"/>
-            <circle cx="85" cy="65" r="4" fill="#aee6ff"/>
-            <!-- Photo inside -->
-            <rect x="24" y="28" width="52" height="44" rx="4" fill="#e8f4fd"/>
-            <polygon points="24,72 46,44 62,58 72,46 76,72" fill="#2ecc71" opacity="0.8"/>
-            <circle cx="66" cy="38" r="8" fill="#f39c12"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/daily-log.png" alt="Gallery">
         </div>
       </div>
 
-      <!-- Music - Guitar/note, red -->
+      <!-- Music - Chat icon (closest to audio/communication) -->
       <div class="grid-tile tile-square app-trigger" data-app="music" data-title="Radio Station" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <circle cx="50" cy="50" r="42" fill="#e74c3c"/>
-            <ellipse cx="38" cy="70" rx="12" ry="9" fill="#c0392b"/>
-            <ellipse cx="38" cy="70" rx="9" ry="7" fill="#ff6b6b"/>
-            <rect x="48" y="24" width="7" height="46" rx="3.5" fill="white"/>
-            <path d="M55 24 L74 31 L74 40 L55 33 Z" fill="white"/>
-            <circle cx="16" cy="82" r="5" fill="white" opacity="0.5"/>
-            <circle cx="84" cy="18" r="5" fill="white" opacity="0.5"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/chat.png" alt="Music">
         </div>
       </div>
 
-      <!-- Themes - Paint palette, green -->
+      <!-- Themes - Settings wrench -->
       <div class="grid-tile tile-square" id="theme-tile" data-title="Themes" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <path d="M50 14 C28 14 11 30 11 50 C11 70 27 86 50 86 C59 86 61 78 57 73 C53 68 56 61 63 61 L73 61 C84 61 90 54 90 45 C90 27 71 14 50 14Z" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2"/>
-            <!-- Paint blobs -->
-            <circle cx="32" cy="38" r="9" fill="#e74c3c"/>
-            <circle cx="48" cy="26" r="9" fill="#f39c12"/>
-            <circle cx="65" cy="26" r="9" fill="#3498db"/>
-            <circle cx="74" cy="40" r="9" fill="#9b59b6"/>
-            <circle cx="32" cy="56" r="9" fill="#2ecc71"/>
-            <!-- Thumb hole -->
-            <circle cx="68" cy="66" r="8" fill="#bdc3c7"/>
-            <circle cx="68" cy="66" r="5" fill="white"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/settings.png" alt="Themes">
         </div>
       </div>
 
-      <!-- Mii Maker - Mii character, purple -->
+      <!-- Mii Maker - Friends (Mii faces) -->
       <div class="grid-tile tile-square app-trigger" data-app="miiMaker" data-title="Mii Maker" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <!-- Body -->
-            <ellipse cx="50" cy="80" rx="26" ry="16" fill="#9b59b6"/>
-            <!-- Head -->
-            <circle cx="50" cy="40" r="28" fill="#f5cba7"/>
-            <!-- Hair -->
-            <path d="M22 36 C22 20 38 14 50 14 C62 14 78 20 78 36" fill="#5d4037"/>
-            <!-- Eyes -->
-            <ellipse cx="40" cy="40" rx="5" ry="6" fill="white"/>
-            <ellipse cx="60" cy="40" rx="5" ry="6" fill="white"/>
-            <circle cx="41" cy="41" r="3" fill="#1a237e"/>
-            <circle cx="61" cy="41" r="3" fill="#1a237e"/>
-            <!-- Smile -->
-            <path d="M40 54 Q50 62 60 54" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/friends.png" alt="Mii Maker">
         </div>
       </div>
 
-      <!-- Mii Plaza - Multiple Mii faces -->
+      <!-- Mii Plaza - Miiverse (community icons) -->
       <div class="grid-tile tile-square app-trigger" data-app="miiPlaza" data-title="Mii Plaza" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <!-- Sky bg -->
-            <rect x="0" y="0" width="100" height="100" rx="18" fill="#87ceeb"/>
-            <!-- Ground -->
-            <ellipse cx="50" cy="96" rx="50" ry="18" fill="#7dce82"/>
-            <!-- Left mini mii -->
-            <circle cx="25" cy="56" r="14" fill="#f5cba7"/>
-            <path d="M12 54 C12 46 18 42 25 42 C32 42 38 46 38 54" fill="#5d4037"/>
-            <circle cx="21" cy="57" r="2" fill="#333"/>
-            <circle cx="29" cy="57" r="2" fill="#333"/>
-            <!-- Right mini mii -->
-            <circle cx="75" cy="56" r="14" fill="#fadbd8"/>
-            <path d="M62 54 C62 46 68 42 75 42 C82 42 88 46 88 54" fill="#e91e63" opacity="0.8"/>
-            <circle cx="71" cy="57" r="2" fill="#333"/>
-            <circle cx="79" cy="57" r="2" fill="#333"/>
-            <!-- Center main mii -->
-            <circle cx="50" cy="48" r="18" fill="#f5cba7"/>
-            <path d="M32 45 C32 35 40 30 50 30 C60 30 68 35 68 45" fill="#795548"/>
-            <circle cx="44" cy="50" r="3" fill="#1a237e"/>
-            <circle cx="56" cy="50" r="3" fill="#1a237e"/>
-            <path d="M44 58 Q50 63 56 58" stroke="#c0392b" stroke-width="2" fill="none" stroke-linecap="round"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/miiverse.png" alt="Mii Plaza">
         </div>
       </div>
 
-      <!-- System Transfer - Arrows -->
+      <!-- System Transfer - Browser globe (network) -->
       <div class="grid-tile tile-square placeholder-app" data-title="System Transfer" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="8" y="8" width="84" height="84" rx="18" fill="#ecf0f1"/>
-            <!-- Arrow right -->
-            <path d="M15 38 L55 38 L55 28 L75 45 L55 62 L55 52 L15 52 Z" fill="#3498db"/>
-            <!-- Arrow left -->
-            <path d="M85 60 L45 60 L45 70 L25 53 L45 36 L45 46 L85 46 Z" fill="#95a5a6"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/browser.png" alt="System Transfer">
         </div>
       </div>
 
-      <!-- Row 2 -->
-
-      <!-- Arcade - Joystick colorful -->
+      <!-- Arcade - eShop bag (games store) -->
       <div class="grid-tile tile-square app-trigger" data-app="arcade" data-title="Classic Arcade" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="14" y="48" width="72" height="44" rx="12" fill="#2c3e50"/>
-            <rect x="20" y="54" width="60" height="32" rx="8" fill="#34495e"/>
-            <!-- Buttons -->
-            <circle cx="66" cy="60" r="8" fill="#e74c3c"/>
-            <circle cx="80" cy="68" r="6" fill="#3498db" opacity="0.9"/>
-            <circle cx="66" cy="76" r="6" fill="#2ecc71" opacity="0.9"/>
-            <circle cx="52" cy="68" r="6" fill="#f39c12" opacity="0.9"/>
-            <!-- Joystick -->
-            <circle cx="32" cy="68" r="10" fill="#7f8c8d"/>
-            <rect x="42" y="20" width="16" height="32" rx="8" fill="#636e72"/>
-            <circle cx="50" cy="16" r="14" fill="#e74c3c"/>
-            <circle cx="50" cy="16" r="9" fill="#ff6b6b"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/eshop.png" alt="Arcade">
         </div>
       </div>
 
-      <!-- Notepad - Clean white notepad -->
+      <!-- Notes - SVG notepad (no exact match) -->
       <div class="grid-tile tile-square app-trigger" data-app="notes" data-title="Notepad" tabindex="0">
         <div class="tile-inner">
           <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
             <rect x="14" y="10" width="72" height="82" rx="10" fill="#f39c12"/>
             <rect x="18" y="18" width="64" height="68" rx="8" fill="#fef9e7"/>
-            <!-- Rings at top -->
-            <circle cx="35" cy="10" r="7" fill="#e67e22" stroke="#f39c12" stroke-width="2"/>
-            <circle cx="50" cy="10" r="7" fill="#e67e22" stroke="#f39c12" stroke-width="2"/>
-            <circle cx="65" cy="10" r="7" fill="#e67e22" stroke="#f39c12" stroke-width="2"/>
-            <!-- Lines -->
-            <line x1="26" y1="34" x2="74" y2="34" stroke="#f39c12" stroke-width="2" stroke-linecap="round"/>
-            <line x1="26" y1="46" x2="74" y2="46" stroke="#f39c12" stroke-width="2" stroke-linecap="round"/>
-            <line x1="26" y1="58" x2="62" y2="58" stroke="#f39c12" stroke-width="2" stroke-linecap="round"/>
-            <!-- Pencil -->
-            <rect x="60" y="64" width="8" height="22" rx="2" fill="#e67e22" transform="rotate(-30 64 75)"/>
-            <polygon points="58,82 66,78 62,88" fill="#f5f5f5" transform="rotate(-30 62 82)"/>
+            <circle cx="35" cy="10" r="7" fill="#e67e22"/>
+            <circle cx="50" cy="10" r="7" fill="#e67e22"/>
+            <circle cx="65" cy="10" r="7" fill="#e67e22"/>
+            <line x1="26" y1="34" x2="74" y2="34" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
+            <line x1="26" y1="46" x2="74" y2="46" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
+            <line x1="26" y1="58" x2="62" y2="58" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
           </svg>
         </div>
       </div>
 
-      <!-- Animal Crossing (2x1) - Isabelle / leaf -->
+      <!-- Animal Crossing (2x1) - SVG Isabelle -->
       <div class="grid-tile tile-wide placeholder-app" data-title="Animal Crossing Plaza" tabindex="0">
         <div class="tile-inner">
           <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <!-- Sky -->
-            <rect x="0" y="0" width="100" height="100" rx="18" fill="#87ceeb"/>
-            <!-- Sun -->
+            <rect x="0" y="0" width="100" height="100" fill="#87ceeb"/>
             <circle cx="80" cy="22" r="14" fill="#FFD700"/>
-            <!-- Ground -->
             <ellipse cx="50" cy="88" rx="54" ry="22" fill="#7dce82"/>
             <ellipse cx="50" cy="82" rx="54" ry="18" fill="#a8e06b"/>
-            <!-- Isabelle head -->
             <circle cx="50" cy="52" r="24" fill="#f5d06e"/>
-            <!-- Ears -->
             <circle cx="30" cy="34" r="12" fill="#f5d06e"/>
             <circle cx="30" cy="34" r="7" fill="#e8a020"/>
             <circle cx="70" cy="34" r="12" fill="#f5d06e"/>
             <circle cx="70" cy="34" r="7" fill="#e8a020"/>
-            <!-- Eyes -->
             <circle cx="43" cy="52" r="4" fill="#2c3e50"/>
             <circle cx="57" cy="52" r="4" fill="#2c3e50"/>
             <circle cx="44" cy="51" r="1.5" fill="white"/>
             <circle cx="58" cy="51" r="1.5" fill="white"/>
-            <!-- Smile -->
             <path d="M42 61 Q50 68 58 61" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <!-- Bow -->
             <path d="M40 32 Q50 28 60 32 Q50 38 40 32Z" fill="#e74c3c"/>
           </svg>
         </div>
       </div>
 
-      <!-- Guest Book (3x2) - Open book with pen -->
+      <!-- Guest Book (3x2) - Miiverse icon (community/writing) -->
       <div class="grid-tile tile-large app-trigger" data-app="guestbook" data-title="Guest Book" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <!-- Book -->
-            <rect x="6" y="14" width="88" height="72" rx="10" fill="#3498db"/>
-            <rect x="6" y="14" width="44" height="72" rx="10" fill="#2980b9"/>
-            <!-- Left page -->
-            <rect x="10" y="18" width="38" height="64" rx="6" fill="#eaf4fb"/>
-            <line x1="16" y1="32" x2="42" y2="32" stroke="#aed6f1" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="16" y1="42" x2="42" y2="42" stroke="#aed6f1" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="16" y1="52" x2="36" y2="52" stroke="#aed6f1" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Right page -->
-            <rect x="52" y="18" width="38" height="64" rx="6" fill="#fef9e7"/>
-            <line x1="58" y1="32" x2="84" y2="32" stroke="#f39c12" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="58" y1="42" x2="84" y2="42" stroke="#f39c12" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="58" y1="52" x2="74" y2="52" stroke="#f39c12" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Spine -->
-            <rect x="46" y="14" width="8" height="72" rx="2" fill="#1a5276"/>
-            <!-- Pen -->
-            <rect x="74" y="54" width="8" height="28" rx="3" fill="#e74c3c" transform="rotate(-40 78 68)"/>
-            <polygon points="74,78 82,74 76,88" fill="#c0392b" transform="rotate(-40 78 82)"/>
-            <rect x="74" y="54" width="8" height="8" rx="2" fill="#f39c12" transform="rotate(-40 78 58)"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/wii/miiverse.png" alt="Guest Book">
         </div>
       </div>
 
-      <!-- Row 3 -->
-
-      <!-- GBA - Game Boy Advance -->
+      <!-- GBA - SVG Game Boy -->
       <div class="grid-tile tile-square app-trigger" data-app="gba" data-title="GBA Emulator" tabindex="0">
         <div class="tile-inner">
           <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="6" y="24" width="88" height="58" rx="20" fill="#5d4037"/>
-            <rect x="6" y="24" width="88" height="58" rx="20" fill="#6c5ce7" opacity="0.9"/>
+            <rect x="6" y="24" width="88" height="58" rx="20" fill="#6c5ce7"/>
             <rect x="14" y="32" width="44" height="30" rx="5" fill="#001428"/>
-            <rect x="16" y="34" width="40" height="26" rx="4" fill="#0a2a4a"/>
-            <!-- Screen content (pokemon-ish) -->
             <rect x="18" y="36" width="36" height="22" rx="3" fill="#1a6f3c"/>
             <circle cx="36" cy="47" r="6" fill="#ff8c00"/>
-            <!-- ABXY buttons -->
             <circle cx="74" cy="38" r="6" fill="#e74c3c"/>
             <circle cx="82" cy="46" r="6" fill="#f39c12"/>
             <circle cx="74" cy="54" r="6" fill="#2ecc71"/>
             <circle cx="66" cy="46" r="6" fill="#3498db"/>
-            <!-- D-pad -->
             <rect x="22" y="66" width="6" height="18" rx="2" fill="#2c3e50"/>
             <rect x="16" y="72" width="18" height="6" rx="2" fill="#2c3e50"/>
-            <!-- Start/Select -->
             <rect x="42" y="72" width="10" height="4" rx="2" fill="#2c3e50"/>
             <rect x="54" y="72" width="10" height="4" rx="2" fill="#2c3e50"/>
           </svg>
         </div>
       </div>
 
-      <!-- Zelda - Triforce on golden -->
+      <!-- Zelda - SVG Triforce -->
       <div class="grid-tile tile-square placeholder-app" data-title="Zelda Collection" tabindex="0">
         <div class="tile-inner">
           <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="0" y="0" width="100" height="100" rx="18" fill="#2c1810"/>
-            <!-- Triforce glow -->
+            <rect x="0" y="0" width="100" height="100" fill="#2c1810"/>
             <polygon points="50,8 66,36 34,36" fill="#f39c12"/>
             <polygon points="34,38 50,66 18,66" fill="#f39c12"/>
             <polygon points="66,38 82,66 50,66" fill="#f39c12"/>
-            <!-- Inner detail -->
             <polygon points="50,15 62,35 38,35" fill="#FFD700"/>
             <polygon points="37,40 49,60 24,60" fill="#FFD700"/>
             <polygon points="63,40 75,60 51,60" fill="#FFD700"/>
