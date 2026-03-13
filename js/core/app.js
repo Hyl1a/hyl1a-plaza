@@ -229,13 +229,14 @@ function initAuth() {
         const myAvatar = docSnap.data();
         if (myAvatar && myAvatar.visual_base64) {
           const b64 = myAvatar.visual_base64;
-          const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=96&shaderType=wiiu`;
-          container.innerHTML = `<img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: contain;">`;
+          // Request a slightly larger image from API (128px) to retain sharpness, and scale it via CSS (120% to zoom in on face)
+          const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=128&shaderType=wiiu`;
+          container.innerHTML = `<img src="${thumbUrl}" style="width: 120%; height: 120%; object-fit: cover; transform: translateY(10%);">`;
         } else {
-          container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
+          container.innerHTML = `<span style="font-size: 24px;">👤</span>`;
         }
       } else {
-        container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
+        container.innerHTML = `<span style="font-size: 24px;">👤</span>`;
       }
     } catch (e) {
       console.error("Error loading user Mii for top bar:", e);
