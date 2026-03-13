@@ -124,50 +124,140 @@
     <div id="app-grid">
       <!-- Row 1 -->
       <div class="grid-tile tile-wide app-trigger" data-app="gallery" data-title="Memory Gallery" tabindex="0">
-        <div class="tile-inner gallery-bg">🖼️</div>
+        <div class="tile-inner gallery-bg">
+          <img class="tile-icon" src="assets/icons/gallery.png" alt="Gallery">
+          <span class="tile-label">Gallery</span>
+        </div>
       </div>
       <div class="grid-tile tile-square app-trigger" data-app="music" data-title="Radio Station" tabindex="0">
-        <div class="tile-inner music-bg">📻</div>
+        <div class="tile-inner music-bg">
+          <img class="tile-icon" src="assets/icons/music.png" alt="Music">
+          <span class="tile-label">Radio</span>
+        </div>
       </div>
       <div class="grid-tile tile-square" id="theme-tile" data-title="Themes" tabindex="0">
-        <div class="tile-inner settings-bg">🎨</div>
+        <div class="tile-inner settings-bg">
+          <img class="tile-icon" src="assets/icons/themes.png" alt="Themes">
+          <span class="tile-label">Themes</span>
+        </div>
       </div>
       <div class="grid-tile tile-square placeholder-app" data-title="System Transfer" tabindex="0">
-        <div class="tile-inner transfer-bg">Wii</div>
+        <div class="tile-inner transfer-bg">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="30" fill="rgba(255,255,255,0.25)" stroke="white" stroke-width="4"/>
+            <path d="M28 40 L52 40 M44 32 L52 40 L44 48" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M52 40 L28 40 M36 32 L28 40 L36 48" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+          </svg>
+          <span class="tile-label">Transfer</span>
+        </div>
       </div>
       <div class="grid-tile tile-square app-trigger" data-app="miiMaker" data-title="Mii Maker" tabindex="0">
-        <div class="tile-inner mii-bg">Mii</div>
+        <div class="tile-inner mii-bg">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="28" r="18" fill="rgba(255,255,255,0.9)"/>
+            <ellipse cx="40" cy="62" rx="22" ry="13" fill="rgba(255,255,255,0.8)"/>
+            <circle cx="33" cy="26" r="3" fill="#555"/>
+            <circle cx="47" cy="26" r="3" fill="#555"/>
+            <path d="M34 34 Q40 38 46 34" stroke="#555" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+          <span class="tile-label">Mii Maker</span>
+        </div>
       </div>
       <!-- Mii Plaza Tile -->
       <div class="grid-tile tile-square app-trigger" data-app="miiPlaza" data-title="Mii Plaza" tabindex="0">
-        <div class="tile-inner mii-plaza-bg" style="font-size: 45px; background: linear-gradient(135deg, #7ec4ff, #4a9fff); color: white; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 12px;">🏕️</div>
+        <div class="tile-inner" style="background: linear-gradient(145deg, #7ec4ff, #4a9fff);">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="26" cy="30" r="12" fill="rgba(255,255,255,0.8)"/>
+            <circle cx="54" cy="30" r="12" fill="rgba(255,255,255,0.8)"/>
+            <circle cx="40" cy="24" r="14" fill="white"/>
+            <ellipse cx="26" cy="55" rx="14" ry="9" fill="rgba(255,255,255,0.6)"/>
+            <ellipse cx="54" cy="55" rx="14" ry="9" fill="rgba(255,255,255,0.6)"/>
+            <ellipse cx="40" cy="58" rx="16" ry="10" fill="rgba(255,255,255,0.9)"/>
+          </svg>
+          <span class="tile-label">Mii Plaza</span>
+        </div>
       </div>
 
       <!-- Row 2 -->
       <div class="grid-tile tile-square app-trigger" data-app="arcade" data-title="Classic Arcade" tabindex="0">
-        <div class="tile-inner arcade-bg">👾</div>
+        <div class="tile-inner arcade-bg">
+          <img class="tile-icon" src="assets/icons/arcade.png" alt="Arcade">
+          <span class="tile-label">Arcade</span>
+        </div>
       </div>
       <div class="grid-tile tile-square app-trigger" data-app="notes" data-title="Notepad" tabindex="0">
-        <div class="tile-inner notes-bg">📓</div>
+        <div class="tile-inner notes-bg">
+          <img class="tile-icon" src="assets/icons/notes.png" alt="Notes">
+          <span class="tile-label">Notepad</span>
+        </div>
       </div>
       <div class="grid-tile tile-wide placeholder-app" data-title="Animal Crossing Plaza" tabindex="0">
-        <div class="tile-inner ac-bg">🏕️</div>
+        <div class="tile-inner ac-bg">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="40" cy="52" rx="28" ry="16" fill="rgba(255,255,255,0.8)"/>
+            <circle cx="40" cy="32" r="20" fill="white"/>
+            <circle cx="33" cy="29" r="3" fill="#5a3e28"/>
+            <circle cx="47" cy="29" r="3" fill="#5a3e28"/>
+            <path d="M34 38 Q40 43 46 38" stroke="#5a3e28" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <!-- Leaf ears -->
+            <ellipse cx="22" cy="16" rx="8" ry="12" fill="#6abf69" transform="rotate(-20 22 16)"/>
+            <ellipse cx="58" cy="16" rx="8" ry="12" fill="#6abf69" transform="rotate(20 58 16)"/>
+          </svg>
+          <span class="tile-label">Animal Crossing</span>
+        </div>
       </div>
       <!-- Row 2/3 Spanning Tile -->
-      <div class="grid-tile tile-large app-trigger" data-app="guestbook" data-title="Super Smash Bros. Hub"
-        tabindex="0">
-        <div class="tile-inner smash-bg">📝</div>
+      <div class="grid-tile tile-large app-trigger" data-app="guestbook" data-title="Guest Book" tabindex="0">
+        <div class="tile-inner smash-bg">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="14" y="10" width="52" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+            <line x1="22" y1="26" x2="58" y2="26" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="22" y1="34" x2="58" y2="34" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="22" y1="42" x2="50" y2="42" stroke="#bbb" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M52 56 L60 48 L68 56 L60 60 Z" fill="rgba(255,255,255,0.9)" stroke="white" stroke-width="2"/>
+            <path d="M52 56 L44 68" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <span class="tile-label">Guest Book</span>
+        </div>
       </div>
 
       <!-- Row 3 -->
       <div class="grid-tile tile-square app-trigger" data-app="gba" data-title="GBA Emulator" tabindex="0">
-        <div class="tile-inner sports-bg" style="font-size: 45px; background: linear-gradient(135deg, #a482ff, #7a5cf2); color: white; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 12px;">🎮</div>
+        <div class="tile-inner" style="background: linear-gradient(145deg, #7028e4, #e5b2ca);">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="24" width="64" height="38" rx="14" fill="rgba(255,255,255,0.9)"/>
+            <rect x="16" y="30" width="32" height="20" rx="4" fill="#555"/>
+            <circle cx="58" cy="36" r="5" fill="#e63e6d"/>
+            <circle cx="70" cy="40" r="5" fill="#2575fc" opacity="0.8"/>
+            <circle cx="58" cy="50" r="5" fill="#56ab2f" opacity="0.8"/>
+            <circle cx="46" cy="40" r="5" fill="#f7971e" opacity="0.8"/>
+          </svg>
+          <span class="tile-label">GBA</span>
+        </div>
       </div>
       <div class="grid-tile tile-square placeholder-app" data-title="Zelda Collection" tabindex="0">
-        <div class="tile-inner zelda-bg">🗡️</div>
+        <div class="tile-inner zelda-bg">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Triforce -->
+            <polygon points="40,12 54,36 26,36" fill="rgba(255,255,255,0.95)"/>
+            <polygon points="27,38 41,62 13,62" fill="rgba(255,255,255,0.95)"/>
+            <polygon points="53,38 67,62 39,62" fill="rgba(255,255,255,0.95)"/>
+          </svg>
+          <span class="tile-label">Zelda</span>
+        </div>
       </div>
       <div class="grid-tile tile-wide placeholder-app" data-title="Miiverse Sketching" tabindex="0">
-        <div class="tile-inner miiverse-bg">🖍️</div>
+        <div class="tile-inner miiverse-bg">
+          <svg class="tile-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="14" width="60" height="52" rx="10" fill="rgba(255,255,255,0.9)"/>
+            <!-- Speech bubbles -->
+            <rect x="18" y="22" width="30" height="16" rx="6" fill="#4facfe"/>
+            <polygon points="22,38 28,46 34,38" fill="#4facfe"/>
+            <rect x="32" y="42" width="30" height="16" rx="6" fill="#e63e6d"/>
+            <polygon points="58,42 52,34 46,42" fill="#e63e6d"/>
+          </svg>
+          <span class="tile-label">Miiverse</span>
+        </div>
       </div>
     </div>
   </div>
