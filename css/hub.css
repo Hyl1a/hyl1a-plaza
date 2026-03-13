@@ -165,29 +165,70 @@
   gap: 20px;
 }
 
-/* Grid Tiles */
+
+/* ============================================================
+   GRID TILES - Authentic Wii U White Panel Style
+   ============================================================ */
 .grid-tile {
-  background: white;
-  border-radius: var(--radius-tile);
-  box-shadow: var(--shadow-tile);
+  /* White panel with rounded corners, exactly like the Wii U */
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, border 0.2s;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s;
   position: relative;
   overflow: hidden;
-  border: 4px solid transparent;
+  border: none;
 }
 
-.grid-tile:hover,
-.grid-tile:focus {
-  transform: scale(1.08);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-  border-color: #8ce1ff;
+/* Subtle depth on the outer edge */
+.grid-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  pointer-events: none;
   z-index: 10;
+}
+
+/* Wii U-style gloss shine: white gradient covering the top ~40% */
+.grid-tile::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  border-radius: 22px 22px 60% 60% / 22px 22px 30% 30%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.80) 0%,
+    rgba(255, 255, 255, 0.30) 50%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+  pointer-events: none;
+  z-index: 9;
+}
+
+.grid-tile:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.22),
+    0 4px 8px rgba(0, 0, 0, 0.12);
   outline: none;
 }
 
+.grid-tile:focus {
+  outline: 3px solid #6ec6ff;
+  outline-offset: 3px;
+}
+
 .grid-tile:active {
-  transform: scale(0.95);
+  transform: scale(0.93);
 }
 
 .grid-tile.tile-square {
@@ -203,6 +244,38 @@
 .grid-tile.tile-large {
   grid-column: span 3;
   grid-row: span 2;
+}
+
+/* ============================================================
+   TILE INNER - Icon area inside the white panel
+   ============================================================ */
+.tile-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* SVG icons fill most of the panel */
+.tile-inner svg.tile-icon {
+  width: 72%;
+  height: 72%;
+  flex-shrink: 0;
+}
+
+/* PNG icons */
+.tile-inner img.tile-icon {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .tile-inner {
