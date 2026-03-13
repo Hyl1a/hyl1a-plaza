@@ -202,9 +202,38 @@ async function initMiiMaker(container) {
     `;
   }
 
-  // Default Mii
-  const defaultMiiStr = "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
-  const rawData = atob(defaultMiiStr);
+  // --- Profile Data & Mii Loader ---
+  const currentProfile = {
+    first_name: "",
+    last_name: "",
+    username: currentUser || "",
+    birthday: "",
+    bio: ""
+  };
+
+  // Default Mii (if user has none)
+  let miiBase64Str = "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
+
+  if (currentUser && window.Auth && window.Auth.currentUser) {
+    // Try forcing a loading text
+    const overlay = container.querySelector('#mii-loading-overlay');
+    if(overlay) overlay.textContent = "Loading your Mii...";
+    
+    try {
+      const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", window.Auth.currentUser.uid);
+      const docSnap = await window.Firestore.getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.visual_base64) miiBase64Str = data.visual_base64;
+        currentProfile.first_name = data.first_name || "";
+        currentProfile.last_name = data.last_name || "";
+        currentProfile.birthday = data.birthday || "";
+        currentProfile.bio = data.bio || "";
+      }
+    } catch(e) { console.error("Could not load Mii save:", e); }
+  }
+
+  const rawData = atob(miiBase64Str);
   const u8 = new Uint8Array(rawData.length);
   for(let i = 0; i < rawData.length; i++) u8[i] = rawData.charCodeAt(i);
   miiInstance = new window.Mii(u8);
@@ -433,15 +462,7 @@ async function initMiiMaker(container) {
     panel.appendChild(grid);
   }
 
-  // Profile data state
-  const currentProfile = {
-    first_name: "",
-    last_name: "",
-    username: currentUser || "",
-    birthday: "",
-    bio: ""
-  };
-
+  // Profile data state is defined at top level now
   function renderProfilePanel() {
     panel.innerHTML = `
       <div class="mii-control-group"><label>First Name</label><input type="text" class="mii-input" id="inp-first" placeholder="e.g. Luigi" value="${currentProfile.first_name}"></div>
@@ -515,10 +536,16 @@ async function initMiiMaker(container) {
   const canvasArea = container.querySelector('#mii-canvas-container');
   canvasArea.style.position = 'relative';
   
+  // Make the background look like a spotlight or brighter to see the Mii clearly
+  canvasArea.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 70%)';
+  canvasArea.style.borderRadius = '16px';
+  canvasArea.style.boxShadow = 'inset 0 0 20px rgba(0,0,0,0.5)';
+  
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
-  previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;z-index:1;';
+  // Increase size and add a drop shadow so it pops from the background
+  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;z-index:1;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));transform:translateY(-5%);';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
