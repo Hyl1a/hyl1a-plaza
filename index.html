@@ -90,11 +90,11 @@
   <!-- Top Bar -->
   <div id="top-bar">
     <div class="top-section left">
-      <div id="user-avatar-badge" style="display: flex; align-items: center; gap: 10px;">
+      <div id="user-avatar-badge" style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 4px 12px 4px 4px; border-radius: 30px;">
         <!-- Avatar and Username -->
-        <div id="top-avatar-container" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden;"></div>
-        <div id="top-username" style="font-size: 14px; font-weight: bold;"></div>
-        <button id="btn-logout" style="background: rgba(255,0,0,0.5); border: none; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer;">Déconnexion</button>
+        <div id="top-avatar-container" style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);"></div>
+        <div id="top-username" style="font-size: 16px; font-weight: bold; margin-right: 10px;"></div>
+        <button id="btn-logout" title="Déconnexion" style="background: rgba(255,50,50,0.8); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s;" onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(255,0,0,1)'" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(255,50,50,0.8)'">⏻</button>
       </div>
       <div class="profile-group">
         <div class="profile-icon"></div>
