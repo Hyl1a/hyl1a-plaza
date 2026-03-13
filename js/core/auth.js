@@ -40,6 +40,7 @@ window.Auth = {
                document.getElementById('auth-overlay').style.display = 'none';
                // Re-trigger loadUserMii via document event or direct call if available
                if (window.loadUserMii) window.loadUserMii();
+               if (window.checkForcedMiiCreation) window.checkForcedMiiCreation();
             }
           }
         } catch(e) { console.error("Error fetching user profile:", e); }

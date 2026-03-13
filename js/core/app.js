@@ -203,19 +203,18 @@ function initAuth() {
   const errorMsg = document.getElementById('auth-error');
   const topUsername = document.getElementById('top-username');
 
-  // Check if logged in
+  // Check if logged in via local storage fallback (Firebase auth listener will overwrite this)
   const currentUser = Auth.getCurrentUser();
   if (currentUser) {
     overlay.style.display = 'none';
     if (topUsername) topUsername.textContent = currentUser;
-    loadUserMii();
-    checkForcedMiiCreation();
   } else {
     overlay.style.display = 'flex';
     generateAuthBackground();
   }
 
-  async function loadUserMii() {
+  // Make loadUserMii globally accessible so auth.js can trigger it when Firebase Auth state changes
+  window.loadUserMii = async function() {
     const user = Auth.getCurrentUser();
     const fbUser = window.Auth ? window.Auth.currentUser : null;
     const container = document.getElementById('top-avatar-container');
@@ -240,14 +239,14 @@ function initAuth() {
       }
     } catch (e) {
       console.error("Error loading user Mii for top bar:", e);
-      container.innerHTML = `<span style="font-size: 20px;">👤</span>`;
+      container.innerHTML = `<span style="font-size: 24px;">👤</span>`;
     }
-  }
+  }; // End of window.loadUserMii
 
-  async function checkForcedMiiCreation() {
-    const user = Auth.getCurrentUser();
+  window.checkForcedMiiCreation = async function() {
+    const user = window.Auth ? window.Auth.getCurrentUser() : null;
     if (user) {
-      const hasMii = await Auth.hasMii(user);
+      const hasMii = await window.Auth.hasMii(user);
       if (!hasMii) {
         // Simulate click on the Mii Maker tile
         setTimeout(() => {
@@ -256,7 +255,7 @@ function initAuth() {
         }, 500); // Small delay to let plaza render first
       }
     }
-  }
+  };
 
   function generateAuthBackground() {
     const bgContainer = document.getElementById('auth-bg');
@@ -376,7 +375,11 @@ function initAuth() {
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      Auth.logout();
+      if (window.Auth) window.Auth.logout();
     });
   }
-}
+} // End of initAuth
+
+document.addEventListener('DOMContentLoaded', () => {
+  initAuth();
+});
