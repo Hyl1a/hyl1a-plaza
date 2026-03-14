@@ -3,6 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry) {
       window.AppRegistry['miiMaker'].render = async function(container) {
+        if (document.querySelector('.mii-fullscreen-container > .mii-topbar')) {
+           console.warn("Mii Maker is already open.");
+           return;
+        }
         if (typeof AudioManager !== 'undefined') AudioManager.isExternalMusicPlaying = true;
         await initMiiMaker(container);
       };
@@ -231,22 +235,28 @@ async function initMiiMaker(container) {
   let miiBase64Str = "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn";
 
   if (currentUser && window.Auth && window.Auth.currentUser) {
-    // Try forcing a loading text
-    const overlay = container.querySelector('#mii-loading-overlay');
-    if(overlay) overlay.textContent = "Loading your Mii...";
-    
-    try {
-      const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", window.Auth.currentUser.uid);
-      const docSnap = await window.Firestore.getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.visual_base64) miiBase64Str = data.visual_base64;
-        currentProfile.first_name = data.first_name || "";
-        currentProfile.last_name = data.last_name || "";
-        currentProfile.birthday = data.birthday || "";
-        currentProfile.bio = data.bio || "";
-      }
-    } catch(e) { console.error("Could not load Mii save:", e); }
+    if (isForcedCreation) {
+      // New user: skip the loading attempt from Firestore
+      const overlay = container.querySelector('#mii-loading-overlay');
+      if (overlay) overlay.style.display = 'none';
+    } else {
+      // Existing user: attempt to load their Mii
+      const overlay = container.querySelector('#mii-loading-overlay');
+      if (overlay) overlay.textContent = "Loading your Mii...";
+      
+      try {
+        const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", window.Auth.currentUser.uid);
+        const docSnap = await window.Firestore.getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.visual_base64) miiBase64Str = data.visual_base64;
+          currentProfile.first_name = data.first_name || "";
+          currentProfile.last_name = data.last_name || "";
+          currentProfile.birthday = data.birthday || "";
+          currentProfile.bio = data.bio || "";
+        }
+      } catch(e) { console.error("Could not load Mii save:", e); }
+    }
   }
 
   const rawData = atob(miiBase64Str);

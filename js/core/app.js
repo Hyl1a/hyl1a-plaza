@@ -414,15 +414,19 @@ function initAuth() {
   }; // End of window.loadUserMii
 
   window.checkForcedMiiCreation = async function() {
+    // Anti-duplication guard: don't trigger if a fullscreen app is already open
+    if (document.querySelector('.mii-fullscreen-container')) return;
+
     const user = window.Auth ? window.Auth.getCurrentUser() : null;
     if (user) {
       const hasMii = await window.Auth.hasMii(user);
       if (!hasMii) {
-        // Simulate click on the Mii Maker tile
+        // Double check after small delay to be sure
         setTimeout(() => {
+          if (document.querySelector('.mii-fullscreen-container')) return;
           const miiMakerTile = document.querySelector('.app-trigger[data-app="miiMaker"]');
           if (miiMakerTile) miiMakerTile.click();
-        }, 500); // Small delay to let plaza render first
+        }, 800); 
       }
     }
   };
