@@ -56,34 +56,37 @@ window.Auth = {
                const welcomeMsg = document.createElement('div');
                welcomeMsg.style.cssText = `
                  position: fixed;
-                 top: 20%;
+                 top: 50%;
                  left: 50%;
                  transform: translate(-50%, -50%);
-                 background: rgba(255, 255, 255, 0.15);
-                 backdrop-filter: blur(15px);
+                 background: rgba(255, 255, 255, 0.1);
+                 backdrop-filter: blur(25px);
                  color: white;
-                 padding: 20px 40px;
-                 border-radius: 50px;
-                 font-size: 24px;
-                 font-weight: 800;
+                 padding: 40px 80px;
+                 border-radius: 100px;
+                 font-size: 56px;
+                 font-weight: 900;
                  z-index: 20000;
-                 box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                 border: 1px solid rgba(255,255,255,0.2);
+                 box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.2);
+                 border: 2px solid rgba(255,255,255,0.3);
                  pointer-events: none;
-                 animation: welcomePop 2.5s ease-out forwards;
+                 text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+                 letter-spacing: -1px;
+                 text-align: center;
+                 animation: welcomeCinematic 3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
                `;
-               welcomeMsg.innerHTML = `Welcome <span style="color:#7ec4ff">${this.currentUsername}</span> ! :)`;
+               welcomeMsg.innerHTML = `Welcome <span style="background: linear-gradient(135deg, #7ec4ff, #4a9fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">${this.currentUsername}</span> ! :)`;
                
                // Add animation keyframes if not existing
                if (!document.getElementById('welcome-anim-style')) {
                  const style = document.createElement('style');
                  style.id = 'welcome-anim-style';
                  style.textContent = `
-                   @keyframes welcomePop {
-                     0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
-                     15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                     85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                     100% { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
+                   @keyframes welcomeCinematic {
+                     0% { opacity: 0; transform: translate(-50%, -45%) scale(0.7); filter: blur(10px) brightness(2); }
+                     15% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px) brightness(1); }
+                     85% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px) brightness(1); }
+                     100% { opacity: 0; transform: translate(-50%, -55%) scale(1.1); filter: blur(20px) brightness(0.5); }
                    }
                  `;
                  document.head.appendChild(style);

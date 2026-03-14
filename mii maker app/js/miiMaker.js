@@ -198,6 +198,7 @@ async function initMiiMaker(container) {
   });
 
   // State
+  let activeCategory = 'face';
   let activeSubtab = 'type';
   let currentExpression = 'normal';
   let blinkTimeout = null;
