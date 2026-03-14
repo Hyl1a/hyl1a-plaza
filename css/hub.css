@@ -781,10 +781,42 @@
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
+/* Standalone Fullscreen Containers (Mii Maker, GBA, etc.) */
+.mii-fullscreen-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: transparent; /* No blur, no background so video shows through */
+  animation: fsAppOpen 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide navigation UI when a fullscreen app is open */
+.app-open-active #music-bar,
+.app-open-active #user-panel,
+.app-open-active #clock-panel,
+.app-open-active #top-bar,
+.app-open-active #bottom-bar {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
 .anim-window-close {
   animation: fsAppClose 0.4s cubic-bezier(0.5, 0, 0.75, 0) forwards !important;
 }
 
 @keyframes fsAppClose {
   to { opacity: 0; transform: scale(1.05); }
+}
+
+/* Mii Animations */
+@keyframes mii-breathe {
+  0%, 100% { transform: translateY(-5%) scale(1); }
+  50% { transform: translateY(-6%) scale(1.01); }
+}
+
+.mii-anim-breathe {
+  animation: mii-breathe 3s ease-in-out infinite;
 }

@@ -331,6 +331,7 @@ function initAppTriggers() {
           const fsContainer = document.createElement('div');
           fsContainer.className = 'mii-fullscreen-container';
           document.body.appendChild(fsContainer);
+          document.body.classList.add('app-open-active');
           
           // Smoothly fade out the hub
           document.getElementById('main-container').style.opacity = '0';
@@ -345,6 +346,7 @@ function initAppTriggers() {
             fsContainer.classList.add('anim-window-close');
             setTimeout(() => {
               if (fsContainer.parentNode) fsContainer.parentNode.removeChild(fsContainer);
+              document.body.classList.remove('app-open-active');
               document.getElementById('main-container').style.opacity = '1';
               document.getElementById('main-container').style.transform = 'scale(1)';
             }, 300);

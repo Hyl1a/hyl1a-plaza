@@ -84,7 +84,7 @@ async function initMiiMaker(container) {
         <button class="mii-save-btn" id="btn-save">Save & Quit</button>
       </div>
     </div>
-    <div id="mii-tutorial-bubble" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000; animation: bounce 2s infinite;">
+    <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000; animation: bounce 2s infinite;">
       Bienvenue ! Commençons par créer votre Mii.
       <style>
         @keyframes bounce {
@@ -568,7 +568,8 @@ async function initMiiMaker(container) {
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
   // Increase size and add a drop shadow so it pops from the background
-  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;z-index:1;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));transform:translateY(-5%);';
+  previewImg.classList.add('mii-anim-breathe');
+  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;z-index:1;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
