@@ -48,7 +48,9 @@ const AudioManager = {
   playlist: [
     { name: 'Eshop January 2016', file: 'assets/audio/Eshop January 2016.wav' },
     { name: 'Eshop July 2014', file: 'assets/audio/Eshop July 2014.wav' },
-    { name: 'Eshop June 2015', file: 'assets/audio/Eshop June 2015.wav' }
+    { name: 'Eshop June 2015', file: 'assets/audio/Eshop June 2015.wav' },
+    { name: 'BXNJI', file: 'assets/audio/bxnji.mp3' },
+    { name: 'Thoughtbody', file: 'assets/audio/thoughtbody.mp3' }
   ],
 
   init: function () {
@@ -124,7 +126,17 @@ const AudioManager = {
   playNextMusic: function () {
     this.pauseMusic();
 
-    this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
+    let nextIndex;
+    if (this.playlist.length > 1) {
+      // Pick a random index that isn't the current one
+      do {
+        nextIndex = Math.floor(Math.random() * this.playlist.length);
+      } while (nextIndex === this.currentTrackIndex);
+    } else {
+      nextIndex = 0;
+    }
+
+    this.currentTrackIndex = nextIndex;
     const track = this.playlist[this.currentTrackIndex];
 
     this.currentMusicAudio = new Audio(track.file);
