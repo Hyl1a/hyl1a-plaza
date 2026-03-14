@@ -147,9 +147,10 @@ async function initMiiMaker(container) {
   }
 
   function playMiiSFX(name) {
-    const sfx = new Audio(`assets/audio/${name}.wav`);
+    const sfx = new Audio(`/assets/audio/${name}.wav`);
+    sfx.preload = "auto";
     sfx.volume = 0.5;
-    sfx.play().catch(() => {});
+    sfx.play().catch(err => console.error(`Failed to play SFX: ${name}`, err));
   }
 
   // Start Mii music on open
