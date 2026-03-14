@@ -626,14 +626,14 @@ async function initMiiMaker(container) {
 
   function triggerStarEffect() {
     const count = 15;
-    const colors = ['#fff700', '#ffea00', '#ffd700', '#ffffff', '#7ee8ff'];
+    const colors = ['#fff700', '#ffea00', '#ffd700']; // Only yellow variations
     
     for (let i = 0; i < count; i++) {
       const star = document.createElement('div');
       star.innerHTML = i % 2 === 0 ? '★' : '✨';
       star.style.position = 'absolute';
       star.style.left = '50%';
-      star.style.top = '30%'; // Target the head area
+      star.style.top = '35%'; // Target between the eyes
       star.style.transform = 'translate(-50%, -50%)';
       star.style.color = colors[Math.floor(Math.random() * colors.length)];
       star.style.fontSize = (Math.random() * 25 + 20) + 'px'; // Larger stars
