@@ -624,6 +624,41 @@ async function initMiiMaker(container) {
   rightBtn.onmouseleave = () => rightBtn.style.background = 'rgba(255,255,255,0.15)';
   canvasArea.appendChild(rightBtn);
 
+  function triggerStarEffect() {
+    const count = 12;
+    const colors = ['#fff700', '#ffea00', '#ffd700', '#ffffff', '#7ee8ff'];
+    
+    for (let i = 0; i < count; i++) {
+      const star = document.createElement('div');
+      star.innerHTML = i % 2 === 0 ? '★' : '✨';
+      star.style.position = 'absolute';
+      star.style.left = '50%';
+      star.style.top = '40%'; // Focus around the face/upper body
+      star.style.transform = 'translate(-50%, -50%)';
+      star.style.color = colors[Math.floor(Math.random() * colors.length)];
+      star.style.fontSize = (Math.random() * 20 + 15) + 'px';
+      star.style.zIndex = '10';
+      star.style.pointerEvents = 'none';
+      star.style.textShadow = '0 0 10px rgba(255,255,255,0.8)';
+      
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 150 + 80;
+      const driftX = Math.cos(angle) * distance;
+      const driftY = Math.sin(angle) * distance;
+      
+      star.animate([
+        { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0 },
+        { transform: 'translate(-50%, -50%) scale(1.5) rotate(180deg)', opacity: 1, offset: 0.2 },
+        { transform: `translate(calc(-50% + ${driftX}px), calc(-50% + ${driftY}px)) scale(0) rotate(360deg)`, opacity: 0 }
+      ], {
+        duration: 700 + Math.random() * 500,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+      }).onfinish = () => star.remove();
+      
+      canvasArea.appendChild(star);
+    }
+  }
+
   // Rotation state
   let rotationY = 0;
 
@@ -650,6 +685,7 @@ async function initMiiMaker(container) {
       previewImg.src = newImg.src;
       // Fade back in quickly for a smooth transition if we were fading
       previewImg.style.opacity = '1';
+      triggerStarEffect();
     };
     newImg.onerror = () => {
       console.error('Failed to load Mii preview render');
