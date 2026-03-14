@@ -566,79 +566,37 @@ function initCustomCursor() {
   const cursor = document.getElementById('custom-cursor');
   if (!cursor) return;
 
-  let mouseX = 0;
-  let mouseY = 0;
-  let currentX = 0;
-  let currentY = 0;
-  let isMoving = false;
-  let mouseIn = false;
-
-  // Smoothing factor (0.1 to 1, where 1 is instant)
-  const lerp = 0.4;
-
-  function updateCursor() {
-    if (!mouseIn) {
-      cursor.style.display = 'none';
-      isMoving = false;
-      return;
-    }
-
-    // Use a small offset for the tip alignment
+  function setCursorPos(x, y) {
     const offsetX = -2;
     const offsetY = -1;
-    
-    // Use direct values instead of lerp to eliminate "lag" or "retard"
-    cursor.style.transform = `translate3d(${mouseX + offsetX}px, ${mouseY + offsetY}px, 0)`;
+    cursor.style.transform = `translate3d(${x + offsetX}px, ${y + offsetY}px, 0)`;
     cursor.style.display = 'block';
-
-    requestAnimationFrame(updateCursor);
   }
 
   document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    mouseIn = true;
-    if (!isMoving) {
-      isMoving = true;
-      requestAnimationFrame(updateCursor);
-    }
+    setCursorPos(e.clientX, e.clientY);
   });
 
   document.addEventListener('mouseenter', () => {
-    mouseIn = true;
-    if (!isMoving) {
-      isMoving = true;
-      requestAnimationFrame(updateCursor);
-    }
+    cursor.style.display = 'block';
   });
 
   document.addEventListener('mouseleave', () => {
-    mouseIn = false;
+    cursor.style.display = 'none';
   });
 
   // Handle cursor positions from inside iframes (GBA, etc.)
   window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'mii-mousemove') {
-      // Coordinates from iframe are relative to the iframe's top-left
-      // We need to find where the iframe is in the main window
       const iframes = document.querySelectorAll('iframe');
       let targetIframe = null;
-      
-      // Find which iframe sent the message (simple origin check or iterating)
-      // Since it's all local/same-ish origin for now:
       iframes.forEach(iframe => {
         if (iframe.contentWindow === event.source) targetIframe = iframe;
       });
 
       if (targetIframe) {
         const rect = targetIframe.getBoundingClientRect();
-        mouseX = rect.left + event.data.x;
-        mouseY = rect.top + event.data.y;
-        mouseIn = true;
-        if (!isMoving) {
-          isMoving = true;
-          requestAnimationFrame(updateCursor);
-        }
+        setCursorPos(rect.left + event.data.x, rect.top + event.data.y);
       }
     }
 

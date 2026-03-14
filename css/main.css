@@ -44,8 +44,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   background-image: url('../assets/icons/curseur/cursor.cur');
   background-size: contain;
   background-repeat: no-repeat;
