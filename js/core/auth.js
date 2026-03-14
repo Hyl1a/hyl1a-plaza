@@ -46,6 +46,52 @@ window.Auth = {
             if (document.getElementById('top-username')) {
                document.getElementById('top-username').textContent = this.currentUsername;
                document.getElementById('auth-overlay').style.display = 'none';
+
+               // Play welcome SFX
+               if (window.AudioManager && window.AudioManager.playConnectSuccess) {
+                 window.AudioManager.playConnectSuccess();
+               }
+
+               // Show welcome message
+               const welcomeMsg = document.createElement('div');
+               welcomeMsg.style.cssText = `
+                 position: fixed;
+                 top: 20%;
+                 left: 50%;
+                 transform: translate(-50%, -50%);
+                 background: rgba(255, 255, 255, 0.15);
+                 backdrop-filter: blur(15px);
+                 color: white;
+                 padding: 20px 40px;
+                 border-radius: 50px;
+                 font-size: 24px;
+                 font-weight: 800;
+                 z-index: 20000;
+                 box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                 border: 1px solid rgba(255,255,255,0.2);
+                 pointer-events: none;
+                 animation: welcomePop 2.5s ease-out forwards;
+               `;
+               welcomeMsg.innerHTML = `Welcome <span style="color:#7ec4ff">${this.currentUsername}</span> ! :)`;
+               
+               // Add animation keyframes if not existing
+               if (!document.getElementById('welcome-anim-style')) {
+                 const style = document.createElement('style');
+                 style.id = 'welcome-anim-style';
+                 style.textContent = `
+                   @keyframes welcomePop {
+                     0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+                     15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                     85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                     100% { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
+                   }
+                 `;
+                 document.head.appendChild(style);
+               }
+
+               document.body.appendChild(welcomeMsg);
+               setTimeout(() => welcomeMsg.remove(), 2600);
+
                // Re-trigger loadUserMii via document event or direct call if available
                if (window.loadUserMii) window.loadUserMii();
                if (window.checkForcedMiiCreation) window.checkForcedMiiCreation();

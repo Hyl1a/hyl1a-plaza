@@ -184,6 +184,7 @@ async function initMiiMaker(container) {
     }
     container.classList.add('closing');
     if (blinkTimeout) clearTimeout(blinkTimeout);
+    if (miiSpeechTimeout) clearTimeout(miiSpeechTimeout);
     setTimeout(() => { if (container.parentNode) container.parentNode.removeChild(container); }, 300);
   }
 
@@ -197,10 +198,23 @@ async function initMiiMaker(container) {
   });
 
   // State
-  let activeCategory = 'face';
   let activeSubtab = 'type';
   let currentExpression = 'normal';
   let blinkTimeout = null;
+  let miiSpeechTimeout = null;
+
+  const MII_MESSAGES = [
+    "Regarde mon nouveau look ! ✨",
+    "Je me sens super bien aujourd'hui ! 😊",
+    "Tu trouves que cette couleur me va ? 🌈",
+    "On dirait presque mon jumeau ! 😄",
+    "J'adore ma nouvelle coiffure ! 💇",
+    "C'est magnifique ! ✨",
+    "Tu as beaucoup de goût ! 🎨",
+    "Waouh, je suis stylé ! 😎",
+    "Je me demande à quoi je vais ressembler... 🤔",
+    "Clique sur les catégories pour m'ajuster ! 👆"
+  ];
 
   // --- TUTORIAL LOGIC ---
   const tutorialBubble = container.querySelector('#mii-tutorial-bubble');
@@ -677,7 +691,7 @@ async function initMiiMaker(container) {
     fetchMiiRender();
   });
 
-  function fetchMiiRender() {
+  function fetchMiiRender(skipStars = false) {
     const b64 = encodeMiiBase64();
     const angle = ((rotationY % 360) + 360) % 360;
     const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=720&clothesColor=default&shaderType=wiiu&characterYRotate=${Math.round(angle)}&expression=${currentExpression}`;
@@ -689,7 +703,7 @@ async function initMiiMaker(container) {
       previewImg.src = newImg.src;
       // Fade back in quickly for a smooth transition if we were fading
       previewImg.style.opacity = '1';
-      triggerStarEffect();
+      if (!skipStars) triggerStarEffect();
     };
     newImg.onerror = () => {
       console.error('Failed to load Mii preview render');
@@ -718,19 +732,70 @@ async function initMiiMaker(container) {
       // Don't blink if we are currently updating the model from selection
       // (This is a bit hard to track perfectly, but usually fine)
       currentExpression = 'blink';
-      fetchMiiRender();
+      fetchMiiRender(true);
 
       // Eye closed duration (very fast)
       setTimeout(() => {
         currentExpression = 'normal';
-        fetchMiiRender();
+        fetchMiiRender(true);
         scheduleBlink();
-      }, 150);
+      }, 100);
     }, interval);
   }
 
-  // Start blinking
+  function triggerMiiSpeech() {
+    let bubble = container.querySelector('#mii-speech-bubble');
+    if (!bubble) {
+      bubble = document.createElement('div');
+      bubble.id = 'mii-speech-bubble';
+      bubble.style.cssText = `
+        position: absolute;
+        top: 22%;
+        right: 15%;
+        background: white;
+        color: #333;
+        padding: 12px 20px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 14px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 1000;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        pointer-events: none;
+        border: 3px solid #4facfe;
+        transform: scale(0.8) translateY(10px);
+      `;
+      container.querySelector('#mii-canvas-container').appendChild(bubble);
+    }
+
+    const msg = MII_MESSAGES[Math.floor(Math.random() * MII_MESSAGES.length)];
+    bubble.innerHTML = `${msg}<div style="position: absolute; bottom: -12px; right: 25px; border-width: 12px 12px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
+                        <div style="position: absolute; bottom: -8px; right: 25px; border-width: 8px 8px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>`;
+
+    bubble.style.opacity = '1';
+    bubble.style.transform = 'scale(1) translateY(0)';
+    
+    playMiiSFX('SE_MII_UP');
+
+    setTimeout(() => {
+      bubble.style.opacity = '0';
+      bubble.style.transform = 'scale(0.8) translateY(10px)';
+    }, 4500);
+  }
+
+  function scheduleMiiSpeech() {
+    if (miiSpeechTimeout) clearTimeout(miiSpeechTimeout);
+    const interval = Math.random() * 12000 + 15000; // 15-27 seconds
+    miiSpeechTimeout = setTimeout(() => {
+      triggerMiiSpeech();
+      scheduleMiiSpeech();
+    }, interval);
+  }
+
+  // Start behaviors
   scheduleBlink();
+  scheduleMiiSpeech();
 
   fetch3DModel();
 }

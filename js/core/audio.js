@@ -39,7 +39,8 @@ const AudioManager = {
     click: 'assets/audio/click_survol_tuile.wav',
     pop: 'assets/audio/pop_interaction.wav',
     windowOpen: 'assets/audio/ouverture_fenetre.wav',
-    windowClose: 'assets/audio/fermeture_fenetre.wav'
+    windowClose: 'assets/audio/fermeture_fenetre.wav',
+    connectSuccess: 'assets/audio/CONNECT_SUCCESS.wav'
   },
 
   // Music playlist
@@ -86,6 +87,10 @@ const AudioManager = {
 
   playWindowClose: function () {
     this._play('windowClose');
+  },
+
+  playConnectSuccess: function () {
+    this._play('connectSuccess');
   },
 
   // --- Music Playback ---
