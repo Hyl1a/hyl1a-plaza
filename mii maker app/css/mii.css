@@ -104,6 +104,7 @@
   position: relative;
   background: radial-gradient(ellipse at 50% 60%, #2a2a4a 0%, #16162a 100%);
   min-width: 55%;
+  overflow: hidden; /* Prevent 105% wide Mii image from overlapping controls */
 }
 .mii-canvas-area canvas {
   display: block;
@@ -132,6 +133,8 @@
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
+  position: relative;
+  z-index: 10; /* Ensure controls are on top of any overlapping preview/particles */
 }
 
 /* Sub-tabs: Type / Color / Position */

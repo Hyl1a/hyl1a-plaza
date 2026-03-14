@@ -633,7 +633,7 @@ async function initMiiMaker(container) {
       star.innerHTML = i % 2 === 0 ? '★' : '✨';
       star.style.position = 'absolute';
       star.style.left = '50%';
-      star.style.top = '25%'; // Precisely between the eyes on the body render
+      star.style.top = '30%'; // Balanced position for face centering
       star.style.transform = 'translate(-50%, -50%)';
       star.style.color = colors[Math.floor(Math.random() * colors.length)];
       star.style.fontSize = (Math.random() * 25 + 20) + 'px'; // Larger stars
