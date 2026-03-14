@@ -44,11 +44,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   background-image: url('../assets/icons/curseur/cursor.cur');
   background-size: contain;
   background-repeat: no-repeat;
+  /* Visual offset to align the actual click point (tip) with the mouse coordinates */
+  background-position: -2px -1px; 
   pointer-events: none;
   z-index: 1000000;
   will-change: transform;

@@ -569,9 +569,10 @@ function initCustomCursor() {
       cursor.style.display = 'block';
       mouseIn = true;
     }
-    // No offset (top-left tip) or slight offset? 
-    // Wii cursors tip is usually top-left.
-    cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    // Add a slight offset to align the visual tip (top-left) with the click point
+    const offsetX = -2;
+    const offsetY = -1;
+    cursor.style.transform = `translate(${e.clientX + offsetX}px, ${e.clientY + offsetY}px)`;
   });
 
   document.addEventListener('mouseleave', () => {
