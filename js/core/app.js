@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMusicBar();          // Initialize song controls
   initAuth(); // Initialize authentication system
   initMiiPlaza();         // Initialize Mii background characters
-  initCustomCursor();     // Initialize custom enlarged cursor
+  initMiiPlaza();         // Initialize Mii background characters
 
   // Auto-play music on first user interaction (browser requires user gesture)
   function autoPlayOnce() {
@@ -562,63 +562,3 @@ function initAuth() {
   }
 } // End of initAuth
 
-function initCustomCursor() {
-  const cursor = document.getElementById('custom-cursor');
-  if (!cursor) return;
-
-  function setCursorPos(x, y) {
-    const offsetX = -2;
-    const offsetY = -1;
-    cursor.style.transform = `translate3d(${x + offsetX}px, ${y + offsetY}px, 0)`;
-    cursor.style.display = 'block';
-  }
-
-  document.addEventListener('mousemove', (e) => {
-    setCursorPos(e.clientX, e.clientY);
-  });
-
-  document.addEventListener('mouseenter', () => {
-    cursor.style.display = 'block';
-  });
-
-  document.addEventListener('mouseleave', () => {
-    cursor.style.display = 'none';
-  });
-
-  // Handle cursor positions from inside iframes (GBA, etc.)
-  window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'mii-mousemove') {
-      const iframes = document.querySelectorAll('iframe');
-      let targetIframe = null;
-      iframes.forEach(iframe => {
-        if (iframe.contentWindow === event.source) targetIframe = iframe;
-      });
-
-      if (targetIframe) {
-        const rect = targetIframe.getBoundingClientRect();
-        setCursorPos(rect.left + event.data.x, rect.top + event.data.y);
-      }
-    }
-
-    if (event.data && event.data.type === 'mii-mousedown') {
-      const iframes = document.querySelectorAll('iframe');
-      let targetIframe = null;
-      iframes.forEach(iframe => {
-        if (iframe.contentWindow === event.source) targetIframe = iframe;
-      });
-
-      if (targetIframe) {
-        // Simulate a click on the element at those coordinates in the main window
-        // but since it's an iframe, we just want to ensure the audio fallback triggers
-        // and any other global click logic
-        if (typeof AudioManager !== 'undefined') {
-          // Trigger the interaction fallback
-          const dummyBtn = document.createElement('button');
-          document.body.appendChild(dummyBtn);
-          dummyBtn.click();
-          dummyBtn.remove();
-        }
-      }
-    }
-  });
-}
