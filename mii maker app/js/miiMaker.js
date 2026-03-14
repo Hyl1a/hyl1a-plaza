@@ -8,7 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         if (typeof AudioManager !== 'undefined') AudioManager.isExternalMusicPlaying = true;
-        await initMiiMaker(container);
+        // Clean up any lingering login welcome messages
+        const oldWelcome = document.getElementById('login-welcome-msg');
+        if (oldWelcome) oldWelcome.remove();
+        
+        // Show gender selection first
+        renderGenderSelection(container);
       };
     }
   }, 100);
@@ -22,14 +27,14 @@ const SHIRTS = ['#ff3333', '#ff6600', '#ffcc00', '#33cc33', '#3366ff', '#66ccff'
 
 // --- Category Definitions ---
 const CATEGORIES = [
-  { id: 'face', icon: '😊', label: 'Face' },
-  { id: 'hair', icon: '💇', label: 'Hair' },
-  { id: 'eyebrows', icon: '🤨', label: 'Brows' },
-  { id: 'eyes', icon: '👁️', label: 'Eyes' },
-  { id: 'nose', icon: '👃', label: 'Nose' },
-  { id: 'mouth', icon: '👄', label: 'Mouth' },
-  { id: 'glasses', icon: '🤓', label: 'Glasses' },
-  { id: 'body', icon: '👕', label: 'Body' },
+  { id: 'face', icon: 'assets/icons/caté/visageI.png', label: 'Face' },
+  { id: 'hair', icon: 'assets/icons/caté/cheveuxI.png', label: 'Hair' },
+  { id: 'eyebrows', icon: 'assets/icons/caté/brow.png', label: 'Brows' },
+  { id: 'eyes', icon: 'assets/icons/caté/oeilI.png', label: 'Eyes' },
+  { id: 'nose', icon: 'assets/icons/caté/nezI.png', label: 'Nose' },
+  { id: 'mouth', icon: 'assets/icons/caté/boucheI.png', label: 'Mouth' },
+  { id: 'glasses', icon: 'assets/icons/caté/accsI.png', label: 'Glasses' },
+  { id: 'body', icon: 'assets/icons/caté/gars.png', label: 'Body' },
   { id: 'profile', icon: '📝', label: 'Profile' },
 ];
 
@@ -51,16 +56,54 @@ const FACE_STYLES = makeStyles(11);
 let miiInstance = null;
 let currentGLBModel = null;
 
-async function initMiiMaker(container) {
+/**
+ * Render the gender selection screen
+ */
+function renderGenderSelection(container) {
+  container.innerHTML = `
+    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #2a2a4a 0%, #1a1a2e 100%); color: white; border-radius: 20px; overflow: hidden; position: relative; font-family: 'Outfit', sans-serif;">
+      <h2 style="font-size: 32px; margin-bottom: 40px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); animation: fadeInDown 0.8s ease-out;">Choisissez le genre</h2>
+      <div style="display: flex; gap: 40px; animation: fadeInUp 0.8s ease-out;">
+        <button id="select-male" style="background: rgba(255,255,255,0.1); border: 4px solid #7ec4ff; border-radius: 30px; padding: 30px; cursor: pointer; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+          <img src="assets/icons/caté/gars.png" style="width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
+          <span style="font-size: 20px; font-weight: 800; color: #7ec4ff;">Homme</span>
+        </button>
+        <button id="select-female" style="background: rgba(255,255,255,0.1); border: 4px solid #ff7eb3; border-radius: 30px; padding: 30px; cursor: pointer; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+          <img src="assets/icons/caté/meuf.png" style="width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
+          <span style="font-size: 20px; font-weight: 800; color: #ff7eb3;">Femme</span>
+        </button>
+      </div>
+      <style>
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        #select-male:hover { transform: scale(1.1); background: rgba(126, 196, 255, 0.2); box-shadow: 0 0 30px rgba(126, 196, 255, 0.4); }
+        #select-female:hover { transform: scale(1.1); background: rgba(255, 126, 179, 0.2); box-shadow: 0 0 30px rgba(255, 126, 179, 0.4); }
+      </style>
+    </div>
+  `;
+
+  container.querySelector('#select-male').addEventListener('click', () => initMiiMaker(container, 0));
+  container.querySelector('#select-female').addEventListener('click', () => initMiiMaker(container, 1));
+}
+
+async function initMiiMaker(container, gender = 0) {
   if (!window.Mii) {
     setTimeout(() => initMiiMaker(container), 100);
     return;
   }
 
   // Build category buttons HTML
-  const catBtns = CATEGORIES.map((c, i) =>
-    `<button class="mii-cat-btn${i === 0 ? ' active' : ''}" data-cat="${c.id}" title="${c.label}">${c.icon}</button>`
-  ).join('');
+  const catBtns = CATEGORIES.map((c, i) => {
+    const isImage = c.icon.includes('.png');
+    const content = isImage ? `<img src="${c.icon}" style="width:38px;height:38px;object-fit:contain;">` : `<span style="font-size:32px;line-height:1;">${c.icon}</span>`;
+    return `<button class="mii-cat-btn${i === 0 ? ' active' : ''}" data-cat="${c.id}" title="${c.label}">${content}</button>`;
+  }).join('');
 
   container.innerHTML = `
     <div class="mii-topbar">
@@ -73,7 +116,7 @@ async function initMiiMaker(container) {
     <div class="mii-body">
       <div class="mii-canvas-area" id="mii-canvas-container" style="background: transparent;">
         <div id="mii-loading-overlay">Loading Preview...</div>
-        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 120px; left: 55%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 15px 25px; border-radius: 30px; font-weight: 800; font-size: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;">
+        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 120px; left: 52.5%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 15px 25px; border-radius: 30px; font-weight: 800; font-size: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;">
           <div id="mii-tutorial-text">Bienvenue ! ✨</div>
           <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>
           <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
@@ -205,16 +248,16 @@ async function initMiiMaker(container) {
   let miiSpeechTimeout = null;
 
   const MII_MESSAGES = [
-    "Regarde mon nouveau look ! ✨",
-    "Je me sens super bien aujourd'hui ! 😊",
-    "Tu trouves que cette couleur me va ? 🌈",
-    "On dirait presque mon jumeau ! 😄",
-    "J'adore ma nouvelle coiffure ! 💇",
-    "C'est magnifique ! ✨",
-    "Tu as beaucoup de goût ! 🎨",
-    "Waouh, je suis stylé ! 😎",
-    "Je me demande à quoi je vais ressembler... 🤔",
-    "Clique sur les catégories pour m'ajuster ! 👆"
+    "Regarde mon nouveau look hehehe",
+    "Je me sens super bien aujourd'hui !",
+    "Tu trouves que cette couleur me va ?",
+    "On dirait presque mon jumeau !",
+    "J'adore ma nouvelle coiffure !",
+    "C'est quoi ce poulet !",
+    "Tu as beaucoup de goût !",
+    "Waouh, je suis stylé !",
+    "Je me demande à quoi je vais ressembler...",
+    "Clique sur les catégories pour m'ajuster !"
   ];
 
   // --- TUTORIAL LOGIC ---
@@ -304,7 +347,16 @@ async function initMiiMaker(container) {
   const u8 = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; i++) u8[i] = rawData.charCodeAt(i);
   miiInstance = new window.Mii(u8);
+  miiInstance.gender = gender; // Set gender from selection
+  miiInstance.height = 91; // Base height requested by user (0-127)
   miiInstance.mouthType = 19; // Default smile style requested by user
+
+  // Female-specific defaults
+  if (gender === 1) {
+    miiInstance.hairType = 12;
+    miiInstance.eyebrowType = 0;
+    miiInstance.eyeType = 4;
+  }
 
   // Category switching
   const catButtons = container.querySelectorAll('.mii-cat-btn');
@@ -752,8 +804,8 @@ async function initMiiMaker(container) {
       bubble.id = 'mii-speech-bubble';
       bubble.style.cssText = `
         position: absolute;
-        top: 15%;
-        left: 8%;
+        top: 45%;
+        left: 20%;
         background: white;
         color: #333;
         padding: 20px 30px;
@@ -780,8 +832,17 @@ async function initMiiMaker(container) {
       <div style="position: absolute; bottom: 15px; right: -25px; border-width: 15px 0 15px 30px; border-style: solid; border-color: transparent transparent transparent #4facfe; transform: rotate(-15deg);"></div>
       <div style="position: absolute; bottom: 18px; right: -18px; border-width: 12px 0 12px 25px; border-style: solid; border-color: transparent transparent transparent white; transform: rotate(-15deg);"></div>`;
 
+    // Reset styles for immediate re-reveal
+    bubble.style.transition = 'none';
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'scale(0.5) translateY(20px)';
+    
+    // Force reflow
+    bubble.offsetHeight;
+
+    bubble.style.transition = 'all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
     bubble.style.opacity = '1';
-    bubble.style.transform = 'scale(1) rotate(0deg)';
+    bubble.style.transform = 'scale(1) translateY(0)';
     
     playMiiSFX('SE_MII_UP');
 

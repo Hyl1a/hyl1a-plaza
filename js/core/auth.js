@@ -54,6 +54,7 @@ window.Auth = {
 
                // Show welcome message
                const welcomeMsg = document.createElement('div');
+               welcomeMsg.id = 'login-welcome-msg';
                welcomeMsg.style.cssText = `
                  position: fixed;
                  top: 50%;

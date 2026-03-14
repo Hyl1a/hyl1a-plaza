@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMusicBar();          // Initialize song controls
   initAuth(); // Initialize authentication system
   initMiiPlaza();         // Initialize Mii background characters
+  initCustomCursor();     // Initialize custom enlarged cursor
 
   // Auto-play music on first user interaction (browser requires user gesture)
   function autoPlayOnce() {
@@ -555,3 +556,26 @@ function initAuth() {
     });
   }
 } // End of initAuth
+
+function initCustomCursor() {
+  const cursor = document.getElementById('custom-cursor');
+  if (!cursor) return;
+
+  // Track if mouse is currently in window
+  let mouseIn = false;
+
+  document.addEventListener('mousemove', (e) => {
+    if (!mouseIn) {
+      cursor.style.display = 'block';
+      mouseIn = true;
+    }
+    // No offset (top-left tip) or slight offset? 
+    // Wii cursors tip is usually top-left.
+    cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+  });
+
+  document.addEventListener('mouseleave', () => {
+    cursor.style.display = 'none';
+    mouseIn = false;
+  });
+}
