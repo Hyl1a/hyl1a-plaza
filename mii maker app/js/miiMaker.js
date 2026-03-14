@@ -73,8 +73,8 @@ async function initMiiMaker(container) {
     <div class="mii-body">
       <div class="mii-canvas-area" id="mii-canvas-container" style="background: transparent;">
         <div id="mii-loading-overlay">Loading Preview...</div>
-        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 15px 25px; border-radius: 30px; font-weight: 800; font-size: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;">
-          <div id="mii-tutorial-text">Bienvenue ! Commençons par créer votre Mii.</div>
+        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 120px; left: 55%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 15px 25px; border-radius: 30px; font-weight: 800; font-size: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;">
+          <div id="mii-tutorial-text">Bienvenue ! ✨</div>
           <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>
           <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
           <style>
@@ -146,6 +146,12 @@ async function initMiiMaker(container) {
     }
   }
 
+  function playMiiSFX(name) {
+    const sfx = new Audio(`assets/audio/${name}.wav`);
+    sfx.volume = 0.5;
+    sfx.play().catch(() => {});
+  }
+
   // Start Mii music on open
   startMiiMusic();
 
@@ -178,6 +184,7 @@ async function initMiiMaker(container) {
   }
 
   container.querySelector('.mii-close-btn').addEventListener('click', () => {
+    playMiiSFX('cancel');
     if (isForcedCreation) {
       alert("Veuillez d'abord créer et sauvegarder votre Mii !");
       return;
@@ -201,20 +208,35 @@ async function initMiiMaker(container) {
     const textEl = container.querySelector('#mii-tutorial-text');
     if (!textEl) return;
 
-    let msg = "Bienvenue !";
-    if (activeCategory === 'face') msg = "Choisissez la forme du visage et le teint qui vous correspondent !";
-    else if (activeCategory === 'hair') msg = "Trouvez votre coiffure idéale et sa couleur.";
-    else if (activeCategory === 'eyebrows') msg = "Les sourcils donnent beaucoup de personnalité !";
-    else if (activeCategory === 'eyes') msg = "Des yeux perçants ou endormis ?";
-    else if (activeCategory === 'nose') msg = "Un petit nez retroussé ou imposant ?";
-    else if (activeCategory === 'mouth') msg = "Veuillez choisir une bouche à votre style !";
-    else if (activeCategory === 'glasses') msg = "Besoin de lunettes ?";
-    else if (activeCategory === 'body') msg = "Ajustez votre taille, votre corpulence et votre couleur préférée !";
-    else if (activeCategory === 'profile') msg = "Enfin, donnez un nom à votre Mii pour sauvegarder !";
+    const variants = {
+      welcome: ["Bienvenue ! ✨", "Salut ! On commence ? 👋", "C'est l'heure de créer votre Mii ! 🎨"],
+      face: ["Choisissez un joli visage ! 😊", "Quel teint vous va le mieux ? ✨", "La base de tout Mii ! 👤"],
+      hair: ["Une coiffure stylée ? 💇", "Quelle couleur vous préférez ? 🌈", "Changez de tête ! ✨"],
+      eyebrows: ["Des sourcils expressifs ! 🤨", "Ça change tout le regard ! ✨"],
+      eyes: ["Regardez-moi dans les yeux ! 👀", "Des yeux pétillants ? ✨"],
+      nose: ["Un petit pif ? 👃", "Chacun son nez ! 😄"],
+      mouth: ["Gardez le sourire ! 😁", "Une petite moue ? ✨"],
+      glasses: ["Besoin d'y voir plus clair ? 👓", "Le style intello ! 🤓"],
+      body: ["Ajustez votre taille ! 📏", "Quelle est votre couleur préférée ? 👕", "Un Mii à votre image ! ✨"],
+      profile: ["Presque fini ! Donnez-lui un nom ! 📝", "Dernière étape ! ✨"]
+    };
+
+    const getRand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    let msg = getRand(variants.welcome);
+    if (activeCategory === 'face') msg = getRand(variants.face);
+    else if (activeCategory === 'hair') msg = getRand(variants.hair);
+    else if (activeCategory === 'eyebrows') msg = getRand(variants.eyebrows);
+    else if (activeCategory === 'eyes') msg = getRand(variants.eyes);
+    else if (activeCategory === 'nose') msg = getRand(variants.nose);
+    else if (activeCategory === 'mouth') msg = getRand(variants.mouth);
+    else if (activeCategory === 'glasses') msg = getRand(variants.glasses);
+    else if (activeCategory === 'body') msg = getRand(variants.body);
+    else if (activeCategory === 'profile') msg = getRand(variants.profile);
     
     if (activeCategory !== 'body' && activeCategory !== 'profile') {
-        if (activeSubtab === 'color') msg += " (N'oubliez pas les couleurs !)";
-        if (activeSubtab === 'position') msg += " (Ajustez la position finement !)";
+        if (activeSubtab === 'color') msg += " (Les couleurs ! 🎨)";
+        if (activeSubtab === 'position') msg += " (Ajustez bien ! 🎯)";
     }
     
     textEl.textContent = msg;
@@ -277,12 +299,15 @@ async function initMiiMaker(container) {
   });
 
   // Sub-tab switching
-  container.querySelectorAll('.mii-subtab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      container.querySelectorAll('.mii-subtab').forEach(s => s.classList.remove('active'));
-      tab.classList.add('active');
-      activeSubtab = tab.dataset.sub;
+  const subtabs = container.querySelectorAll('.mii-subtab');
+  subtabs.forEach(subtab => {
+    subtab.addEventListener('click', () => {
+      subtabs.forEach(s => s.classList.remove('active'));
+      subtab.classList.add('active');
+      activeSubtab = subtab.getAttribute('data-sub');
+      if (activeSubtab === 'color') playMiiSFX('Color');
       renderPanel();
+      updateTutorialMessage();
     });
   });
 
@@ -522,14 +547,15 @@ async function initMiiMaker(container) {
   });
 
   // Save with Forced Creation Bypass
-  container.querySelector('#btn-save').addEventListener('click', async () => {
-    const btn = container.querySelector('#btn-save');
+  const saveBtn = container.querySelector('#btn-save');
+  saveBtn.addEventListener('click', async () => {
+    playMiiSFX('save');
     const data = getProfileData();
     if (!data.username) { alert("Please enter a Nickname before saving!"); return; }
     if (data.first_name) miiInstance.miiName = data.first_name;
     
     try {
-      btn.textContent = "Saving..."; btn.disabled = true;
+      saveBtn.textContent = "Saving..."; saveBtn.disabled = true;
       const fbUser = window.Auth ? window.Auth.currentUser : null;
       
       if (!fbUser) throw new Error("User not authenticated in Firebase");
@@ -539,7 +565,7 @@ async function initMiiMaker(container) {
       await window.Firestore.setDoc(docRef, data, { merge: true });
 
       if (typeof AudioManager !== 'undefined') AudioManager.playPop();
-      btn.textContent = "Saved!";
+      saveBtn.textContent = "Saved!";
       
       closeMiiMaker();
       
@@ -547,7 +573,7 @@ async function initMiiMaker(container) {
       if (isForcedCreation) setTimeout(() => window.location.reload(), 1000);
 
     } catch(err) {
-      console.error(err); alert("Failed to connect. Is server running?"); btn.textContent = "Save & Quit"; btn.disabled = false;
+      console.error(err); alert("Failed to connect. Is server running?"); saveBtn.textContent = "Save & Quit"; saveBtn.disabled = false;
     }
   });
 
@@ -594,8 +620,16 @@ async function initMiiMaker(container) {
   // Rotation state
   let rotationY = 0;
 
-  leftBtn.addEventListener('click', () => { rotationY -= 30; fetchMiiRender(); });
-  rightBtn.addEventListener('click', () => { rotationY += 30; fetchMiiRender(); });
+  leftBtn.addEventListener('click', () => {
+    playMiiSFX('Gauche');
+    rotationY -= 30;
+    fetchMiiRender();
+  });
+  rightBtn.addEventListener('click', () => {
+    playMiiSFX('Droite');
+    rotationY += 30;
+    fetchMiiRender();
+  });
 
   function fetchMiiRender() {
     const overlay = document.getElementById('mii-loading-overlay');
