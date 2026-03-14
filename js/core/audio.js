@@ -51,6 +51,7 @@ const AudioManager = {
   ],
 
   init: function () {
+    if (this._initialized) return;
     // Preload all UI sound effects
     Object.entries(this.soundFiles).forEach(([key, path]) => {
       const audio = new Audio(path);
@@ -58,10 +59,12 @@ const AudioManager = {
       audio.volume = 0.4;
       this.sounds[key] = audio;
     });
+    this._initialized = true;
   },
 
   _play: function (key) {
     if (this.isMuted) return;
+    if (!this._initialized) this.init(); // Auto-init if needed
     const sound = this.sounds[key];
     if (sound) {
       // Clone so overlapping plays work

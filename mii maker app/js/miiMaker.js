@@ -652,7 +652,9 @@ async function initMiiMaker(container, gender = 0) {
       if (isForcedCreation) setTimeout(() => window.location.reload(), 1000);
 
     } catch (err) {
-      console.error(err); alert("Failed to connect. Is server running?"); saveBtn.textContent = "Save & Quit"; saveBtn.disabled = false;
+      console.error("Mii Save Error:", err);
+      alert("Failed to save Mii: " + err.message);
+      saveBtn.textContent = "Save & Quit"; saveBtn.disabled = false;
     }
   });
 
