@@ -110,9 +110,11 @@ async function initMiiMaker(container) {
       AudioManager.isExternalMusicPlaying = true;
       if (AudioManager.isPlayingMusic) {
         mainMusicWasPlaying = true;
-        AudioManager.fadeOut(800).then(() => {
+        AudioManager.fadeOut(300).then(() => {
           miiMusic.play().catch(() => { });
         });
+        // Also start playing immediately but at low volume if possible, 
+        // or just start playing right after a short fade
       } else {
         mainMusicWasPlaying = false;
         miiMusic.play().catch(() => { });
@@ -306,7 +308,6 @@ async function initMiiMaker(container) {
       subtabs.forEach(s => s.classList.remove('active'));
       subtab.classList.add('active');
       activeSubtab = subtab.getAttribute('data-sub');
-      if (activeSubtab === 'color') playMiiSFX('Color');
       renderPanel();
       updateTutorialMessage();
     });
@@ -376,6 +377,7 @@ async function initMiiMaker(container) {
         grid.querySelectorAll('.mii-style-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         miiInstance[stateKey] = item.v;
+        playMiiSFX('Selectwav');
         fetch3DModel();
       });
       grid.appendChild(btn);
@@ -410,6 +412,7 @@ async function initMiiMaker(container) {
       swatch.className = 'mii-color-swatch' + (miiInstance[stateKey] === idx ? ' active' : '');
       swatch.style.backgroundColor = c;
       swatch.addEventListener('click', () => {
+        playMiiSFX('Color');
         grid.querySelectorAll('.mii-color-swatch').forEach(s => s.classList.remove('active'));
         swatch.classList.add('active');
         miiInstance[stateKey] = idx;
@@ -461,6 +464,7 @@ async function initMiiMaker(container) {
       group.querySelector('input').addEventListener('input', (e) => {
         miiInstance[s.key] = parseInt(e.target.value);
         group.querySelector(`#val-${s.key}`).textContent = e.target.value;
+        playMiiSFX('Selectwav');
         fetch3DModel();
       });
       panel.appendChild(group);
@@ -480,6 +484,7 @@ async function initMiiMaker(container) {
     hg.querySelector('input').addEventListener('input', e => {
       miiInstance.height = parseInt(e.target.value);
       hg.querySelector('#val-height').textContent = e.target.value;
+      playMiiSFX('Selectwav');
       fetch3DModel();
     });
     panel.appendChild(hg);
@@ -491,6 +496,7 @@ async function initMiiMaker(container) {
     bg.querySelector('input').addEventListener('input', e => {
       miiInstance.build = parseInt(e.target.value);
       bg.querySelector('#val-build').textContent = e.target.value;
+      playMiiSFX('Selectwav');
       fetch3DModel();
     });
     panel.appendChild(bg);
@@ -502,6 +508,7 @@ async function initMiiMaker(container) {
       swatch.className = 'mii-color-swatch' + (miiInstance.favoriteColor === idx ? ' active' : '');
       swatch.style.backgroundColor = c;
       swatch.addEventListener('click', () => {
+        playMiiSFX('Color');
         grid.querySelectorAll('.mii-color-swatch').forEach(s => s.classList.remove('active'));
         swatch.classList.add('active');
         miiInstance.favoriteColor = idx;
