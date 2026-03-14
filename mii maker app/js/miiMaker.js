@@ -599,9 +599,8 @@ async function initMiiMaker(container) {
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
-  // Increase size and add a drop shadow so it pops from the background
   previewImg.classList.add('mii-anim-breathe');
-  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.2s;user-select:none;z-index:1;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));';
+  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.3s ease-in-out;user-select:none;z-index:1;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));opacity:1;';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
@@ -640,28 +639,32 @@ async function initMiiMaker(container) {
   });
 
   function fetchMiiRender() {
-    const overlay = document.getElementById('mii-loading-overlay');
     const b64 = encodeMiiBase64();
     const angle = ((rotationY % 360) + 360) % 360;
     const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=720&clothesColor=default&shaderType=wiiu&characterYRotate=${Math.round(angle)}`;
 
+    // Create a background image to load the new render
     const newImg = new Image();
     newImg.onload = () => {
+      // Swap immediately when loaded
       previewImg.src = newImg.src;
+      // Fade back in quickly for a smooth transition if we were fading
       previewImg.style.opacity = '1';
-      if(overlay) overlay.style.display = 'none';
     };
     newImg.onerror = () => {
-      if(overlay) overlay.textContent = 'Failed to load Mii preview.';
+      console.error('Failed to load Mii preview render');
     };
-    previewImg.style.opacity = '0.7';
+    
+    // We don't dim the old image anymore for a "seamless" feel, 
+    // unless we want a very subtle feedback pulse:
+    // previewImg.style.opacity = '0.9'; 
+    
     newImg.src = url;
   }
 
   // Alias for compatibility with existing code that calls fetch3DModel
   function fetch3DModel() {
-    const overlay = document.getElementById('mii-loading-overlay');
-    if(overlay) overlay.style.display = 'flex';
+    // Just trigger the render update
     fetchMiiRender();
   }
 
