@@ -79,14 +79,15 @@ function renderGbaMenu(container) {
         letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 90%;
       }
       .gba-cf-arrow {
-        position: absolute; top: 50%; transform: translateY(-50%); z-index: 300; width: 60px; height: 60px;
-        border-radius: 50%; border: none; background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+        position: absolute; top: 50%; transform: translateY(-50%); z-index: 10000; width: 80px; height: 120px;
+        border-radius: 12px; border: none; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px);
         color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.2s; box-shadow: 0 5px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+        transition: all 0.2s; box-shadow: 0 5px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
       }
-      .gba-cf-arrow:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.1); }
-      #gba-cf-arrow-left { left: 40px; }
-      #gba-cf-arrow-right { right: 40px; }
+      .gba-cf-arrow:hover { background: rgba(255,255,255,0.25); transform: translateY(-50%) scale(1.05); }
+      #gba-cf-arrow-left { left: 20px; }
+      #gba-cf-arrow-right { right: 20px; }
+      .gba-cf-arrow svg { width: 40px; height: 40px; }
 
       .gba-cf-info {
         height: 140px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;

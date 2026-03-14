@@ -33,6 +33,7 @@ const AudioManager = {
   currentMusicAudio: null,
   currentTrackIndex: -1,
   isExternalMusicPlaying: false, // Flag for Mii Maker etc.
+  _pendingConnectSuccess: false,
 
   // Sound file mapping
   soundFiles: {
@@ -93,7 +94,29 @@ const AudioManager = {
   },
 
   playConnectSuccess: function () {
-    this._play('connectSuccess');
+    const sound = this.sounds['connectSuccess'];
+    if (sound) {
+      sound.play().catch(() => {
+        // If blocked by browser, set flag to play on first click
+        this._pendingConnectSuccess = true;
+        this._setupInteractionFallback();
+      });
+    }
+  },
+
+  _setupInteractionFallback: function() {
+    if (this._hasSetupFallback) return;
+    const playPending = () => {
+      if (this._pendingConnectSuccess) {
+        this._play('connectSuccess');
+        this._pendingConnectSuccess = false;
+      }
+      document.removeEventListener('click', playPending);
+      document.removeEventListener('keydown', playPending);
+    };
+    document.addEventListener('click', playPending);
+    document.addEventListener('keydown', playPending);
+    this._hasSetupFallback = true;
   },
 
   // --- Music Playback ---

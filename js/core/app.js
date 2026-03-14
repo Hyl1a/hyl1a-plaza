@@ -134,6 +134,9 @@ function initFocusNavigation() {
 
   /* ── Keyboard handler ── */
   document.addEventListener('keydown', (e) => {
+    // BLOCK INTERACTION IF LOGIN OVERLAY IS VISIBLE
+    if (document.getElementById('auth-overlay').style.display !== 'none') return;
+    
     const dirMap = { ArrowRight: 'right', ArrowLeft:  'left', ArrowDown:  'down', ArrowUp:    'up' };
     const dir = dirMap[e.key];
     if (dir) {
@@ -234,6 +237,7 @@ function initEnvironment() {
   const themeTile = document.getElementById('theme-tile');
   if (themeTile) {
     themeTile.addEventListener('click', () => {
+      if (document.getElementById('auth-overlay').style.display !== 'none') return;
       if (typeof AudioManager !== 'undefined') AudioManager.playPop();
       ThemeManager.openSelector();
     });
@@ -322,6 +326,7 @@ function initAppTriggers() {
     });
 
       trigger.addEventListener('click', () => {
+        if (document.getElementById('auth-overlay').style.display !== 'none') return;
         const appId = trigger.getAttribute('data-app');
         const appData = window.AppRegistry[appId];
         console.log('Launching appId:', appId, 'Data:', appData);
@@ -561,22 +566,104 @@ function initCustomCursor() {
   const cursor = document.getElementById('custom-cursor');
   if (!cursor) return;
 
-  // Track if mouse is currently in window
+  let mouseX = 0;
+  let mouseY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let isMoving = false;
   let mouseIn = false;
 
-  document.addEventListener('mousemove', (e) => {
+  // Smoothing factor (0.1 to 1, where 1 is instant)
+  const lerp = 0.4;
+
+  function updateCursor() {
     if (!mouseIn) {
-      cursor.style.display = 'block';
-      mouseIn = true;
+      cursor.style.display = 'none';
+      isMoving = false;
+      return;
     }
-    // Add a slight offset to align the visual tip (top-left) with the click point
+
+    // Interpolate positions for smoothness
+    currentX += (mouseX - currentX) * lerp;
+    currentY += (mouseY - currentY) * lerp;
+
+    // Use a small offset for the tip alignment
     const offsetX = -2;
     const offsetY = -1;
-    cursor.style.transform = `translate(${e.clientX + offsetX}px, ${e.clientY + offsetY}px)`;
+    
+    cursor.style.transform = `translate3d(${currentX + offsetX}px, ${currentY + offsetY}px, 0)`;
+    cursor.style.display = 'block';
+
+    requestAnimationFrame(updateCursor);
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    mouseIn = true;
+    if (!isMoving) {
+      isMoving = true;
+      requestAnimationFrame(updateCursor);
+    }
+  });
+
+  document.addEventListener('mouseenter', () => {
+    mouseIn = true;
+    if (!isMoving) {
+      isMoving = true;
+      requestAnimationFrame(updateCursor);
+    }
   });
 
   document.addEventListener('mouseleave', () => {
-    cursor.style.display = 'none';
     mouseIn = false;
+  });
+
+  // Handle cursor positions from inside iframes (GBA, etc.)
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'mii-mousemove') {
+      // Coordinates from iframe are relative to the iframe's top-left
+      // We need to find where the iframe is in the main window
+      const iframes = document.querySelectorAll('iframe');
+      let targetIframe = null;
+      
+      // Find which iframe sent the message (simple origin check or iterating)
+      // Since it's all local/same-ish origin for now:
+      iframes.forEach(iframe => {
+        if (iframe.contentWindow === event.source) targetIframe = iframe;
+      });
+
+      if (targetIframe) {
+        const rect = targetIframe.getBoundingClientRect();
+        mouseX = rect.left + event.data.x;
+        mouseY = rect.top + event.data.y;
+        mouseIn = true;
+        if (!isMoving) {
+          isMoving = true;
+          requestAnimationFrame(updateCursor);
+        }
+      }
+    }
+
+    if (event.data && event.data.type === 'mii-mousedown') {
+      const iframes = document.querySelectorAll('iframe');
+      let targetIframe = null;
+      iframes.forEach(iframe => {
+        if (iframe.contentWindow === event.source) targetIframe = iframe;
+      });
+
+      if (targetIframe) {
+        // Simulate a click on the element at those coordinates in the main window
+        // but since it's an iframe, we just want to ensure the audio fallback triggers
+        // and any other global click logic
+        if (typeof AudioManager !== 'undefined') {
+          // Trigger the interaction fallback
+          const dummyBtn = document.createElement('button');
+          document.body.appendChild(dummyBtn);
+          dummyBtn.click();
+          dummyBtn.remove();
+        }
+      }
+    }
   });
 }

@@ -67,6 +67,14 @@
             const script = document.createElement('script');
             script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
             document.body.appendChild(script);
+
+            // Report mouse acts to parent for custom cursor support
+            window.addEventListener('mousemove', (e) => {
+                window.parent.postMessage({ type: 'mii-mousemove', x: e.clientX, y: e.clientY }, '*');
+            });
+            window.addEventListener('mousedown', (e) => {
+                window.parent.postMessage({ type: 'mii-mousedown', x: e.clientX, y: e.clientY }, '*');
+            });
         } else {
             document.getElementById('game').innerText = "No ROM provided!";
         }
