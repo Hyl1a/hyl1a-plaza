@@ -42,63 +42,68 @@ window.Auth = {
                window.ThemeManager.init();
             }
 
-            // Trigger UI updates in app.js if they are ready
-            if (document.getElementById('top-username')) {
-               document.getElementById('top-username').textContent = this.currentUsername;
-               document.getElementById('auth-overlay').style.display = 'none';
-
-               // Play welcome SFX
-               if (window.AudioManager && window.AudioManager.playConnectSuccess) {
-                 window.AudioManager.playConnectSuccess();
-               }
-
-                // Show welcome message
-                const welcomeMsg = document.createElement('div');
-                welcomeMsg.id = 'login-welcome-msg';
-                welcomeMsg.style.cssText = `
-                  position: fixed;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  background: rgba(255, 255, 255, 0.08);
-                  backdrop-filter: blur(35px) saturate(180%);
-                  color: white;
-                  padding: 50px 100px;
-                  border-radius: 120px;
-                  font-size: 64px;
-                  font-weight: 900;
-                  z-index: 20000;
-                  box-shadow: 0 40px 100px rgba(0,0,0,0.7), 
-                              inset 0 0 40px rgba(255,255,255,0.2),
-                              0 0 0 1px rgba(255,255,255,0.4);
-                  pointer-events: none;
-                  text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                  letter-spacing: -2px;
-                  text-align: center;
-                  animation: welcomeCinematic 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-                `;
-                welcomeMsg.innerHTML = `Welcome <span style="background: linear-gradient(135deg, #7ec4ff, #4a9fff, #7ec4ff); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: textShine 3s linear infinite;">${this.currentUsername}</span> ! :)`;
-                
-                // Add animation keyframes
-                if (!document.getElementById('welcome-anim-style')) {
-                  const style = document.createElement('style');
-                  style.id = 'welcome-anim-style';
-                  style.textContent = `
-                    @keyframes welcomeCinematic {
-                      0% { opacity: 0; transform: translate(-50%, -40%) scale(0.6); filter: blur(20px) brightness(2); }
-                      15% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px) brightness(1); }
-                      85% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); filter: blur(0px) brightness(1); }
-                      100% { opacity: 0; transform: translate(-50%, -60%) scale(1.1); filter: blur(30px) brightness(0.5); }
-                    }
-                    @keyframes textShine {
-                      to { background-position: 200% center; }
-                    }
-                  `;
-                  document.head.appendChild(style);
-                }
+             // Trigger UI updates in app.js if they are ready
+             if (document.getElementById('top-username')) {
+                document.getElementById('top-username').textContent = this.currentUsername;
+                document.getElementById('auth-overlay').style.display = 'none';
  
-                document.body.appendChild(welcomeMsg);
-                setTimeout(() => welcomeMsg.remove(), 2800);
+                // Only show welcome message and play SFX once per session
+                if (!sessionStorage.getItem('hylia_welcome_shown')) {
+                  sessionStorage.setItem('hylia_welcome_shown', 'true');
+
+                  // Play welcome SFX
+                  if (window.AudioManager && window.AudioManager.playConnectSuccess) {
+                    window.AudioManager.playConnectSuccess();
+                  }
+ 
+                  // Show welcome message
+                  const welcomeMsg = document.createElement('div');
+                  welcomeMsg.id = 'login-welcome-msg';
+                  welcomeMsg.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 255, 255, 0.08);
+                    backdrop-filter: blur(35px) saturate(180%);
+                    color: white;
+                    padding: 50px 100px;
+                    border-radius: 120px;
+                    font-size: 64px;
+                    font-weight: 900;
+                    z-index: 20000;
+                    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 
+                                inset 0 0 40px rgba(255,255,255,0.2),
+                                0 0 0 1px rgba(255,255,255,0.4);
+                    pointer-events: none;
+                    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    letter-spacing: -2px;
+                    text-align: center;
+                    animation: welcomeCinematic 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                  `;
+                  welcomeMsg.innerHTML = `Welcome <span style="background: linear-gradient(135deg, #7ec4ff, #4a9fff, #7ec4ff); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: textShine 3s linear infinite;">${this.currentUsername}</span> ! :)`;
+                  
+                  // Add animation keyframes
+                  if (!document.getElementById('welcome-anim-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'welcome-anim-style';
+                    style.textContent = `
+                      @keyframes welcomeCinematic {
+                        0% { opacity: 0; transform: translate(-50%, -40%) scale(0.6); filter: blur(20px) brightness(2); }
+                        15% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px) brightness(1); }
+                        85% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); filter: blur(0px) brightness(1); }
+                        100% { opacity: 0; transform: translate(-50%, -60%) scale(1.1); filter: blur(30px) brightness(0.5); }
+                      }
+                      @keyframes textShine {
+                        to { background-position: 200% center; }
+                      }
+                    `;
+                    document.head.appendChild(style);
+                  }
+  
+                  document.body.appendChild(welcomeMsg);
+                  setTimeout(() => welcomeMsg.remove(), 2800);
+                }
 
                // Re-trigger loadUserMii via document event or direct call if available
                if (window.loadUserMii) window.loadUserMii();
