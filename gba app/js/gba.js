@@ -1,9 +1,8 @@
 const GBA_GAMES = [
   { name: 'Pokémon Émeraude', file: '/gba app/assets/roms/gba/Pokemon - Version Emeraude (France).gba', playtime: '12h 45m', cover: 'assets/icons/pkmnemeraude.jpg' },
   { name: 'Pokémon Rouge Feu', file: '/gba app/assets/roms/gba/Pokemon - Version Rouge Feu (France).gba', playtime: '4h 30m', cover: 'assets/icons/pkmnrouge.jpg' },
-  // Missing ROMs below - uncomment if added to assets/roms/gba/
-  // { name: 'Super Mario Advance', file: '/gba app/assets/roms/gba/Super Mario Advance (USA, Europe).gba', playtime: '1h 12m' },
-  // { name: 'The Legend of Zelda', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe).gba', playtime: '0h 00m' }
+  { name: 'Kirby & the Amazing Mirror', file: '/gba app/assets/roms/gba/Kirby & the Amazing Mirror (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m' },
+  { name: 'The Legend of Zelda: The Minish Cap', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -583,15 +583,12 @@ function initCustomCursor() {
       return;
     }
 
-    // Interpolate positions for smoothness
-    currentX += (mouseX - currentX) * lerp;
-    currentY += (mouseY - currentY) * lerp;
-
     // Use a small offset for the tip alignment
     const offsetX = -2;
     const offsetY = -1;
     
-    cursor.style.transform = `translate3d(${currentX + offsetX}px, ${currentY + offsetY}px, 0)`;
+    // Use direct values instead of lerp to eliminate "lag" or "retard"
+    cursor.style.transform = `translate3d(${mouseX + offsetX}px, ${mouseY + offsetY}px, 0)`;
     cursor.style.display = 'block';
 
     requestAnimationFrame(updateCursor);
