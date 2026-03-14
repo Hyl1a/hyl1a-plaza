@@ -304,6 +304,7 @@ async function initMiiMaker(container) {
   const u8 = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; i++) u8[i] = rawData.charCodeAt(i);
   miiInstance = new window.Mii(u8);
+  miiInstance.mouthType = 19; // Default smile style requested by user
 
   // Category switching
   const catButtons = container.querySelectorAll('.mii-cat-btn');
@@ -751,31 +752,36 @@ async function initMiiMaker(container) {
       bubble.id = 'mii-speech-bubble';
       bubble.style.cssText = `
         position: absolute;
-        top: 22%;
-        right: 15%;
+        top: 15%;
+        left: 8%;
         background: white;
         color: #333;
-        padding: 12px 20px;
-        border-radius: 20px;
+        padding: 20px 30px;
+        border-radius: 60px;
         font-weight: 800;
-        font-size: 14px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        font-size: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         z-index: 1000;
         opacity: 0;
-        transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         pointer-events: none;
-        border: 3px solid #4facfe;
-        transform: scale(0.8) translateY(10px);
+        border: 4px solid #4facfe;
+        transform: scale(0.8) rotate(-5deg);
+        max-width: 280px;
+        text-align: center;
+        line-height: 1.4;
       `;
       container.querySelector('#mii-canvas-container').appendChild(bubble);
     }
 
     const msg = MII_MESSAGES[Math.floor(Math.random() * MII_MESSAGES.length)];
-    bubble.innerHTML = `${msg}<div style="position: absolute; bottom: -12px; right: 25px; border-width: 12px 12px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
-                        <div style="position: absolute; bottom: -8px; right: 25px; border-width: 8px 8px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>`;
+    bubble.innerHTML = `${msg}
+      <!-- Tail pointing to Mii -->
+      <div style="position: absolute; bottom: 15px; right: -25px; border-width: 15px 0 15px 30px; border-style: solid; border-color: transparent transparent transparent #4facfe; transform: rotate(-15deg);"></div>
+      <div style="position: absolute; bottom: 18px; right: -18px; border-width: 12px 0 12px 25px; border-style: solid; border-color: transparent transparent transparent white; transform: rotate(-15deg);"></div>`;
 
     bubble.style.opacity = '1';
-    bubble.style.transform = 'scale(1) translateY(0)';
+    bubble.style.transform = 'scale(1) rotate(0deg)';
     
     playMiiSFX('SE_MII_UP');
 
