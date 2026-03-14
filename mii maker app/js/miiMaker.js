@@ -2,10 +2,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry) {
-      window.AppRegistry['miiMaker'].render = async function(container) {
+      window.AppRegistry['miiMaker'].render = async function (container) {
         if (document.querySelector('.mii-fullscreen-container > .mii-topbar')) {
-           console.warn("Mii Maker is already open.");
-           return;
+          console.warn("Mii Maker is already open.");
+          return;
         }
         if (typeof AudioManager !== 'undefined') AudioManager.isExternalMusicPlaying = true;
         await initMiiMaker(container);
@@ -15,29 +15,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- Asset Colors ---
-const SKINS = ['#feedcf','#f7d3a0','#edb278','#d38b58','#9d6343','#834c31','#512f1f'];
-const HAIRS = ['#1d1c1a','#3f3123','#663b21','#85512b','#7c6d66','#a98059','#b5a16d','#bc9c65'];
-const EYES_COLORS = ['#3f3530','#7a818c','#533c30','#837b2d','#426899','#5d8050'];
-const SHIRTS = ['#ff3333','#ff6600','#ffcc00','#33cc33','#3366ff','#66ccff','#9933cc','#ff66cc','#ffffff','#888888','#222222'];
+const SKINS = ['#feedcf', '#f7d3a0', '#edb278', '#d38b58', '#9d6343', '#834c31', '#512f1f'];
+const HAIRS = ['#1d1c1a', '#3f3123', '#663b21', '#85512b', '#7c6d66', '#a98059', '#b5a16d', '#bc9c65'];
+const EYES_COLORS = ['#3f3530', '#7a818c', '#533c30', '#837b2d', '#426899', '#5d8050'];
+const SHIRTS = ['#ff3333', '#ff6600', '#ffcc00', '#33cc33', '#3366ff', '#66ccff', '#9933cc', '#ff66cc', '#ffffff', '#888888', '#222222'];
 
 // --- Category Definitions ---
 const CATEGORIES = [
-  { id:'face', icon:'😊', label:'Face' },
-  { id:'hair', icon:'💇', label:'Hair' },
-  { id:'eyebrows', icon:'🤨', label:'Brows' },
-  { id:'eyes', icon:'👁️', label:'Eyes' },
-  { id:'nose', icon:'👃', label:'Nose' },
-  { id:'mouth', icon:'👄', label:'Mouth' },
-  { id:'glasses', icon:'🤓', label:'Glasses' },
-  { id:'body', icon:'👕', label:'Body' },
-  { id:'profile', icon:'📝', label:'Profile' },
+  { id: 'face', icon: '😊', label: 'Face' },
+  { id: 'hair', icon: '💇', label: 'Hair' },
+  { id: 'eyebrows', icon: '🤨', label: 'Brows' },
+  { id: 'eyes', icon: '👁️', label: 'Eyes' },
+  { id: 'nose', icon: '👃', label: 'Nose' },
+  { id: 'mouth', icon: '👄', label: 'Mouth' },
+  { id: 'glasses', icon: '🤓', label: 'Glasses' },
+  { id: 'body', icon: '👕', label: 'Body' },
+  { id: 'profile', icon: '📝', label: 'Profile' },
 ];
 
 // --- Hair / Eye / Brow / Mouth / Nose style data (ALL valid values) ---
 // Helper to generate style arrays from a range
 function makeStyles(max) {
   const arr = [];
-  for (let i = 0; i <= max; i++) arr.push({v:i, n:'Style ' + i});
+  for (let i = 0; i <= max; i++) arr.push({ v: i, n: 'Style ' + i });
   return arr;
 }
 const HAIR_STYLES = makeStyles(131);
@@ -45,7 +45,7 @@ const EYE_STYLES = makeStyles(59);
 const BROW_STYLES = makeStyles(23);
 const MOUTH_STYLES = makeStyles(35);
 const NOSE_STYLES = makeStyles(17);
-const GLASSES_STYLES = [{v:0,n:'None'}].concat(makeStyles(8).slice(1));
+const GLASSES_STYLES = [{ v: 0, n: 'None' }].concat(makeStyles(8).slice(1));
 const FACE_STYLES = makeStyles(11);
 
 let miiInstance = null;
@@ -58,8 +58,8 @@ async function initMiiMaker(container) {
   }
 
   // Build category buttons HTML
-  const catBtns = CATEGORIES.map((c,i) =>
-    `<button class="mii-cat-btn${i===0?' active':''}" data-cat="${c.id}" title="${c.label}">${c.icon}</button>`
+  const catBtns = CATEGORIES.map((c, i) =>
+    `<button class="mii-cat-btn${i === 0 ? ' active' : ''}" data-cat="${c.id}" title="${c.label}">${c.icon}</button>`
   ).join('');
 
   container.innerHTML = `
@@ -163,7 +163,7 @@ async function initMiiMaker(container) {
   musicToggle.addEventListener('click', () => {
     if (miiMusic) {
       if (miiMusic.paused) {
-        miiMusic.play().catch(() => {});
+        miiMusic.play().catch(() => { });
         musicToggle.textContent = '🔊';
       } else {
         miiMusic.pause();
@@ -183,7 +183,8 @@ async function initMiiMaker(container) {
       window.ThemeManager.apply(window.ThemeManager.currentTheme, false);
     }
     container.classList.add('closing');
-    setTimeout(() => { if(container.parentNode) container.parentNode.removeChild(container); }, 300);
+    if (blinkTimeout) clearTimeout(blinkTimeout);
+    setTimeout(() => { if (container.parentNode) container.parentNode.removeChild(container); }, 300);
   }
 
   container.querySelector('.mii-close-btn').addEventListener('click', () => {
@@ -198,10 +199,12 @@ async function initMiiMaker(container) {
   // State
   let activeCategory = 'face';
   let activeSubtab = 'type';
+  let currentExpression = 'normal';
+  let blinkTimeout = null;
 
   // --- TUTORIAL LOGIC ---
   const tutorialBubble = container.querySelector('#mii-tutorial-bubble');
-  
+
   if (isForcedCreation) {
     tutorialBubble.style.display = 'block';
   }
@@ -236,12 +239,12 @@ async function initMiiMaker(container) {
     else if (activeCategory === 'glasses') msg = getRand(variants.glasses);
     else if (activeCategory === 'body') msg = getRand(variants.body);
     else if (activeCategory === 'profile') msg = getRand(variants.profile);
-    
+
     if (activeCategory !== 'body' && activeCategory !== 'profile') {
-        if (activeSubtab === 'color') msg += " (Les couleurs ! 🎨)";
-        if (activeSubtab === 'position') msg += " (Ajustez bien ! 🎯)";
+      if (activeSubtab === 'color') msg += " (Les couleurs ! 🎨)";
+      if (activeSubtab === 'position') msg += " (Ajustez bien ! 🎯)";
     }
-    
+
     textEl.textContent = msg;
   }
 
@@ -266,7 +269,7 @@ async function initMiiMaker(container) {
       // Existing user: attempt to load their Mii
       const overlay = container.querySelector('#mii-loading-overlay');
       if (overlay) overlay.textContent = "Loading your Mii...";
-      
+
       try {
         const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", window.Auth.currentUser.uid);
         const docSnap = await window.Firestore.getDoc(docRef);
@@ -278,13 +281,13 @@ async function initMiiMaker(container) {
           currentProfile.birthday = data.birthday || "";
           currentProfile.bio = data.bio || "";
         }
-      } catch(e) { console.error("Could not load Mii save:", e); }
+      } catch (e) { console.error("Could not load Mii save:", e); }
     }
   }
 
   const rawData = atob(miiBase64Str);
   const u8 = new Uint8Array(rawData.length);
-  for(let i = 0; i < rawData.length; i++) u8[i] = rawData.charCodeAt(i);
+  for (let i = 0; i < rawData.length; i++) u8[i] = rawData.charCodeAt(i);
   miiInstance = new window.Mii(u8);
 
   // Category switching
@@ -333,15 +336,15 @@ async function initMiiMaker(container) {
   function renderTypePanel() {
     let items = [];
     let stateKey = '';
-    switch(activeCategory) {
-      case 'face':    items = FACE_STYLES;    stateKey = 'faceType'; break;
-      case 'hair':    items = HAIR_STYLES;    stateKey = 'hairType'; break;
-      case 'eyebrows':items = BROW_STYLES;    stateKey = 'eyebrowType'; break;
-      case 'eyes':    items = EYE_STYLES;     stateKey = 'eyeType'; break;
-      case 'nose':    items = NOSE_STYLES;    stateKey = 'noseType'; break;
-      case 'mouth':   items = MOUTH_STYLES;   stateKey = 'mouthType'; break;
+    switch (activeCategory) {
+      case 'face': items = FACE_STYLES; stateKey = 'faceType'; break;
+      case 'hair': items = HAIR_STYLES; stateKey = 'hairType'; break;
+      case 'eyebrows': items = BROW_STYLES; stateKey = 'eyebrowType'; break;
+      case 'eyes': items = EYE_STYLES; stateKey = 'eyeType'; break;
+      case 'nose': items = NOSE_STYLES; stateKey = 'noseType'; break;
+      case 'mouth': items = MOUTH_STYLES; stateKey = 'mouthType'; break;
       case 'glasses': items = GLASSES_STYLES; stateKey = 'glassesType'; break;
-      case 'body':    renderBodyPanel(); return;
+      case 'body': renderBodyPanel(); return;
     }
 
     const label = document.createElement('div');
@@ -369,7 +372,7 @@ async function initMiiMaker(container) {
         img.style.cssText = 'width:72px;height:72px;object-fit:contain;border-radius:4px;';
         img.loading = 'lazy';
         btn.appendChild(img);
-      } catch(e) {
+      } catch (e) {
         btn.textContent = item.n;
       }
 
@@ -387,14 +390,14 @@ async function initMiiMaker(container) {
 
   function renderColorPanel() {
     let colors = []; let stateKey = '';
-    switch(activeCategory) {
-      case 'face':     colors = SKINS;       stateKey = 'skinColor'; break;
-      case 'hair':     colors = HAIRS;       stateKey = 'hairColor'; break;
-      case 'eyebrows': colors = HAIRS;       stateKey = 'eyebrowColor'; break;
-      case 'eyes':     colors = EYES_COLORS; stateKey = 'eyeColor'; break;
-      case 'mouth':    colors = ['#de7e58','#cc5544','#e87070','#d45e7e','#c94040','#a03030']; stateKey = 'mouthColor'; break;
-      case 'body':     colors = SHIRTS;      stateKey = 'favoriteColor'; break;
-      case 'glasses':  colors = ['#222222','#994433','#4455aa','#cc5555','#ffffff','#886644']; stateKey = 'glassesColor'; break;
+    switch (activeCategory) {
+      case 'face': colors = SKINS; stateKey = 'skinColor'; break;
+      case 'hair': colors = HAIRS; stateKey = 'hairColor'; break;
+      case 'eyebrows': colors = HAIRS; stateKey = 'eyebrowColor'; break;
+      case 'eyes': colors = EYES_COLORS; stateKey = 'eyeColor'; break;
+      case 'mouth': colors = ['#de7e58', '#cc5544', '#e87070', '#d45e7e', '#c94040', '#a03030']; stateKey = 'mouthColor'; break;
+      case 'body': colors = SHIRTS; stateKey = 'favoriteColor'; break;
+      case 'glasses': colors = ['#222222', '#994433', '#4455aa', '#cc5555', '#ffffff', '#886644']; stateKey = 'glassesColor'; break;
       default:
         panel.innerHTML = '<div class="mii-section-label" style="color:#666;">No colors for this category.</div>';
         return;
@@ -425,29 +428,29 @@ async function initMiiMaker(container) {
 
   function renderPositionPanel() {
     const sliders = [];
-    switch(activeCategory) {
+    switch (activeCategory) {
       case 'eyes':
-        sliders.push({label:'Vertical', key:'eyeVertical', min:0, max:18});
-        sliders.push({label:'Size', key:'eyeScale', min:0, max:7});
-        sliders.push({label:'Stretch', key:'eyeStretch', min:0, max:6});
-        sliders.push({label:'Spacing', key:'eyeSpacing', min:0, max:12});
-        sliders.push({label:'Rotation', key:'eyeRotation', min:0, max:7});
+        sliders.push({ label: 'Vertical', key: 'eyeVertical', min: 0, max: 18 });
+        sliders.push({ label: 'Size', key: 'eyeScale', min: 0, max: 7 });
+        sliders.push({ label: 'Stretch', key: 'eyeStretch', min: 0, max: 6 });
+        sliders.push({ label: 'Spacing', key: 'eyeSpacing', min: 0, max: 12 });
+        sliders.push({ label: 'Rotation', key: 'eyeRotation', min: 0, max: 7 });
         break;
       case 'eyebrows':
-        sliders.push({label:'Vertical', key:'eyebrowVertical', min:0, max:18});
-        sliders.push({label:'Size', key:'eyebrowScale', min:0, max:8});
-        sliders.push({label:'Stretch', key:'eyebrowStretch', min:0, max:6});
-        sliders.push({label:'Spacing', key:'eyebrowSpacing', min:0, max:12});
-        sliders.push({label:'Rotation', key:'eyebrowRotation', min:0, max:11});
+        sliders.push({ label: 'Vertical', key: 'eyebrowVertical', min: 0, max: 18 });
+        sliders.push({ label: 'Size', key: 'eyebrowScale', min: 0, max: 8 });
+        sliders.push({ label: 'Stretch', key: 'eyebrowStretch', min: 0, max: 6 });
+        sliders.push({ label: 'Spacing', key: 'eyebrowSpacing', min: 0, max: 12 });
+        sliders.push({ label: 'Rotation', key: 'eyebrowRotation', min: 0, max: 11 });
         break;
       case 'nose':
-        sliders.push({label:'Vertical', key:'noseVertical', min:0, max:18});
-        sliders.push({label:'Size', key:'noseScale', min:0, max:8});
+        sliders.push({ label: 'Vertical', key: 'noseVertical', min: 0, max: 18 });
+        sliders.push({ label: 'Size', key: 'noseScale', min: 0, max: 8 });
         break;
       case 'mouth':
-        sliders.push({label:'Vertical', key:'mouthVertical', min:0, max:18});
-        sliders.push({label:'Size', key:'mouthScale', min:0, max:8});
-        sliders.push({label:'Stretch', key:'mouthStretch', min:0, max:6});
+        sliders.push({ label: 'Vertical', key: 'mouthVertical', min: 0, max: 18 });
+        sliders.push({ label: 'Size', key: 'mouthScale', min: 0, max: 8 });
+        sliders.push({ label: 'Stretch', key: 'mouthStretch', min: 0, max: 6 });
         break;
       default:
         panel.innerHTML = '<div class="mii-section-label" style="color:#666;">No position controls for this category.</div>';
@@ -544,7 +547,7 @@ async function initMiiMaker(container) {
     const enc = miiInstance.encode();
     const limit = Math.min(enc.length, 96);
     let res = "";
-    for(let i=0; i<limit; i++) res+=String.fromCharCode(enc[i]);
+    for (let i = 0; i < limit; i++) res += String.fromCharCode(enc[i]);
     return btoa(res);
   }
 
@@ -561,11 +564,11 @@ async function initMiiMaker(container) {
     const data = getProfileData();
     if (!data.username) { alert("Please enter a Nickname before saving!"); return; }
     if (data.first_name) miiInstance.miiName = data.first_name;
-    
+
     try {
       saveBtn.textContent = "Saving..."; saveBtn.disabled = true;
       const fbUser = window.Auth ? window.Auth.currentUser : null;
-      
+
       if (!fbUser) throw new Error("User not authenticated in Firebase");
 
       // Save complete avatar blob in "avatars" collection using their UID
@@ -574,13 +577,13 @@ async function initMiiMaker(container) {
 
       if (typeof AudioManager !== 'undefined') AudioManager.playPop();
       saveBtn.textContent = "Saved!";
-      
+
       closeMiiMaker();
-      
+
       // Reload if it was the first time creating a Mii to unlock the site
       if (isForcedCreation) setTimeout(() => window.location.reload(), 1000);
 
-    } catch(err) {
+    } catch (err) {
       console.error(err); alert("Failed to connect. Is server running?"); saveBtn.textContent = "Save & Quit"; saveBtn.disabled = false;
     }
   });
@@ -588,14 +591,14 @@ async function initMiiMaker(container) {
   // --- MII PREVIEW (Full body 2D render from API + arrow rotation) ---
   const canvasArea = container.querySelector('#mii-canvas-container');
   canvasArea.style.position = 'relative';
-  
+
   // Make the background look like a spotlight or brighter to see the Mii clearly
   canvasArea.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 70%)';
   canvasArea.style.borderRadius = '16px';
   canvasArea.style.boxShadow = 'inset 0 0 20px rgba(0,0,0,0.5)';
   // Ensure the container is transparent so the bg-video shows through
   canvasArea.style.backgroundColor = 'transparent';
-  
+
   // Create the preview image
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
@@ -607,7 +610,7 @@ async function initMiiMaker(container) {
 
   // Arrow buttons
   const arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);color:#fff;border:none;font-size:28px;width:40px;height:60px;cursor:pointer;border-radius:8px;z-index:5;transition:background 0.2s;display:flex;align-items:center;justify-content:center;';
-  
+
   const leftBtn = document.createElement('button');
   leftBtn.innerHTML = '◀';
   leftBtn.style.cssText = arrowStyle + 'left:6px;';
@@ -627,25 +630,25 @@ async function initMiiMaker(container) {
   function triggerStarEffect() {
     const count = 15;
     const colors = ['#fff700', '#ffea00', '#ffd700']; // Only yellow variations
-    
+
     for (let i = 0; i < count; i++) {
       const star = document.createElement('div');
       star.innerHTML = i % 2 === 0 ? '★' : '✨';
       star.style.position = 'absolute';
-      star.style.left = '50%';
-      star.style.top = '30%'; // Balanced position for face centering
+      star.style.left = '52%';
+      star.style.top = '40%'; // Balanced position for face centering
       star.style.transform = 'translate(-50%, -50%)';
       star.style.color = colors[Math.floor(Math.random() * colors.length)];
-      star.style.fontSize = (Math.random() * 25 + 20) + 'px'; // Larger stars
+      star.style.fontSize = (Math.random() * 80 + 50) + 'px'; // Larger stars
       star.style.zIndex = '0'; // Behind the Mii
       star.style.pointerEvents = 'none';
       star.style.textShadow = '0 0 15px rgba(255,255,255,1)';
-      
+
       const angle = Math.random() * Math.PI * 2;
       const distance = Math.random() * 220 + 120; // Drift further
       const driftX = Math.cos(angle) * distance;
       const driftY = Math.sin(angle) * distance;
-      
+
       star.animate([
         { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0 },
         { transform: 'translate(-50%, -50%) scale(2) rotate(180deg)', opacity: 1, offset: 0.2 },
@@ -655,7 +658,7 @@ async function initMiiMaker(container) {
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
         delay: Math.random() * 100 // Slight staggered burst
       }).onfinish = () => star.remove();
-      
+
       canvasArea.appendChild(star);
     }
   }
@@ -677,7 +680,7 @@ async function initMiiMaker(container) {
   function fetchMiiRender() {
     const b64 = encodeMiiBase64();
     const angle = ((rotationY % 360) + 360) % 360;
-    const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=720&clothesColor=default&shaderType=wiiu&characterYRotate=${Math.round(angle)}`;
+    const url = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=all_body&width=720&clothesColor=default&shaderType=wiiu&characterYRotate=${Math.round(angle)}&expression=${currentExpression}`;
 
     // Create a background image to load the new render
     const newImg = new Image();
@@ -691,11 +694,11 @@ async function initMiiMaker(container) {
     newImg.onerror = () => {
       console.error('Failed to load Mii preview render');
     };
-    
+
     // We don't dim the old image anymore for a "seamless" feel, 
     // unless we want a very subtle feedback pulse:
     // previewImg.style.opacity = '0.9'; 
-    
+
     newImg.src = url;
   }
 
@@ -704,6 +707,30 @@ async function initMiiMaker(container) {
     // Just trigger the render update
     fetchMiiRender();
   }
+
+  function scheduleBlink() {
+    if (blinkTimeout) clearTimeout(blinkTimeout);
+
+    // Random interval between 2.5 and 6 seconds
+    const interval = Math.random() * 3500 + 2500;
+
+    blinkTimeout = setTimeout(() => {
+      // Don't blink if we are currently updating the model from selection
+      // (This is a bit hard to track perfectly, but usually fine)
+      currentExpression = 'blink';
+      fetchMiiRender();
+
+      // Eye closed duration (very fast)
+      setTimeout(() => {
+        currentExpression = 'normal';
+        fetchMiiRender();
+        scheduleBlink();
+      }, 150);
+    }, interval);
+  }
+
+  // Start blinking
+  scheduleBlink();
 
   fetch3DModel();
 }
