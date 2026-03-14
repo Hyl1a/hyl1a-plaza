@@ -71,8 +71,19 @@ async function initMiiMaker(container) {
       <button class="mii-close-btn" title="Close">✕</button>
     </div>
     <div class="mii-body">
-      <div class="mii-canvas-area" id="mii-canvas-container">
+      <div class="mii-canvas-area" id="mii-canvas-container" style="background: transparent;">
         <div id="mii-loading-overlay">Loading Preview...</div>
+        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 15px 25px; border-radius: 30px; font-weight: 800; font-size: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;">
+          <div id="mii-tutorial-text">Bienvenue ! Commençons par créer votre Mii.</div>
+          <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>
+          <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
+          <style>
+            @keyframes bounce {
+              0%, 100% { transform: translate(-50%, 0); }
+              50% { transform: translate(-50%, -10px); }
+            }
+          </style>
+        </div>
       </div>
       <div class="mii-controls-area">
         <div class="mii-subtabs">
@@ -83,15 +94,6 @@ async function initMiiMaker(container) {
         <div class="mii-panel-content" id="mii-panel"></div>
         <button class="mii-save-btn" id="btn-save">Save & Quit</button>
       </div>
-    </div>
-    <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000; animation: bounce 2s infinite;">
-      Bienvenue ! Commençons par créer votre Mii.
-      <style>
-        @keyframes bounce {
-          0%, 100% { transform: translate(-50%, 0); }
-          50% { transform: translate(-50%, -10px); }
-        }
-      </style>
     </div>
   `;
 
@@ -196,6 +198,9 @@ async function initMiiMaker(container) {
 
   function updateTutorialMessage() {
     if (!isForcedCreation) return;
+    const textEl = container.querySelector('#mii-tutorial-text');
+    if (!textEl) return;
+
     let msg = "Bienvenue !";
     if (activeCategory === 'face') msg = "Choisissez la forme du visage et le teint qui vous correspondent !";
     else if (activeCategory === 'hair') msg = "Trouvez votre coiffure idéale et sa couleur.";
@@ -212,14 +217,7 @@ async function initMiiMaker(container) {
         if (activeSubtab === 'position') msg += " (Ajustez la position finement !)";
     }
     
-    tutorialBubble.innerHTML = msg + `
-      <style>
-        @keyframes bounce {
-          0%, 100% { transform: translate(-50%, 0); }
-          50% { transform: translate(-50%, -10px); }
-        }
-      </style>
-    `;
+    textEl.textContent = msg;
   }
 
   // --- Profile Data & Mii Loader ---
