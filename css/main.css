@@ -1,28 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
 :root {
-  /* Wii U Theme Color Palette */
-  --color-bg-top: #fbfbfb;
-  --color-bg-bottom: #e6e6e6;
-  --color-primary: #00d2ff;
-  --color-primary-dark: #8198a2;
-  --color-white-glossy: rgba(255, 255, 255, 0.9);
+  /* Hylia Plaza – Design Tokens */
+  --color-bg-top: #f0f4fa;
+  --color-bg-bottom: #dce6f0;
+  --color-primary: #4facfe;
+  --color-primary-dark: #0069d9;
+  --color-white-glossy: rgba(255, 255, 255, 0.92);
   --color-white-solid: #ffffff;
-  --color-text-dark: #555555;
+  --color-text-dark: #444444;
   --color-text-light: #999999;
-  --color-border: rgba(220, 220, 220, 0.8);
-  
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-window: 0 10px 30px rgba(0, 0, 0, 0.15);
-  --shadow-tile: 0 3px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+  --color-border: rgba(220, 220, 220, 0.7);
+
+  --shadow-soft:       0 4px 14px rgba(0, 0, 0, 0.09);
+  --shadow-window:     0 12px 36px rgba(0, 0, 0, 0.14);
+  --shadow-tile:       0 8px 20px rgba(0, 0, 0, 0.08);
+  --shadow-tile-focus: 0 14px 35px rgba(0, 0, 0, 0.18);
   --shadow-inner-glow: inset 0 2px 4px rgba(255, 255, 255, 0.8);
-  
-  --radius-window: 16px;
-  --radius-button: 20px;
-  --radius-tile: 16px;
-  
-  --font-main: 'Segoe UI', 'San Francisco', 'Helvetica Neue', Arial, sans-serif;
-  
+
+  --radius-window: 20px;
+  --radius-button: 24px;
+  --radius-tile:   26px;
+
+  --font-main: 'Inter', 'Segoe UI', 'San Francisco', 'Helvetica Neue', Arial, sans-serif;
+
   --glossy-gradient: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(245,245,245,1) 100%);
-  --glossy-glass: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(240,240,240,0.9));
+  --glossy-glass:    linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(240,240,240,0.90));
+
+  /* Dynamic background accent (changed by JS on tile focus) */
+  --bg-accent-h: 210;
+  --bg-accent-s: 60%;
+  --bg-accent-l: 95%;
 }
 
 * {
@@ -35,9 +43,9 @@ body, html {
   width: 100%;
   height: 100%;
   font-family: var(--font-main);
-  background: linear-gradient(to bottom, var(--color-bg-top), var(--color-bg-bottom));
+  background-color: transparent;
   color: var(--color-text-dark);
-  overflow: hidden; 
+  overflow: hidden;
   user-select: none;
 }
 

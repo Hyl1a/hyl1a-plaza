@@ -6,7 +6,9 @@
   top: 0; left: 0;
   width: 100vw; height: 100vh;
   z-index: 99999;
-  background: #1a1a2e;
+  background: rgba(26, 26, 46, 0.4); /* transparent so video shows */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   font-family: 'Inter', 'Segoe UI', sans-serif;

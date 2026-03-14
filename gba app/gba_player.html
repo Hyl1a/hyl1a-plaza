@@ -28,10 +28,21 @@
 <body>
     <div id="game">Loading Emulator...</div>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const romUrl = urlParams.get('rom');
+        // Use hash for robust passing without server interference, fallback to search if not in hash
+        const paramsString = window.location.hash ? window.location.hash.substring(1) : window.location.search;
+        const urlParams = new URLSearchParams(paramsString);
+        let romUrl = urlParams.get('rom');
         let gameName = urlParams.get('name') || 'Unknown Game';
         
+        // If the URL has #rom=... but not parsed well, try to manually extract occasionally URLSearchParams has quirks with hashes
+        if (!romUrl && window.location.hash.includes('rom=')) {
+            const hashParts = window.location.hash.substring(1).split('&');
+            for (let part of hashParts) {
+                if (part.startsWith('rom=')) romUrl = decodeURIComponent(part.split('=')[1]);
+                if (part.startsWith('name=')) gameName = decodeURIComponent(part.split('=')[1]);
+            }
+        }
+
         // Isolate save states by user profile
         const currentUser = localStorage.getItem('nostalgia_current_user') || 'Guest';
         gameName = `${currentUser}_${gameName}`;

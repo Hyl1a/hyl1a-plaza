@@ -1,8 +1,3 @@
-/**
- * Main application initialization.
- * Coordinates the environment, background animations, and UI triggers.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize audio (preload MP3/WAV files from Son/ folder)
   if (typeof AudioManager !== 'undefined') {
@@ -11,9 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initEnvironment();
   initAppTriggers();
+  initFocusNavigation();   // Console-style tile focus + spatial nav
   initClockWidget();
-  initMusicBar();
+  initMusicBar();          // Initialize song controls
   initAuth(); // Initialize authentication system
+  initMiiPlaza();         // Initialize Mii background characters
 
   // Auto-play music on first user interaction (browser requires user gesture)
   function autoPlayOnce() {
@@ -33,6 +30,132 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', autoPlayOnce);
   document.addEventListener('keydown', autoPlayOnce);
 });
+
+/* ============================================================
+   FOCUS NAVIGATION SYSTEM
+   Console-style spatial navigation with arrow keys & mouse hover.
+   ============================================================ */
+function initFocusNavigation() {
+  const tiles = Array.from(document.querySelectorAll('.grid-tile'));
+  const glowEl = document.getElementById('focus-glow');
+  const mainContainer = document.getElementById('main-container');
+
+  if (!tiles.length) return;
+
+  // Pastel glow colours keyed to tile index (cycles through hues)
+  const glowColors = [
+    'rgba(79,172,254,0.55)',   // blue
+    'rgba(255,154,86,0.50)',   // orange
+    'rgba(106,218,228,0.50)',  // teal
+    'rgba(196,113,237,0.50)',  // purple
+    'rgba(67,233,123,0.45)',   // green
+    'rgba(255,117,140,0.50)',  // pink
+    'rgba(163,140,209,0.50)',  // lavender
+    'rgba(255,211,100,0.45)',  // yellow
+  ];
+
+  // BG accent hues matching glow colours
+  const bgAccentHues = [210, 25, 188, 280, 140, 340, 255, 45];
+
+  let focusedIndex = 0;
+
+  function setFocus(index, source) {
+    if (index < 0 || index >= tiles.length) return;
+
+    // Remove old focused state
+    tiles[focusedIndex]?.classList.remove('tile-focused');
+
+    focusedIndex = index;
+    const tile = tiles[focusedIndex];
+    tile.classList.add('tile-focused');
+
+    // Move glow behind the tile
+    if (glowEl && mainContainer) {
+      const containerRect = mainContainer.getBoundingClientRect();
+      const tileRect = tile.getBoundingClientRect();
+
+      const cx = tileRect.left - containerRect.left + tileRect.width  / 2;
+      const cy = tileRect.top  - containerRect.top  + tileRect.height / 2;
+
+      const color = glowColors[focusedIndex % glowColors.length];
+      glowEl.style.background = `radial-gradient(circle, ${color} 0%, rgba(255,255,255,0) 70%)`;
+      glowEl.style.left = `${cx - 130}px`;
+      glowEl.style.top  = `${cy - 130}px`;
+      glowEl.style.opacity = '1';
+    }
+
+    // Shift body background accent hue
+    const hue = bgAccentHues[focusedIndex % bgAccentHues.length];
+    document.documentElement.style.setProperty('--bg-accent-h', hue);
+
+    // Update dynamic title if it exists
+    const dynamicTitle = document.getElementById('dynamic-title-pill');
+    const title = tile.getAttribute('data-title');
+    if (dynamicTitle && title && source === 'keyboard') {
+      dynamicTitle.textContent = title;
+    }
+  }
+
+  /* ── Spatial navigation helpers ── */
+  function getCenter(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  function findNext(currentIndex, direction) {
+    const current = getCenter(tiles[currentIndex]);
+    let bestIndex = -1;
+    let bestScore = Infinity;
+
+    tiles.forEach((tile, i) => {
+      if (i === currentIndex) return;
+      const c = getCenter(tile);
+      const dx = c.x - current.x;
+      const dy = c.y - current.y;
+
+      let primary, cross;
+      if (direction === 'right') { primary = dx; cross = Math.abs(dy); }
+      if (direction === 'left')  { primary = -dx; cross = Math.abs(dy); }
+      if (direction === 'down')  { primary = dy; cross = Math.abs(dx); }
+      if (direction === 'up')    { primary = -dy; cross = Math.abs(dx); }
+
+      if (primary <= 0) return;  // Wrong direction
+
+      const score = primary + cross * 1.6;
+      if (score < bestScore) {
+        bestScore = score;
+        bestIndex = i;
+      }
+    });
+
+    return bestIndex;
+  }
+
+  /* ── Keyboard handler ── */
+  document.addEventListener('keydown', (e) => {
+    const dirMap = { ArrowRight: 'right', ArrowLeft:  'left', ArrowDown:  'down', ArrowUp:    'up' };
+    const dir = dirMap[e.key];
+    if (dir) {
+      e.preventDefault();
+      const next = findNext(focusedIndex, dir);
+      if (next !== -1) setFocus(next, 'keyboard');
+      return;
+    }
+    if ((e.key === 'Enter' || e.key === ' ') && document.activeElement !== tiles[focusedIndex]) {
+      e.preventDefault();
+      tiles[focusedIndex]?.click();
+    }
+  });
+
+  /* ── Mouse hover transfers focus ── */
+  tiles.forEach((tile, i) => {
+    tile.addEventListener('mouseenter', () => setFocus(i, 'mouse'));
+  });
+
+  // Set initial focus
+  setFocus(0, 'init');
+}
+
 
 function initMusicBar() {
   const playBtn = document.getElementById('music-play');
@@ -88,12 +211,10 @@ function initClockWidget() {
   function updateClock() {
     const now = new Date();
 
-    // Time in 12h format like the Wii U
-    let hours = now.getHours();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
+    // 24h Format
+    const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
-    timeEl.textContent = `${hours}:${minutes} ${ampm}`;
+    timeEl.textContent = `${hours}:${minutes}`;
 
     // Date as MM/DD
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -116,11 +237,50 @@ function initEnvironment() {
       ThemeManager.openSelector();
     });
   }
+
+  initGifGrid();
+}
+
+function initGifGrid() {
+  const grid = document.getElementById('app-grid');
+  if (!grid) return;
+
+  const gifs = [
+    'assets/gif/kirby-nintendo.gif',
+    'assets/gif/pokemon1.gif',
+    'assets/gif/nintendo-video-game.gif'
+  ];
+
+  const appTiles = Array.from(grid.children);
+  let gifIndex = 0;
+
+  // Insert a GIF tile every 2 applications
+  for (let i = 2; i < appTiles.length + (appTiles.length / 2); i += 3) {
+    if (gifIndex >= gifs.length) break;
+
+    const gifTile = document.createElement('div');
+    gifTile.className = 'grid-tile tile-square gif-tile';
+    gifTile.innerHTML = `
+      <div class="tile-inner">
+        <img src="${gifs[gifIndex]}" alt="GIF" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+      </div>
+    `;
+    
+    // Insert before the (i)th element
+    if (grid.children[i]) {
+      grid.insertBefore(gifTile, grid.children[i]);
+    } else {
+      grid.appendChild(gifTile);
+    }
+    
+    gifIndex++;
+  }
+
+  // Update spatial navigation because the grid has changed
+  if (window.initFocusNavigation) window.initFocusNavigation();
 }
 
 function initAppTriggers() {
-  // Map app names to their window content renderers and nice titles
-  // These renderers will be populated by the individual app scripts
   window.AppRegistry = {
     'gallery': { title: '🖼️ Image Gallery', render: null },
     'music': { title: '📻 Radio Station', render: null },
@@ -135,7 +295,6 @@ function initAppTriggers() {
 
   const dynamicTitle = document.getElementById('dynamic-title-pill');
 
-  // Handle ALL grid tiles (both app-trigger and placeholder-app) for hover title
   const allTiles = document.querySelectorAll('.grid-tile');
   allTiles.forEach(tile => {
     tile.addEventListener('mouseenter', () => {
@@ -145,7 +304,6 @@ function initAppTriggers() {
         dynamicTitle.textContent = title;
       }
     });
-
     tile.addEventListener('mouseleave', () => {
       if (dynamicTitle) {
         dynamicTitle.textContent = 'Hylia Plaza';
@@ -153,10 +311,8 @@ function initAppTriggers() {
     });
   });
 
-  // Handle app-trigger tiles for opening windows
   const triggers = document.querySelectorAll('.app-trigger');
   triggers.forEach(trigger => {
-    // Keyboard accessibility
     trigger.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -164,20 +320,35 @@ function initAppTriggers() {
       }
     });
 
-    // Click action
-    trigger.addEventListener('click', () => {
-      const appId = trigger.getAttribute('data-app');
-      const appData = window.AppRegistry[appId];
+      trigger.addEventListener('click', () => {
+        const appId = trigger.getAttribute('data-app');
+        const appData = window.AppRegistry[appId];
+        console.log('Launching appId:', appId, 'Data:', appData);
 
-      if (appData) {
-        if (appId === 'miiMaker' || appId === 'miiPlaza') {
+        if (appData) {
+          if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
           // Launch custom fullscreen standalone app experience
           const fsContainer = document.createElement('div');
           fsContainer.className = 'mii-fullscreen-container';
           document.body.appendChild(fsContainer);
+          
+          // Smoothly fade out the hub
+          document.getElementById('main-container').style.opacity = '0';
+          document.getElementById('main-container').style.transform = 'scale(0.95)';
+          
           if (appData.render) {
             appData.render(fsContainer);
           }
+          
+          // Provide a close method for the app
+          appData.close = function() {
+            fsContainer.classList.add('anim-window-close');
+            setTimeout(() => {
+              if (fsContainer.parentNode) fsContainer.parentNode.removeChild(fsContainer);
+              document.getElementById('main-container').style.opacity = '1';
+              document.getElementById('main-container').style.transform = 'scale(1)';
+            }, 300);
+          };
         } else {
           WindowManager.openWindow(appId, appData.title, appData.render || function (container) {
             container.innerHTML = `
@@ -215,12 +386,12 @@ function initAuth() {
 
   // Make loadUserMii globally accessible so auth.js can trigger it when Firebase Auth state changes
   window.loadUserMii = async function() {
-    const user = Auth.getCurrentUser();
     const fbUser = window.Auth ? window.Auth.currentUser : null;
     const container = document.getElementById('top-avatar-container');
     if (!fbUser || !container) return;
 
     try {
+      if (!window.Firestore || !window.Firestore.getDoc) return;
       const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", fbUser.uid);
       const docSnap = await window.Firestore.getDoc(docRef);
       
@@ -228,7 +399,6 @@ function initAuth() {
         const myAvatar = docSnap.data();
         if (myAvatar && myAvatar.visual_base64) {
           const b64 = myAvatar.visual_base64;
-          // Request a slightly larger image from API (128px) to retain sharpness, and scale it via CSS (120% to zoom in on face)
           const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(b64)}&verifyCharInfo=0&type=face&width=128&shaderType=wiiu`;
           container.innerHTML = `<img src="${thumbUrl}" style="width: 120%; height: 120%; object-fit: cover; transform: translateY(10%);">`;
         } else {
@@ -379,7 +549,3 @@ function initAuth() {
     });
   }
 } // End of initAuth
-
-document.addEventListener('DOMContentLoaded', () => {
-  initAuth();
-});

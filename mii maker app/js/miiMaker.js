@@ -115,6 +115,14 @@ async function initMiiMaker(container) {
       mainMusicWasPlaying = false;
       miiMusic.play().catch(() => { });
     }
+
+    // Set Mii Maker background video
+    const bgVideo = document.getElementById('bg-video');
+    if (bgVideo) {
+      bgVideo.src = 'assets/icons/video/miimakerBC.mp4';
+      bgVideo.style.opacity = '1';
+      bgVideo.play().catch(e => console.log('Video play error:', e));
+    }
   }
 
   function stopMiiMusic() {
@@ -153,14 +161,22 @@ async function initMiiMaker(container) {
   const currentUser = window.Auth ? window.Auth.getCurrentUser() : null;
   const isForcedCreation = currentUser && window.Auth ? !(await window.Auth.hasMii(currentUser)) : false;
 
+  function closeMiiMaker() {
+    stopMiiMusic();
+    // Restore theme background
+    if (window.ThemeManager) {
+      window.ThemeManager.apply(window.ThemeManager.currentTheme, false);
+    }
+    container.classList.add('closing');
+    setTimeout(() => { if(container.parentNode) container.parentNode.removeChild(container); }, 300);
+  }
+
   container.querySelector('.mii-close-btn').addEventListener('click', () => {
     if (isForcedCreation) {
       alert("Veuillez d'abord créer et sauvegarder votre Mii !");
       return;
     }
-    stopMiiMusic();
-    container.classList.add('closing');
-    setTimeout(() => { if(container.parentNode) container.parentNode.removeChild(container); }, 300);
+    closeMiiMaker();
   });
 
   // State
@@ -517,15 +533,10 @@ async function initMiiMaker(container) {
       if (typeof AudioManager !== 'undefined') AudioManager.playPop();
       btn.textContent = "Saved!";
       
-      // Stop music and close correctly
-      stopMiiMusic();
+      closeMiiMaker();
       
-      container.classList.add('closing');
-      setTimeout(() => { 
-          if(container.parentNode) container.parentNode.removeChild(container);
-          // Reload if it was the first time creating a Mii to unlock the site
-          if (isForcedCreation) window.location.reload();
-      }, 1000);
+      // Reload if it was the first time creating a Mii to unlock the site
+      if (isForcedCreation) setTimeout(() => window.location.reload(), 1000);
 
     } catch(err) {
       console.error(err); alert("Failed to connect. Is server running?"); btn.textContent = "Save & Quit"; btn.disabled = false;
@@ -540,6 +551,8 @@ async function initMiiMaker(container) {
   canvasArea.style.background = 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 70%)';
   canvasArea.style.borderRadius = '16px';
   canvasArea.style.boxShadow = 'inset 0 0 20px rgba(0,0,0,0.5)';
+  // Ensure the container is transparent so the bg-video shows through
+  canvasArea.style.backgroundColor = 'transparent';
   
   // Create the preview image
   const previewImg = document.createElement('img');

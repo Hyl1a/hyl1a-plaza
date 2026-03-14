@@ -87,176 +87,81 @@
   </div>
 
   <!-- Background Environment (Skies, bubbles, particles) -->
-  <!-- Top Bar -->
+  <video id="bg-video" autoplay loop muted playsinline style="position:fixed; top:0; left:0; width:100vw; height:100vh; object-fit:cover; z-index:-10; filter:brightness(0.9); transition: opacity 0.5s; pointer-events:none;"></video>
+  
+  <!-- MII PLAZA LAYER (Miis walking around background) -->
+  <div id="mii-plaza-layer"></div>
+
+  <!-- User Panel — floating top-left -->
+  <div id="user-panel">
+    <div id="user-avatar-badge">
+      <div id="top-avatar-container"></div>
+      <div id="top-username"></div>
+    </div>
+    <button id="btn-logout" title="Déconnexion">⏻</button>
+  </div>
+
+  <!-- Clock Panel — floating top-right -->
+  <div id="clock-panel">
+    <span class="status-icon">🕐</span>
+    <span id="top-time">12:00 PM</span>
+    <span style="color:rgba(0,0,0,0.2);">|</span>
+    <span id="top-date">08/25</span>
+  </div>
+
+  <!-- Top Bar — center title pill only -->
   <div id="top-bar">
-    <div class="top-section left">
-      <div id="user-avatar-badge" style="display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.2); padding: 6px 20px 6px 6px; border-radius: 50px;">
-        <!-- Avatar and Username -->
-        <div id="top-avatar-container" style="width: 76px; height: 76px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid rgba(255,255,255,0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>
-        <div id="top-username" style="font-size: 24px; font-weight: bold; margin-right: 15px; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);"></div>
-        <button id="btn-logout" title="Déconnexion" style="background: rgba(255,50,50,0.9); border: 2px solid white; color: white; width: 44px; height: 44px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(255,0,0,1)'" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(255,50,50,0.9)'">⏻</button>
-      </div>
-      <div class="profile-group">
-        <div class="profile-icon"></div>
-        <div class="profile-icon"></div>
-        <div class="profile-icon"></div>
-        <div class="profile-count">+ 4</div>
-      </div>
-      <div class="bumper-btn">L</div>
-    </div>
-
-    <div id="dynamic-title-pill" class="glossy-glass">
+    <div id="dynamic-title-pill">
       Hylia Plaza
-    </div>
-
-    <div class="top-section right">
-      <div class="bumper-btn">R</div>
-      <div class="status-group">
-        <span class="status-icon">🕐</span>
-        <span id="top-time">12:00 PM</span> | <span id="top-date">08/25</span>
-        <span class="battery-icon">🔋</span>
-      </div>
     </div>
   </div>
 
+
   <!-- Main Central Container -->
-  <div id="main-container" class="glossy-glass">
+  <div id="main-container">
+    <!-- Ambient glow that follows focused tile -->
+    <div id="focus-glow"></div>
     <div id="app-grid">
 
-      <!-- Gallery (2x1) - Daily Log icon (bar chart) -->
-      <div class="grid-tile tile-wide app-trigger" data-app="gallery" data-title="Memory Gallery" tabindex="0">
+      <!-- Gallery -->
+      <div class="grid-tile tile-square app-trigger" data-app="gallery" data-title="Memory Gallery" tabindex="0">
         <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/daily-log.png" alt="Gallery">
+          <img class="tile-icon" src="assets/icons/screen.png" alt="Gallery">
         </div>
       </div>
 
-      <!-- Music - Chat icon (closest to audio/communication) -->
-      <div class="grid-tile tile-square app-trigger" data-app="music" data-title="Radio Station" tabindex="0">
-        <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/chat.png" alt="Music">
-        </div>
-      </div>
-
-      <!-- Themes - Settings wrench -->
+      <!-- Themes -->
       <div class="grid-tile tile-square" id="theme-tile" data-title="Themes" tabindex="0">
         <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/settings.png" alt="Themes">
+          <img class="tile-icon" src="assets/icons/eshop.png" alt="Themes">
         </div>
       </div>
 
-      <!-- Mii Maker - Friends (Mii faces) -->
+      <!-- Mii Maker -->
       <div class="grid-tile tile-square app-trigger" data-app="miiMaker" data-title="Mii Maker" tabindex="0">
         <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/friends.png" alt="Mii Maker">
+          <img class="tile-icon" src="assets/icons/mii.jpg" alt="Mii Maker">
         </div>
       </div>
 
-      <!-- Mii Plaza - Miiverse (community icons) -->
+      <!-- Mii Plaza -->
       <div class="grid-tile tile-square app-trigger" data-app="miiPlaza" data-title="Mii Plaza" tabindex="0">
         <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/miiverse.png" alt="Mii Plaza">
+          <img class="tile-icon" src="assets/icons/miiverse.png" alt="Mii Plaza">
         </div>
       </div>
 
-      <!-- System Transfer - Browser globe (network) -->
-      <div class="grid-tile tile-square placeholder-app" data-title="System Transfer" tabindex="0">
-        <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/browser.png" alt="System Transfer">
-        </div>
-      </div>
-
-      <!-- Arcade - eShop bag (games store) -->
-      <div class="grid-tile tile-square app-trigger" data-app="arcade" data-title="Classic Arcade" tabindex="0">
-        <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/eshop.png" alt="Arcade">
-        </div>
-      </div>
-
-      <!-- Notes - SVG notepad (no exact match) -->
+      <!-- Notes -->
       <div class="grid-tile tile-square app-trigger" data-app="notes" data-title="Notepad" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="14" y="10" width="72" height="82" rx="10" fill="#f39c12"/>
-            <rect x="18" y="18" width="64" height="68" rx="8" fill="#fef9e7"/>
-            <circle cx="35" cy="10" r="7" fill="#e67e22"/>
-            <circle cx="50" cy="10" r="7" fill="#e67e22"/>
-            <circle cx="65" cy="10" r="7" fill="#e67e22"/>
-            <line x1="26" y1="34" x2="74" y2="34" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
-            <line x1="26" y1="46" x2="74" y2="46" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
-            <line x1="26" y1="58" x2="62" y2="58" stroke="#f39c12" stroke-width="3" stroke-linecap="round"/>
-          </svg>
+          <img class="tile-icon" src="assets/icons/message.png" alt="Notepad">
         </div>
       </div>
 
-      <!-- Animal Crossing (2x1) - SVG Isabelle -->
-      <div class="grid-tile tile-wide placeholder-app" data-title="Animal Crossing Plaza" tabindex="0">
-        <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="0" y="0" width="100" height="100" fill="#87ceeb"/>
-            <circle cx="80" cy="22" r="14" fill="#FFD700"/>
-            <ellipse cx="50" cy="88" rx="54" ry="22" fill="#7dce82"/>
-            <ellipse cx="50" cy="82" rx="54" ry="18" fill="#a8e06b"/>
-            <circle cx="50" cy="52" r="24" fill="#f5d06e"/>
-            <circle cx="30" cy="34" r="12" fill="#f5d06e"/>
-            <circle cx="30" cy="34" r="7" fill="#e8a020"/>
-            <circle cx="70" cy="34" r="12" fill="#f5d06e"/>
-            <circle cx="70" cy="34" r="7" fill="#e8a020"/>
-            <circle cx="43" cy="52" r="4" fill="#2c3e50"/>
-            <circle cx="57" cy="52" r="4" fill="#2c3e50"/>
-            <circle cx="44" cy="51" r="1.5" fill="white"/>
-            <circle cx="58" cy="51" r="1.5" fill="white"/>
-            <path d="M42 61 Q50 68 58 61" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <path d="M40 32 Q50 28 60 32 Q50 38 40 32Z" fill="#e74c3c"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Guest Book (3x2) - Miiverse icon (community/writing) -->
-      <div class="grid-tile tile-large app-trigger" data-app="guestbook" data-title="Guest Book" tabindex="0">
-        <div class="tile-inner">
-          <img class="tile-icon" src="assets/icons/wii/miiverse.png" alt="Guest Book">
-        </div>
-      </div>
-
-      <!-- GBA - SVG Game Boy -->
+      <!-- GBA -->
       <div class="grid-tile tile-square app-trigger" data-app="gba" data-title="GBA Emulator" tabindex="0">
         <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="6" y="24" width="88" height="58" rx="20" fill="#6c5ce7"/>
-            <rect x="14" y="32" width="44" height="30" rx="5" fill="#001428"/>
-            <rect x="18" y="36" width="36" height="22" rx="3" fill="#1a6f3c"/>
-            <circle cx="36" cy="47" r="6" fill="#ff8c00"/>
-            <circle cx="74" cy="38" r="6" fill="#e74c3c"/>
-            <circle cx="82" cy="46" r="6" fill="#f39c12"/>
-            <circle cx="74" cy="54" r="6" fill="#2ecc71"/>
-            <circle cx="66" cy="46" r="6" fill="#3498db"/>
-            <rect x="22" y="66" width="6" height="18" rx="2" fill="#2c3e50"/>
-            <rect x="16" y="72" width="18" height="6" rx="2" fill="#2c3e50"/>
-            <rect x="42" y="72" width="10" height="4" rx="2" fill="#2c3e50"/>
-            <rect x="54" y="72" width="10" height="4" rx="2" fill="#2c3e50"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Zelda - SVG Triforce -->
-      <div class="grid-tile tile-square placeholder-app" data-title="Zelda Collection" tabindex="0">
-        <div class="tile-inner">
-          <svg class="tile-icon" viewBox="0 0 100 100" fill="none">
-            <rect x="0" y="0" width="100" height="100" fill="#2c1810"/>
-            <polygon points="50,8 66,36 34,36" fill="#f39c12"/>
-            <polygon points="34,38 50,66 18,66" fill="#f39c12"/>
-            <polygon points="66,38 82,66 50,66" fill="#f39c12"/>
-            <polygon points="50,15 62,35 38,35" fill="#FFD700"/>
-            <polygon points="37,40 49,60 24,60" fill="#FFD700"/>
-            <polygon points="63,40 75,60 51,60" fill="#FFD700"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Pokémon GIF tile (2x1) -->
-      <div class="grid-tile tile-wide placeholder-app" data-title="Pokémon" tabindex="0">
-        <div class="tile-inner" style="padding:0; overflow:hidden;">
-          <img src="assets/gif/pokemon1.gif" alt="Pokémon" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:20px;">
+          <img class="tile-icon" src="assets/icons/gba.png" alt="GBA Emulator">
         </div>
       </div>
 

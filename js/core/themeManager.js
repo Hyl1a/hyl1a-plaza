@@ -10,22 +10,25 @@ const ThemeManager = {
       name: 'Default',
       emoji: '🏠',
       bgGradient: 'linear-gradient(135deg, #f0f0f0 0%, #e0e4e8 50%, #d5dce3 100%)',
+      videoSrc: 'assets/icons/video/menuBC.mp4',
       accentColor: '#00d2ff',
       textColor: '#555',
       pillBg: 'linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(240,240,240,0.9))'
     },
-    zelda: {
-      name: 'Hyrule',
-      emoji: '🗡️',
-      bgGradient: 'linear-gradient(135deg, #4a7c3f 0%, #2d5a27 40%, #1a3d15 70%, #99a031fc 100%)',
-      accentColor: '#b89e0bff',
-      textColor: '#2d5016',
-      pillBg: 'linear-gradient(to bottom, rgba(255,248,220,0.95), rgba(209, 218, 130, 0.9))'
+    violet: {
+      name: 'Violet',
+      emoji: '🔮',
+      bgGradient: 'linear-gradient(135deg, #4a1c6f 0%, #2d0a4f 40%, #1a0533 70%, #6f1cba 100%)',
+      videoSrc: 'assets/icons/video/purpleBC.mp4',
+      accentColor: '#b700ffff',
+      textColor: '#4a1c6f',
+      pillBg: 'linear-gradient(to bottom, rgba(230,200,255,0.95), rgba(200, 150, 255, 0.9))'
     },
     mario: {
       name: 'Mario',
       emoji: '🍄',
       bgGradient: 'linear-gradient(135deg, #e52521 0%, #c41e1a 30%, #d96b4aff 60%, #ebb487ff 100%)',
+      videoSrc: null,
       accentColor: '#e52521',
       textColor: '#c41e1a',
       pillBg: 'linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,230,230,0.9))'
@@ -34,6 +37,7 @@ const ThemeManager = {
       name: 'Dragon Ball',
       emoji: '🐉',
       bgGradient: 'linear-gradient(135deg, #2d0d35ff 0%, #9422a3ff 35%, #871fa7ff 65%, #3b0739ff 100%)',
+      videoSrc: null,
       accentColor: '#b700ffff',
       textColor: '#661088ff',
       pillBg: 'linear-gradient(to bottom, rgba(241, 220, 255, 0.95), rgba(232, 140, 255, 0.9))'
@@ -90,10 +94,24 @@ const ThemeManager = {
       }
     }
 
-    const root = document.documentElement.style;
-
-    // Background
-    document.body.style.background = theme.bgGradient;
+    // Background Video and Color Fallback
+    const bgVideo = document.getElementById('bg-video');
+    if (bgVideo) {
+      if (theme.videoSrc) {
+        if (!bgVideo.src.endsWith(theme.videoSrc)) {
+          bgVideo.src = theme.videoSrc;
+        }
+        bgVideo.style.opacity = '1';
+        bgVideo.play().catch(e => console.log('Video play error (needs interaction):', e));
+        document.body.style.background = 'transparent'; // Let video show through
+      } else {
+        bgVideo.style.opacity = '0';
+        setTimeout(() => { if (!bgVideo.style.opacity || bgVideo.style.opacity === '0') bgVideo.pause(); }, 500);
+        document.body.style.background = theme.bgGradient; // Use fallback gradient
+      }
+    } else {
+        document.body.style.background = theme.bgGradient;
+    }
 
     // Accent color for hover borders
     root.setProperty('--theme-accent', theme.accentColor);

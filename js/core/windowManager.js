@@ -76,6 +76,8 @@ const WindowManager = {
       win.classList.remove('anim-window-open');
       win.classList.add('anim-window-close');
       
+      if (window.restoreCoverflow) window.restoreCoverflow();
+
       // Wait for bounce out animation
       setTimeout(() => {
         if (win.parentNode) win.parentNode.removeChild(win);
