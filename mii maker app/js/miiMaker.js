@@ -600,7 +600,7 @@ async function initMiiMaker(container) {
   const previewImg = document.createElement('img');
   previewImg.id = 'mii-preview-img';
   previewImg.classList.add('mii-anim-breathe');
-  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.3s ease-in-out;user-select:none;z-index:1;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));opacity:1;';
+  previewImg.style.cssText = 'width:105%;height:105%;object-fit:contain;display:block;margin:auto;transition:opacity 0.3s ease-in-out;user-select:none;z-index:2;filter:drop-shadow(0px 15px 20px rgba(0,0,0,0.6));opacity:1;position:relative;';
   previewImg.alt = 'Mii Preview';
   previewImg.draggable = false;
   canvasArea.appendChild(previewImg);
@@ -625,7 +625,7 @@ async function initMiiMaker(container) {
   canvasArea.appendChild(rightBtn);
 
   function triggerStarEffect() {
-    const count = 12;
+    const count = 15;
     const colors = ['#fff700', '#ffea00', '#ffd700', '#ffffff', '#7ee8ff'];
     
     for (let i = 0; i < count; i++) {
@@ -633,26 +633,27 @@ async function initMiiMaker(container) {
       star.innerHTML = i % 2 === 0 ? '★' : '✨';
       star.style.position = 'absolute';
       star.style.left = '50%';
-      star.style.top = '40%'; // Focus around the face/upper body
+      star.style.top = '30%'; // Target the head area
       star.style.transform = 'translate(-50%, -50%)';
       star.style.color = colors[Math.floor(Math.random() * colors.length)];
-      star.style.fontSize = (Math.random() * 20 + 15) + 'px';
-      star.style.zIndex = '10';
+      star.style.fontSize = (Math.random() * 25 + 20) + 'px'; // Larger stars
+      star.style.zIndex = '0'; // Behind the Mii
       star.style.pointerEvents = 'none';
-      star.style.textShadow = '0 0 10px rgba(255,255,255,0.8)';
+      star.style.textShadow = '0 0 15px rgba(255,255,255,1)';
       
       const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 150 + 80;
+      const distance = Math.random() * 220 + 120; // Drift further
       const driftX = Math.cos(angle) * distance;
       const driftY = Math.sin(angle) * distance;
       
       star.animate([
         { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0 },
-        { transform: 'translate(-50%, -50%) scale(1.5) rotate(180deg)', opacity: 1, offset: 0.2 },
+        { transform: 'translate(-50%, -50%) scale(2) rotate(180deg)', opacity: 1, offset: 0.2 },
         { transform: `translate(calc(-50% + ${driftX}px), calc(-50% + ${driftY}px)) scale(0) rotate(360deg)`, opacity: 0 }
       ], {
-        duration: 700 + Math.random() * 500,
-        easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+        duration: 800 + Math.random() * 600,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        delay: Math.random() * 100 // Slight staggered burst
       }).onfinish = () => star.remove();
       
       canvasArea.appendChild(star);
