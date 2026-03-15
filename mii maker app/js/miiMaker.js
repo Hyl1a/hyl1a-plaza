@@ -228,6 +228,15 @@ async function initMiiMaker(container, gender = 0) {
     container.classList.add('closing');
     if (blinkTimeout) clearTimeout(blinkTimeout);
     if (miiSpeechTimeout) clearTimeout(miiSpeechTimeout);
+    
+    // Restore main container visibility
+    const mainContainer = document.getElementById('main-container');
+    if (mainContainer) {
+      mainContainer.style.opacity = '1';
+      mainContainer.style.transform = 'scale(1)';
+    }
+    document.body.classList.remove('app-open-active');
+
     setTimeout(() => { if (container.parentNode) container.parentNode.removeChild(container); }, 300);
   }
 
@@ -757,6 +766,10 @@ async function initMiiMaker(container, gender = 0) {
     newImg.onload = () => {
       // Swap immediately when loaded
       previewImg.src = newImg.src;
+      // Hide loading overlay
+      const overlay = container.querySelector('#mii-loading-overlay');
+      if (overlay) overlay.style.display = 'none';
+
       // Fade back in quickly for a smooth transition if we were fading
       previewImg.style.opacity = '1';
       if (!skipStars) triggerStarEffect();
