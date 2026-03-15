@@ -621,41 +621,61 @@ function initMusicBar() {
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = 70;
-    const barCount = 120;
-    const barWidth = 2;
+    const radius = 72;
+    const points = [];
+    const numPoints = 120; // Number of points to forming the wave
     
-    // Average volume for pulsing effect
+    // Calculate average volume for pulsing
     let sum = 0;
     for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
     const avg = sum / dataArray.length;
     const pulseScale = 1 + (avg / 255) * 0.12;
     circleCenter.style.transform = `scale(${pulseScale})`;
 
-    for (let i = 0; i < barCount; i++) {
-      const angle = (i / barCount) * Math.PI * 2;
-      const freqIndex = Math.floor((i / barCount) * (dataArray.length / 2));
-      const val = dataArray[freqIndex] || 0;
-      const barHeight = (val / 255) * 60;
-
-      const x1 = centerX + Math.cos(angle) * (radius + 2);
-      const y1 = centerY + Math.sin(angle) * (radius + 2);
-      const x2 = centerX + Math.cos(angle) * (radius + barHeight + 5);
-      const y2 = centerY + Math.sin(angle) * (radius + barHeight + 5);
-
-      // Gradient color based on angle and frequency
-      const hue = (i / barCount) * 360 + (Date.now() / 50);
-      ctx.strokeStyle = `hsla(${hue % 360}, 100%, 70%, 0.9)`;
-      ctx.lineWidth = barWidth;
-      ctx.lineCap = 'round';
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = ctx.strokeStyle;
-      
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
+    // Generate points for the wave
+    for (let i = 0; i < numPoints; i++) {
+        const angle = (i / numPoints) * Math.PI * 2;
+        const freqIndex = Math.floor((i / numPoints) * (dataArray.length / 2));
+        const val = dataArray[freqIndex] || 0;
+        const waveHeight = (val / 255) * 45; // Amplitude of the wave
+        
+        const r = radius + waveHeight;
+        const x = centerX + Math.cos(angle) * r;
+        const y = centerY + Math.sin(angle) * r;
+        points.push({ x, y });
     }
+
+    // Draw the continuous wave path
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+
+    for (let i = 0; i < points.length; i++) {
+        const nextIdx = (i + 1) % points.length;
+        const xc = (points[i].x + points[nextIdx].x) / 2;
+        const yc = (points[i].y + points[nextIdx].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+    }
+    
+    ctx.closePath();
+
+    // Style the wave
+    const gradient = ctx.createConicGradient(0, centerX, centerY);
+    gradient.addColorStop(0, '#7ec4ff');
+    gradient.addColorStop(0.25, '#4a9fff');
+    gradient.addColorStop(0.5, '#00f2fe');
+    gradient.addColorStop(0.75, '#ff7ec4');
+    gradient.addColorStop(1, '#7ec4ff');
+
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(74, 159, 255, 0.8)';
+    ctx.stroke();
+
+    // Add a subtle fill
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.fill();
 
     // Update progress bar
     const audio = window.AudioManager.currentMusicAudio;
