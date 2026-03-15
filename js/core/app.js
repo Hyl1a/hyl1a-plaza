@@ -18,12 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof AudioManager !== 'undefined' && !AudioManager.isPlayingMusic && !AudioManager.isExternalMusicPlaying) {
       AudioManager.playNextMusic();
       // Update music bar display
-      const playBtn = document.getElementById('music-play');
-      const trackName = document.getElementById('music-track-name');
-      if (playBtn) { playBtn.textContent = '⏸'; playBtn.classList.add('playing'); }
-      if (trackName && AudioManager.playlist[AudioManager.currentTrackIndex]) {
-        trackName.textContent = AudioManager.playlist[AudioManager.currentTrackIndex].name;
-      }
+      // The new initMusicBar handles its own display updates, so these lines are removed.
     }
     document.removeEventListener('click', autoPlayOnce);
     document.removeEventListener('keydown', autoPlayOnce);
@@ -561,4 +556,153 @@ function initAuth() {
     });
   }
 } // End of initAuth
+
+function initMusicBar() {
+  const musicBar = document.getElementById('music-bar');
+  if (!musicBar) return;
+
+  // Replace content with Circular Visualizer Structure
+  musicBar.innerHTML = `
+    <div class="visualizer-container">
+      <div id="visualizer-info">
+        <div id="music-track-name">No track playing</div>
+        <div class="music-bar-subtitle">Hylia Radio</div>
+      </div>
+      
+      <div class="visualizer-circle">
+        <canvas id="visualizer-canvas"></canvas>
+        <div class="circle-center">
+          <img id="music-album-art" src="assets/icons/ami.png" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+          <button id="visualizer-play-btn" class="visualizer-ctrl main-play">
+            <span class="play-icon">▶</span>
+          </button>
+        </div>
+        <button id="visualizer-prev-btn" class="visualizer-ctrl side-ctrl prev">⏮</button>
+        <button id="visualizer-next-btn" class="visualizer-ctrl side-ctrl next">⏭</button>
+      </div>
+
+      <div class="visualizer-progress-container">
+        <div id="visualizer-progress-bar"></div>
+      </div>
+    </div>
+  `;
+
+  const canvas = document.getElementById('visualizer-canvas');
+  const ctx = canvas.getContext('2d');
+  const playBtn = document.getElementById('visualizer-play-btn');
+  const prevBtn = document.getElementById('visualizer-prev-btn');
+  const nextBtn = document.getElementById('visualizer-next-btn');
+  const trackName = document.getElementById('music-track-name');
+  const progressBar = document.getElementById('visualizer-progress-bar');
+  const circleCenter = document.querySelector('.circle-center');
+
+  // Resize canvas
+  function resizeCanvas() {
+    canvas.width = 300;
+    canvas.height = 300;
+  }
+  resizeCanvas();
+
+  // Visualizer Loop
+  function draw() {
+    requestAnimationFrame(draw);
+    if (!window.AudioManager || !window.AudioManager.isPlayingMusic || !window.AudioManager.analyser) {
+      if (!window.AudioManager.isPlayingMusic) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
+    }
+
+    const analyser = window.AudioManager.analyser;
+    const dataArray = window.AudioManager.dataArray;
+    analyser.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 70;
+    const barCount = 120;
+    const barWidth = 2;
+    
+    // Average volume for pulsing effect
+    let sum = 0;
+    for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+    const avg = sum / dataArray.length;
+    const pulseScale = 1 + (avg / 255) * 0.12;
+    circleCenter.style.transform = `scale(${pulseScale})`;
+
+    for (let i = 0; i < barCount; i++) {
+      const angle = (i / barCount) * Math.PI * 2;
+      const freqIndex = Math.floor((i / barCount) * (dataArray.length / 2));
+      const val = dataArray[freqIndex] || 0;
+      const barHeight = (val / 255) * 60;
+
+      const x1 = centerX + Math.cos(angle) * (radius + 2);
+      const y1 = centerY + Math.sin(angle) * (radius + 2);
+      const x2 = centerX + Math.cos(angle) * (radius + barHeight + 5);
+      const y2 = centerY + Math.sin(angle) * (radius + barHeight + 5);
+
+      // Gradient color based on angle and frequency
+      const hue = (i / barCount) * 360 + (Date.now() / 50);
+      ctx.strokeStyle = `hsla(${hue % 360}, 100%, 70%, 0.9)`;
+      ctx.lineWidth = barWidth;
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = ctx.strokeStyle;
+      
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    // Update progress bar
+    const audio = window.AudioManager.currentMusicAudio;
+    if (audio && audio.duration) {
+      const progress = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = `${progress}%`;
+    }
+  }
+
+  draw();
+
+  // Controls listeners
+  playBtn.addEventListener('click', () => {
+    if (window.AudioManager.isPlayingMusic) {
+      window.AudioManager.currentMusicAudio.pause();
+      window.AudioManager.isPlayingMusic = false;
+    } else {
+      if (window.AudioManager.currentMusicAudio) {
+        window.AudioManager.currentMusicAudio.play();
+        window.AudioManager.isPlayingMusic = true;
+      } else {
+        window.AudioManager.playNextMusic();
+      }
+    }
+    updateUIElements();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    window.AudioManager.playNextMusic();
+    updateUIElements();
+  });
+
+  nextBtn.addEventListener('click', () => {
+    window.AudioManager.playNextMusic();
+    updateUIElements();
+  });
+
+  function updateUIElements() {
+    if (window.AudioManager.currentTrackIndex >= 0) {
+      const track = window.AudioManager.playlist[window.AudioManager.currentTrackIndex];
+      trackName.textContent = track.name;
+      const playIcon = playBtn.querySelector('.play-icon');
+      if (playIcon) playIcon.textContent = window.AudioManager.isPlayingMusic ? '⏸' : '▶';
+    }
+  }
+
+  // Periodic UI sync
+  setInterval(updateUIElements, 1000);
+}
 

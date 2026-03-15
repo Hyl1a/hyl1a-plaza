@@ -30,9 +30,12 @@ const AudioManager = {
   sounds: {},
   isMuted: false,
   isPlayingMusic: false,
+  audioContext: null,
+  analyser: null,
+  dataArray: null,
   currentMusicAudio: null,
-  currentTrackIndex: -1,
-  isExternalMusicPlaying: false, // Flag for Mii Maker etc.
+  currentTrackIndex: -1, 
+  isExternalMusicPlaying: false,
   _pendingConnectSuccess: false,
 
   // Sound file mapping
@@ -55,6 +58,7 @@ const AudioManager = {
 
   init: function () {
     if (this._initialized) return;
+    
     // Preload all UI sound effects
     Object.entries(this.soundFiles).forEach(([key, path]) => {
       const audio = new Audio(path);
@@ -62,7 +66,21 @@ const AudioManager = {
       audio.volume = 0.4;
       this.sounds[key] = audio;
     });
+
     this._initialized = true;
+  },
+
+  _initAudioContext: function() {
+    if (this.audioContext) return;
+    try {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 256;
+      const bufferLength = this.analyser.frequencyBinCount;
+      this.dataArray = new Uint8Array(bufferLength);
+    } catch(e) {
+      console.error("Web Audio API not supported", e);
+    }
   },
 
   _play: function (key) {
@@ -141,7 +159,26 @@ const AudioManager = {
 
     this.currentMusicAudio = new Audio(track.file);
     this.currentMusicAudio.volume = 0.3;
-    this.currentMusicAudio.loop = true;
+    this.currentMusicAudio.loop = false; // Disable loop for auto-advance
+
+    // Setup visualizer connection
+    this.currentMusicAudio.onplay = () => {
+      this._initAudioContext();
+      if (this.audioContext && !this.sourceNode) {
+        this.sourceNode = this.audioContext.createMediaElementSource(this.currentMusicAudio);
+        this.sourceNode.connect(this.analyser);
+        this.analyser.connect(this.audioContext.destination);
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+    };
+
+    // Auto-advance to next track
+    this.currentMusicAudio.onended = () => {
+      this.playNextMusic();
+    };
+
     this.currentMusicAudio.play().catch(() => { });
 
     this.isPlayingMusic = true;
