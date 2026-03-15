@@ -353,6 +353,11 @@ window.handleAppLaunch = function(trigger) {
           appData.render(fsContainer);
         }
         
+        // Music logic for Mii Plaza specifically (it doesn't have its own transition sound/music in registry usually)
+        if (appId === 'miiPlaza') {
+           if (typeof AudioManager !== 'undefined') AudioManager.fadeIn(800);
+        }
+
         appData.close = function() {
           fsContainer.classList.add('anim-window-close');
           
@@ -371,6 +376,7 @@ window.handleAppLaunch = function(trigger) {
         if (appData.render) appData.render();
         if (typeof AudioManager !== 'undefined') AudioManager.playPop();
       } else {
+        // Windowed apps: open window and fade hub music back in
         WindowManager.openWindow(appId, appData.title, appData.render || function (container) {
           container.innerHTML = `
             <div class="app-inner">
@@ -379,6 +385,11 @@ window.handleAppLaunch = function(trigger) {
             </div>
           `;
         });
+        
+        // Resume hub music for windowed apps
+        if (typeof AudioManager !== 'undefined' && appId !== 'music') {
+          AudioManager.fadeIn(800);
+        }
       }
     });
   }

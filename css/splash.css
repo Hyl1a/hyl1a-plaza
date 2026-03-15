@@ -28,9 +28,9 @@
 }
 
 #splash-logo {
-    width: 400px; /* ENCORE PLUS GRAND */
+    width: 500px; /* ENCORE PLUS GRAND */
     height: auto;
-    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.25));
+    filter: drop-shadow(0 30px 60px rgba(0,0,0,0.3));
     transform: scale(0);
 }
 
