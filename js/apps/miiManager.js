@@ -4,10 +4,17 @@
  */
 
 window.MiiManager = {
+  passwordVerified: false,
+
   async open(container) {
     this.container = container;
-    this.renderLoading();
 
+    if (!this.passwordVerified) {
+      this.renderPasswordPrompt();
+      return;
+    }
+
+    this.renderLoading();
     const user = window.Auth ? window.Auth.currentUser : null;
     if (!user) {
       this.container.innerHTML = '<div class="mii-manager-error">Veuillez vous connecter pour gérer vos Miis.</div>';
@@ -21,6 +28,45 @@ window.MiiManager = {
       console.error("Error opening Mii Manager:", e);
       this.container.innerHTML = '<div class="mii-manager-error">Erreur lors du chargement des Miis.</div>';
     }
+  },
+
+  renderPasswordPrompt() {
+    this.container.innerHTML = `
+      <div class="mii-manager-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; background: #16162a; color: white; font-family: 'Inter', sans-serif;">
+        <div style="font-size: 50px;">🔒</div>
+        <h2 style="margin: 0; color: #7eb8ff;">Accès Protégé</h2>
+        <p style="color: rgba(255,255,255,0.6); margin: 0;">Entrez le code pour gérer les Miis</p>
+        <div style="display: flex; gap: 10px;">
+          <input type="password" id="mii-auth-input" placeholder="Code secret" 
+                 style="padding: 12px 20px; border-radius: 12px; border: 2px solid #2a2a4a; background: #22223a; color: white; outline: none; font-size: 16px; width: 180px; text-align: center;">
+          <button id="mii-auth-btn" 
+                  style="padding: 12px 25px; border-radius: 12px; border: none; background: #3366cc; color: white; font-weight: 800; cursor: pointer; transition: all 0.2s;">OK</button>
+        </div>
+        <p id="mii-auth-error" style="color: #ff4455; font-size: 14px; height: 20px; margin: 0;"></p>
+      </div>
+    `;
+
+    const input = this.container.querySelector('#mii-auth-input');
+    const btn = this.container.querySelector('#mii-auth-btn');
+    const error = this.container.querySelector('#mii-auth-error');
+
+    const check = () => {
+      if (input.value === '375513') {
+        this.passwordVerified = true;
+        this.open(this.container);
+      } else {
+        error.textContent = 'Code incorrect';
+        input.value = '';
+        input.focus();
+        error.style.animation = 'none';
+        error.offsetHeight; // trigger reflow
+        error.style.animation = 'shake 0.4s';
+      }
+    };
+
+    btn.onclick = check;
+    input.onkeydown = (e) => { if (e.key === 'Enter') check(); };
+    input.focus();
   },
 
   renderLoading() {

@@ -116,14 +116,19 @@ async function initMiiMaker(container, gender = 0) {
     <div class="mii-body">
       <div class="mii-canvas-area" id="mii-canvas-container" style="background: transparent;">
         <div id="mii-loading-overlay">Loading Preview...</div>
-        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 120px; left: 52.5%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 15px 25px; border-radius: 30px; font-weight: 800; font-size: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;">
+        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 100px; left: 52.5%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: 800; font-size: 13px; box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none; transition: opacity 0.3s;">
           <div id="mii-tutorial-text">Bienvenue ! ✨</div>
-          <div style="position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>
-          <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
+          <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>
+          <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); border-width: 9px 9px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
           <style>
             @keyframes bounce {
               0%, 100% { transform: translate(-50%, 0); }
-              50% { transform: translate(-50%, -10px); }
+              50% { transform: translate(-50%, -6px); }
+            }
+            @keyframes shake {
+              0%, 100% { transform: translateX(0); }
+              25% { transform: translateX(-5px); }
+              75% { transform: translateX(5px); }
             }
           </style>
         </div>
