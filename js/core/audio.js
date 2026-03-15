@@ -44,7 +44,8 @@ const AudioManager = {
     connectSuccess: 'assets/audio/CONNECT_SUCCESS.wav',
     miiLaunch: 'assets/audio/MiiSF.wav',
     gbaLaunch: 'assets/audio/EmuSF.wav',
-    gbaBgm: 'assets/audio/GbaSF.mp3'
+    gbaBgm: 'assets/audio/GbaSF.mp3',
+    defaultLaunch: 'assets/audio/launchD.mp3'
   },
 
   // Music playlist

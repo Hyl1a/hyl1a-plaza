@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMusicBar();          // Initialize song controls
   initAuth(); // Initialize authentication system
   initMiiPlaza();         // Initialize Mii background characters
-  initMiiPlaza();         // Initialize Mii background characters
+  initCompanion();        // Initialize virtual companion
 
   // Auto-play music on first user interaction (browser requires user gesture)
   function autoPlayOnce() {
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.removeEventListener('click', autoPlayOnce);
     document.removeEventListener('keydown', autoPlayOnce);
   }
-  
+
   // Try aggressive immediate autoplay (might be blocked by browser policy)
   setTimeout(() => {
     if (typeof AudioManager !== 'undefined' && !AudioManager.isPlayingMusic) {
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.updateVisualizerDisplay) window.updateVisualizerDisplay();
         document.removeEventListener('click', autoPlayOnce);
         document.removeEventListener('keydown', autoPlayOnce);
-      } catch(e) { /* Blocked by browser */ }
+      } catch (e) { /* Blocked by browser */ }
     }
   }, 1000);
 
@@ -66,15 +66,15 @@ function initFocusNavigation() {
 
   // BG accent hues matching glow colours
   const bgAccentHues = [210, 25, 188, 280, 140, 340, 255, 45];
-  
+
   window.setGlobalHueFromIndex = (index) => {
     const hue = bgAccentHues[index % bgAccentHues.length];
     document.documentElement.style.setProperty('--bg-accent-h', hue);
-    
+
     // Also update tile glow variables for visualizer/carousel sync
     const glowColorsSolid = ['#4facfe', '#ff9a56', '#6adae4', '#c471ed', '#43e97b', '#ff758c', '#a38cd1', '#ffd364'];
     const glowColorsSoft = [
-      'rgba(79,172,254,0.4)', 'rgba(255,154,86,0.4)', 'rgba(106,218,228,0.4)', 
+      'rgba(79,172,254,0.4)', 'rgba(255,154,86,0.4)', 'rgba(106,218,228,0.4)',
       'rgba(196,113,237,0.4)', 'rgba(67,233,123,0.4)', 'rgba(255,117,140,0.4)',
       'rgba(163,140,209,0.4)', 'rgba(255,211,100,0.4)'
     ];
@@ -97,13 +97,13 @@ function initFocusNavigation() {
       const containerRect = mainContainer.getBoundingClientRect();
       const tileRect = tile.getBoundingClientRect();
 
-      const cx = tileRect.left - containerRect.left + tileRect.width  / 2;
-      const cy = tileRect.top  - containerRect.top  + tileRect.height / 2;
+      const cx = tileRect.left - containerRect.left + tileRect.width / 2;
+      const cy = tileRect.top - containerRect.top + tileRect.height / 2;
 
       const color = glowColors[focusedIndex % glowColors.length];
       glowEl.style.background = `radial-gradient(circle, ${color} 0%, rgba(255,255,255,0) 70%)`;
       glowEl.style.left = `${cx - 130}px`;
-      glowEl.style.top  = `${cy - 130}px`;
+      glowEl.style.top = `${cy - 130}px`;
       glowEl.style.opacity = '1';
     }
 
@@ -138,9 +138,9 @@ function initFocusNavigation() {
 
       let primary, cross;
       if (direction === 'right') { primary = dx; cross = Math.abs(dy); }
-      if (direction === 'left')  { primary = -dx; cross = Math.abs(dy); }
-      if (direction === 'down')  { primary = dy; cross = Math.abs(dx); }
-      if (direction === 'up')    { primary = -dy; cross = Math.abs(dx); }
+      if (direction === 'left') { primary = -dx; cross = Math.abs(dy); }
+      if (direction === 'down') { primary = dy; cross = Math.abs(dx); }
+      if (direction === 'up') { primary = -dy; cross = Math.abs(dx); }
 
       if (primary <= 0) return;  // Wrong direction
 
@@ -160,8 +160,8 @@ function initFocusNavigation() {
     if (document.getElementById('auth-overlay').style.display !== 'none') return;
     if (document.body.classList.contains('app-open-active')) return;
     if (document.querySelector('.mii-fullscreen-container')) return;
-    
-    const dirMap = { ArrowRight: 'right', ArrowLeft:  'left', ArrowDown:  'down', ArrowUp:    'up' };
+
+    const dirMap = { ArrowRight: 'right', ArrowLeft: 'left', ArrowDown: 'down', ArrowUp: 'up' };
     const dir = dirMap[e.key];
     if (dir) {
       e.preventDefault();
@@ -231,11 +231,20 @@ function initAppTriggers() {
     'miiMaker': { title: '👤 Mii Maker', render: null },
     'miiPlaza': { title: '🏕️ Mii Plaza', render: null },
     'gba': { title: '🎮 Émulateur GBA', render: null },
-    'themes': { title: '🎨 Thèmes & Couleurs', render: () => {
-      if (typeof ThemeManager !== 'undefined') ThemeManager.openSelector();
-    }},
-    'bio': { title: '👤 À propos de Hyl1a', render: (container) => {
-      container.innerHTML = `
+    'miiManager': { 
+        title: '⚠️ Mii Manager', 
+        render: (container) => {
+          if (window.MiiManager) window.MiiManager.open(container);
+        } 
+      },
+    'themes': {
+      title: '🎨 Thèmes & Couleurs', render: () => {
+        if (typeof ThemeManager !== 'undefined') ThemeManager.openSelector();
+      }
+    },
+    'bio': {
+      title: '👤 À propos de Hyl1a', render: (container) => {
+        container.innerHTML = `
         <div class="bio-window">
           <div class="bio-header">
             <img src="assets/icons/bobaboy.jpg" class="bio-avatar">
@@ -264,7 +273,8 @@ function initAppTriggers() {
           </div>
         </div>
       `;
-    }}
+      }
+    }
   };
 
   const dynamicTitle = document.getElementById('dynamic-title-pill');
@@ -296,20 +306,20 @@ function initAppTriggers() {
   });
 }
 
-window.showSplashScreen = function(callback) {
+window.showSplashScreen = function (callback) {
   const splash = document.getElementById('app-splash-screen');
   if (!splash) {
     if (callback) callback();
     return;
   }
-  
+
   splash.classList.remove('splash-exit');
   splash.classList.add('splash-visible');
-  
+
   // Wait for the pop-in + hover time (Reduced to 800ms for faster feel)
   setTimeout(() => {
     splash.classList.add('splash-exit');
-    
+
     // Wait for pop-out animation
     setTimeout(() => {
       splash.classList.remove('splash-visible', 'splash-exit');
@@ -318,9 +328,9 @@ window.showSplashScreen = function(callback) {
   }, 800);
 };
 
-window.handleAppLaunch = function(trigger) {
+window.handleAppLaunch = function (trigger) {
   if (document.getElementById('auth-overlay').style.display !== 'none') return;
-  
+
   const appId = trigger.getAttribute('data-app');
   const appData = window.AppRegistry[appId];
   console.log('Launching appId:', appId, 'Data:', appData);
@@ -333,8 +343,10 @@ window.handleAppLaunch = function(trigger) {
       } else if (appId === 'gba') {
         AudioManager.playAppLaunchTransition('gbaLaunch', 'gbaBgm');
       } else {
-        // For other apps, maybe a subtle pop or fadeout
-        if (appId !== 'themes') AudioManager.fadeOut(600);
+        // Fallback: Play default launch sound for other apps
+        if (appId !== 'themes') {
+          AudioManager.playAppLaunchTransition('defaultLaunch');
+        }
       }
     }
 
@@ -345,22 +357,22 @@ window.handleAppLaunch = function(trigger) {
         fsContainer.className = 'mii-fullscreen-container';
         document.body.appendChild(fsContainer);
         document.body.classList.add('app-open-active');
-        
+
         document.getElementById('main-container').style.opacity = '0';
         document.getElementById('main-container').style.transform = 'scale(0.95)';
-        
+
         if (appData.render) {
           appData.render(fsContainer);
         }
-        
+
         // Music logic for Mii Plaza specifically (it doesn't have its own transition sound/music in registry usually)
         if (appId === 'miiPlaza') {
-           if (typeof AudioManager !== 'undefined') AudioManager.fadeIn(800);
+          if (typeof AudioManager !== 'undefined') AudioManager.fadeIn(800);
         }
 
-        appData.close = function() {
+        appData.close = function () {
           fsContainer.classList.add('anim-window-close');
-          
+
           if (typeof AudioManager !== 'undefined') {
             AudioManager.restoreHubAudio();
           }
@@ -385,7 +397,7 @@ window.handleAppLaunch = function(trigger) {
             </div>
           `;
         });
-        
+
         // Resume hub music for windowed apps
         if (typeof AudioManager !== 'undefined' && appId !== 'music') {
           AudioManager.fadeIn(800);
@@ -416,7 +428,7 @@ function initAuth() {
   }
 
   // Make loadUserMii globally accessible so auth.js can trigger it when Firebase Auth state changes
-  window.loadUserMii = async function() {
+  window.loadUserMii = async function () {
     const fbUser = window.Auth ? window.Auth.currentUser : null;
     const container = document.getElementById('top-avatar-container');
     if (!fbUser || !container) return;
@@ -425,7 +437,7 @@ function initAuth() {
       if (!window.Firestore || !window.Firestore.getDoc) return;
       const docRef = window.Firestore.doc(window.FirebaseDB, "avatars", fbUser.uid);
       const docSnap = await window.Firestore.getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         const myAvatar = docSnap.data();
         if (myAvatar && myAvatar.visual_base64) {
@@ -444,7 +456,7 @@ function initAuth() {
     }
   }; // End of window.loadUserMii
 
-  window.checkForcedMiiCreation = async function() {
+  window.checkForcedMiiCreation = async function () {
     // Anti-duplication guard: don't trigger if a fullscreen app is already open
     if (document.querySelector('.mii-fullscreen-container')) return;
 
@@ -457,7 +469,7 @@ function initAuth() {
           if (document.querySelector('.mii-fullscreen-container')) return;
           const miiMakerTile = document.querySelector('.app-trigger[data-app="miiMaker"]');
           if (miiMakerTile) miiMakerTile.click();
-        }, 800); 
+        }, 800);
       }
     }
   };
@@ -467,19 +479,19 @@ function initAuth() {
     if (!bgContainer || bgContainer.children.length > 2) return; // Prevent regenerating
 
     let avatars = [];
-    
+
     // Try to fetch real Miis from Firestore
     if (window.Firestore && window.FirebaseDB) {
       try {
         const avatarsRef = window.Firestore.collection(window.FirebaseDB, "avatars");
         const qSnap = await window.Firestore.getDocs(avatarsRef);
         qSnap.forEach(doc => {
-           if(doc.data().visual_base64 && doc.data().username) {
-               avatars.push({
-                   b64: doc.data().visual_base64,
-                   username: doc.data().username
-               });
-           }
+          if (doc.data().visual_base64 && doc.data().username) {
+            avatars.push({
+              b64: doc.data().visual_base64,
+              username: doc.data().username
+            });
+          }
         });
       } catch (e) {
         console.warn("Could not fetch real Miis for background, falling back to SVGs", e);
@@ -487,7 +499,7 @@ function initAuth() {
     }
 
     const totalMiisToGenerate = 15;
-    
+
     // Fallback data if no real Miis
     const faces = [
       '<circle cx="22" cy="22" r="2" fill="#333" /><circle cx="38" cy="22" r="2" fill="#333" /><path d="M25 32 Q30 35 35 32" stroke="#333" stroke-width="2" fill="none" />',
@@ -511,18 +523,17 @@ function initAuth() {
     for (let i = 0; i < totalMiisToGenerate; i++) {
       const svg = document.createElement('div');
       svg.className = 'auth-mii';
-      
+
       const left = Math.random() * 100;
-      const size = 0.5 + Math.random() * 1.5; 
-      const duration = 10 + Math.random() * 20; 
-      const delay = Math.random() * -30; 
-      
+      const size = 1.0 + Math.random() * 2.5; // SLIGHT REDUCTION: from [1.5, 5.5] to [1.0, 3.5]
+      const duration = 12 + Math.random() * 30;
+      const delay = Math.random() * -60;
+
       svg.style.left = `${left}%`;
-      svg.style.transform = `scale(${size})`;
+      svg.style.setProperty('--mii-scale', size);
       svg.style.animationDuration = `${duration}s`;
       svg.style.animationDelay = `${delay}s`;
-      svg.style.zIndex = Math.floor(Math.random() * 10);
-      
+      svg.style.zIndex = Math.floor(Math.random() * 5);
       let bubbleHtml = '';
       let miiContentHtml = '';
 
@@ -531,16 +542,16 @@ function initAuth() {
         const realMii = avatars[Math.floor(Math.random() * avatars.length)];
         const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(realMii.b64)}&verifyCharInfo=0&type=face&width=128&shaderType=wiiu`;
         miiContentHtml = `<img src="${thumbUrl}" style="width: 60px; height: 60px; object-fit: cover; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); border-radius: 50%;">`;
-        
+
         if (Math.random() > 0.8) {
-           const bubbleDelay = Math.random() * 5;
-           bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${realMii.username} : ${phrases[Math.floor(Math.random() * phrases.length)]}</div>`;
+          const bubbleDelay = Math.random() * 5;
+          bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${realMii.username} : ${phrases[Math.floor(Math.random() * phrases.length)]}</div>`;
         }
       } else {
         // Fallback SVG Mii
         const hue = Math.floor(Math.random() * 360);
         const face = faces[Math.floor(Math.random() * faces.length)];
-        
+
         miiContentHtml = `
           <svg viewBox="0 0 60 90" width="60" height="90" style="filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));">
             <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
@@ -558,7 +569,7 @@ function initAuth() {
           bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${phrase}</div>`;
         }
       }
-      
+
       svg.innerHTML = `
         ${bubbleHtml}
         ${miiContentHtml}
@@ -572,7 +583,7 @@ function initAuth() {
       errorMsg.style.display = 'none';
       errorMsg.style.color = '#7eff7e'; // green success
       errorMsg.textContent = res.message;
-      
+
       // Short delay for user feedback on successful registration/login
       setTimeout(() => {
         const user = Auth.getCurrentUser();
@@ -617,4 +628,53 @@ function initAuth() {
     });
   }
 } // End of initAuth
+
+function initCompanion() {
+  const widget = document.getElementById('companion-widget');
+  const bubble = document.getElementById('companion-bubble');
+  const glass = document.querySelector('.companion-glass');
+
+  if (!widget || !bubble || !glass) return;
+
+  const phrases = [
+    "Poyo",
+    "Tu veux jouer à quoi frro ?",
+    "Hylia Plaza est trop cool ! (stp dis le)",
+    "Coucou !",
+    "C'est une belle journée !",
+    "J'adore la musique ici !",
+    "Tema, je flotte !",
+    "Mii Maker est trop bien",
+    "Tu as vu le nouveau thème ?"
+  ];
+
+  let bubbleTimeout;
+
+  const showBubble = (text) => {
+    bubble.textContent = text || phrases[Math.floor(Math.random() * phrases.length)];
+    bubble.classList.add('show');
+
+    clearTimeout(bubbleTimeout);
+    bubbleTimeout = setTimeout(() => {
+      bubble.classList.remove('show');
+    }, 4000);
+  };
+
+  glass.addEventListener('click', () => {
+    showBubble();
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.playPop();
+    }
+  });
+
+  // Small random greeting on hub load
+  setTimeout(() => showBubble("Poyo ! ✨"), 3000);
+
+  // Random interaction every minute
+  setInterval(() => {
+    if (Math.random() > 0.6 && document.getElementById('auth-overlay').style.display === 'none') {
+      showBubble();
+    }
+  }, 60000);
+}
 

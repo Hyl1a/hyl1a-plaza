@@ -23,7 +23,14 @@
 <body>
   <!-- AUTHENTICATION OVERLAY -->
   <div id="auth-overlay"
-    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; flex-direction: column; backdrop-filter: blur(10px); overflow: hidden;">
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 15, 0.75); display: flex; align-items: center; justify-content: center; z-index: 10000; flex-direction: column; backdrop-filter: blur(10px); overflow: hidden;">
+
+    <!-- CONSTRUCTION BANNER (Matched to marquee style) -->
+    <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 60px); max-width: 1400px; height: 44px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px) saturate(2); -webkit-backdrop-filter: blur(25px) saturate(2); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 22px; display: flex; align-items: center; justify-content: center; z-index: 10001; pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+      <div style="display: flex; gap: 15px; align-items: center; color: rgba(255, 255, 255, 0.8); font-weight: 700; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase;">
+        <span>ℹ️</span> SITE EN COURS DE CONSTRUCTION <span>ℹ️</span>
+      </div>
+    </div>
 
     <!-- Background layer for Miis -->
     <div id="auth-bg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;">
@@ -63,7 +70,7 @@
 
         @keyframes floatMii {
           0% {
-            transform: translateY(100vh) rotate(-10deg);
+            transform: translateY(100vh) rotate(-10deg) scale(var(--mii-scale, 1));
             opacity: 0;
           }
 
@@ -76,7 +83,7 @@
           }
 
           100% {
-            transform: translateY(-20vh) rotate(10deg);
+            transform: translateY(-20vh) rotate(10deg) scale(var(--mii-scale, 1));
             opacity: 0;
           }
         }
@@ -101,51 +108,83 @@
             transform: translateX(-50%) translateY(-10px) scale(0.8);
           }
         }
+
+        .auth-logo {
+          width: 480px;
+          height: auto;
+          margin-bottom: -10px; /* Slight overlap with the glass box for better depth */
+          filter: drop-shadow(0 15px 30px rgba(0,0,0,0.5));
+          animation: logoFloat 4s ease-in-out infinite;
+          z-index: 20;
+          pointer-events: none;
+        }
+
+        @keyframes logoFloat {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-10px) scale(1.02); }
+        }
       </style>
     </div>
 
+    <!-- Hylia Plaza Logo (Floating Outside) -->
+    <img src="assets/icons/logo.gif" alt="Hylia Plaza Logo" class="auth-logo">
+
     <!-- Login Box -->
     <div
-      style="position: relative; z-index: 10; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-radius: 24px; padding: 50px 40px; text-align: center; color: white; width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.1); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); animation: fadeIn 0.8s ease-out;">
-      
-      <img src="assets/icons/logo.gif" alt="Hylia Plaza Logo" style="width: 220px; height: auto; margin-bottom: 25px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));">
-      
-      <p style="margin-bottom: 35px; font-size: 15px; color: rgba(255,255,255,0.7); font-weight: 300; letter-spacing: 0.5px;">Connectez-vous pour accéder à vos sauvegardes.</p>
+      style="position: relative; z-index: 10; background: rgba(255, 255, 255, 0.25); border: 1px solid rgba(255,255,255,0.3); border-radius: 24px; padding: 40px 40px; text-align: center; color: white; width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.4), inset 0 0 20px rgba(255,255,255,0.1); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); animation: fadeIn 0.8s ease-out;">
+
+      <p
+        style="margin-bottom: 35px; font-size: 15px; color: rgba(255,255,255,0.7); font-weight: 300; letter-spacing: 0.5px;">
+        Connectez-vous pour accéder à vos sauvegardes.</p>
 
       <div style="margin-bottom: 20px; position: relative;">
         <input type="text" id="auth-username" placeholder="Nom d'utilisateur"
           style="width: 100%; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-size: 15px;">
       </div>
-      
+
       <div style="margin-bottom: 30px; position: relative;">
         <input type="password" id="auth-password" placeholder="Mot de passe"
           style="width: 100%; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; outline: none; box-sizing: border-box; transition: all 0.3s; font-size: 15px;">
       </div>
 
-      <div id="auth-error" style="color: #ff6b6b; font-size: 13px; margin-bottom: 20px; display: none; background: rgba(255,107,107,0.1); padding: 8px; border-radius: 8px;"></div>
+      <div id="auth-error"
+        style="color: #ff6b6b; font-size: 13px; margin-bottom: 20px; display: none; background: rgba(255,107,107,0.1); padding: 8px; border-radius: 8px;">
+      </div>
 
       <div style="display: flex; gap: 15px; justify-content: center;">
         <button id="btn-login"
           style="padding: 12px 24px; border-radius: 12px; border: none; background: linear-gradient(135deg, #7ec4ff, #4a9fff); color: white; font-weight: bold; cursor: pointer; flex: 1; box-shadow: 0 4px 15px rgba(74, 159, 255, 0.4); transition: transform 0.2s, box-shadow 0.2s;">Connexion</button>
         <button id="btn-register"
-          style="padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(126, 196, 255, 0.5); background: transparent; color: #7ec4ff; font-weight: bold; cursor: pointer; flex: 1; transition: background 0.2s, color 0.2s;">Créer un compte</button>
+          style="padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(126, 196, 255, 0.5); background: transparent; color: #7ec4ff; font-weight: bold; cursor: pointer; flex: 1; transition: background 0.2s, color 0.2s;">Créer
+          un compte</button>
       </div>
     </div>
-    
+
     <style>
       @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-      #auth-username:focus, #auth-password:focus {
-        background: rgba(255,255,255,0.15);
+
+      #auth-username:focus,
+      #auth-password:focus {
+        background: rgba(255, 255, 255, 0.15);
         border-color: rgba(126, 196, 255, 0.6);
         box-shadow: 0 0 15px rgba(126, 196, 255, 0.2);
       }
+
       #btn-login:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(74, 159, 255, 0.6);
       }
+
       #btn-register:hover {
         background: rgba(126, 196, 255, 0.1);
         color: white;
@@ -241,6 +280,13 @@
         </div>
       </div>
 
+      <!-- Mii Manager -->
+      <div class="grid-tile tile-square app-trigger" data-app="miiManager" data-title="Mii Manager" tabindex="0">
+        <div class="tile-inner">
+          <img class="tile-icon" src="assets/icons/attention.png" alt="Mii Manager">
+        </div>
+      </div>
+
     </div>
     <button id="carousel-nav-next" class="carousel-nav-btn" aria-label="Next App">›</button>
   </div>
@@ -281,6 +327,14 @@
     </div>
   </div>
 
+  <!-- Virtual Companion Widget -->
+  <div id="companion-widget">
+    <div id="companion-bubble">Poyo !</div>
+    <div class="companion-glass">
+      <img id="companion-avatar" src="assets/gif/kirby-nintendo.gif" alt="Companion">
+    </div>
+  </div>
+
   <!-- Container for dynamic OS windows -->
   <div id="window-layer"></div>
 
@@ -318,6 +372,7 @@
   <script src="mii maker app/js/miiMaker.js?v=17"></script>
   <script src="mii maker app/js/miiPlaza.js?v=17"></script>
   <script src="gba app/js/gba.js"></script>
+  <script src="js/apps/miiManager.js"></script>
 
   <script src="js/core/visualizer.js"></script>
   <script src="js/core/carousel.js"></script>
