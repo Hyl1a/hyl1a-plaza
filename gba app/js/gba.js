@@ -1,13 +1,14 @@
-const GBA_GAMES = [
+window.GBA_GAMES = [
   { name: 'Pokémon Émeraude', file: '/gba app/assets/roms/gba/Pokemon - Version Emeraude (France).gba', cover: 'assets/icons/pkmnemeraude.jpg' },
   { name: 'Pokémon Rouge Feu', file: '/gba app/assets/roms/gba/Pokemon - Version Rouge Feu (France).gba', cover: 'assets/icons/pkmnrouge.jpg' },
   { name: 'Kirby & the Amazing Mirror', file: '/gba app/assets/roms/gba/Kirby & the Amazing Mirror (Europe) (En,Fr,De,Es,It).zip', cover: 'assets/icons/kirby.jpg' },
   { name: 'The Legend of Zelda: The Minish Cap', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe) (En,Fr,De,Es,It).zip', cover: 'assets/icons/zelda.jpg' }
 ];
 
-let gbaPlaytimes = {};
-let currentEmuStartTime = 0;
-let currentGameName = null;
+window.gbaPlaytimes = {};
+window.currentEmuStartTime = 0;
+window.currentGameName = null;
+window.gbaCurrentCoverIndex = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {

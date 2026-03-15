@@ -231,6 +231,7 @@ function initAppTriggers() {
     'miiMaker': { title: '👤 Mii Maker', render: null },
     'miiPlaza': { title: '🏕️ Mii Plaza', render: null },
     'gba': { title: '🎮 Émulateur GBA', render: null },
+    'gbaTurbo': { title: '🚀 GBA Turbo', render: (c) => window.gbaTurbo.open(c) },
     'miiManager': { 
         title: '⚠️ Mii Manager', 
         render: (container) => {
@@ -352,7 +353,7 @@ window.handleAppLaunch = function (trigger) {
 
     // Show splash screen
     window.showSplashScreen(() => {
-      if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
+      if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba' || appId === 'gbaTurbo') {
         const fsContainer = document.createElement('div');
         fsContainer.className = 'mii-fullscreen-container';
         document.body.appendChild(fsContainer);
