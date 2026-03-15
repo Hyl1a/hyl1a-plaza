@@ -95,18 +95,18 @@ function renderGbaMenu(container) {
       .gba-btn b { background: #fff; color: #000; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 
       .gba-arrow {
-        position: absolute; top: calc(50% - 70px); transform: translateY(-50%); z-index: 100; width: 60px; height: 100px;
-        border-radius: 12px; border: none; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+        position: absolute; top: calc(50% - 70px); transform: translateY(-50%); z-index: 200; width: 70px; height: 110px;
+        border-radius: 15px; border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6);
         color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3); outline: none;
+        transition: all 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); outline: none;
       }
-      .gba-arrow:hover { background: rgba(255,255,255,0.15); transform: translateY(-50%) scale(1.05); }
+      .gba-arrow:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.1); border-color: #fff; }
       .gba-arrow:active { transform: translateY(-50%) scale(0.95); }
       
-      #gba-btn-prev { left: 30px; }
-      #gba-btn-next { right: 30px; }
-      .gba-arrow svg { width: 32px; height: 32px; opacity: 0.8; }
-      .gba-arrow:hover svg { opacity: 1; }
+      #gba-btn-prev { left: 40px; }
+      #gba-btn-next { right: 40px; }
+      .gba-arrow svg { width: 40px; height: 40px; opacity: 1; stroke: #7ec4ff; }
+      .gba-arrow:hover svg { stroke: #fff; }
     `;
     document.head.appendChild(style);
   }
