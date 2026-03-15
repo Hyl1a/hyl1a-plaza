@@ -621,60 +621,75 @@ function initMusicBar() {
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = 72;
+    const baseRadius = 75;
+    const numPoints = 180; // High density for liquid feel
     const points = [];
-    const numPoints = 120; // Number of points to forming the wave
     
-    // Calculate average volume for pulsing
+    // Low-pass filter for smoother wave (physics smoothing)
+    if (!this._smoothingData) this._smoothingData = new Float32Array(numPoints);
+
+    // Calculate pulse
     let sum = 0;
     for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
     const avg = sum / dataArray.length;
-    const pulseScale = 1 + (avg / 255) * 0.12;
+    const pulseScale = 1 + (avg / 255) * 0.1;
     circleCenter.style.transform = `scale(${pulseScale})`;
 
-    // Generate points for the wave
+    // Generate smoothed points
     for (let i = 0; i < numPoints; i++) {
-        const angle = (i / numPoints) * Math.PI * 2;
-        const freqIndex = Math.floor((i / numPoints) * (dataArray.length / 2));
-        const val = dataArray[freqIndex] || 0;
-        const waveHeight = (val / 255) * 45; // Amplitude of the wave
+        // Mirror frequencies for symmetry
+        const freqIdx = i < numPoints / 2 
+            ? Math.floor((i / (numPoints / 2)) * (dataArray.length / 2))
+            : Math.floor(((numPoints - i) / (numPoints / 2)) * (dataArray.length / 2));
         
-        const r = radius + waveHeight;
+        const rawVal = dataArray[freqIdx] || 0;
+        // Interpolation for "liquid" movement
+        this._smoothingData[i] += (rawVal - this._smoothingData[i]) * 0.2;
+        
+        const val = this._smoothingData[i];
+        const angle = (i / numPoints) * Math.PI * 2;
+        const waveHeight = (val / 255) * 40;
+        
+        const r = baseRadius + waveHeight;
         const x = centerX + Math.cos(angle) * r;
         const y = centerY + Math.sin(angle) * r;
         points.push({ x, y });
     }
 
-    // Draw the continuous wave path
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
+    // Rendering multiple passes for deep neon glow
+    const drawWave = (width, blur, alpha) => {
+        ctx.beginPath();
+        ctx.lineWidth = width;
+        ctx.shadowBlur = blur;
+        const hueOffset = Date.now() / 30;
+        
+        // Dynamic gradient that follows the wave
+        const gradient = ctx.createConicGradient(hueOffset / 100, centerX, centerY);
+        gradient.addColorStop(0, `hsla(${hueOffset % 360}, 100%, 75%, ${alpha})`);
+        gradient.addColorStop(0.5, `hsla(${(hueOffset + 180) % 360}, 100%, 70%, ${alpha})`);
+        gradient.addColorStop(1, `hsla(${hueOffset % 360}, 100%, 75%, ${alpha})`);
+        
+        ctx.strokeStyle = gradient;
+        ctx.shadowColor = `hsla(${hueOffset % 360}, 100%, 60%, ${alpha})`;
 
-    for (let i = 0; i < points.length; i++) {
-        const nextIdx = (i + 1) % points.length;
-        const xc = (points[i].x + points[nextIdx].x) / 2;
-        const yc = (points[i].y + points[nextIdx].y) / 2;
-        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-    }
-    
-    ctx.closePath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length; i++) {
+            const nextIdx = (i + 1) % points.length;
+            const xc = (points[i].x + points[nextIdx].x) / 2;
+            const yc = (points[i].y + points[nextIdx].y) / 2;
+            ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        ctx.closePath();
+        ctx.stroke();
+    };
 
-    // Style the wave
-    const gradient = ctx.createConicGradient(0, centerX, centerY);
-    gradient.addColorStop(0, '#7ec4ff');
-    gradient.addColorStop(0.25, '#4a9fff');
-    gradient.addColorStop(0.5, '#00f2fe');
-    gradient.addColorStop(0.75, '#ff7ec4');
-    gradient.addColorStop(1, '#7ec4ff');
+    // Layered Neon Glow (Outer -> Inner)
+    drawWave(4, 25, 0.3); // Outer soft glow
+    drawWave(2, 10, 0.6); // Medium glow
+    drawWave(1.5, 0, 1.0); // Core visible line
 
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'rgba(74, 159, 255, 0.8)';
-    ctx.stroke();
-
-    // Add a subtle fill
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    // Subtle inner fill
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.fill();
 
     // Update progress bar
