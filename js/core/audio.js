@@ -30,12 +30,9 @@ const AudioManager = {
   sounds: {},
   isMuted: false,
   isPlayingMusic: false,
-  audioContext: null,
-  analyser: null,
-  dataArray: null,
   currentMusicAudio: null,
-  currentTrackIndex: -1, 
-  isExternalMusicPlaying: false,
+  currentTrackIndex: -1,
+  isExternalMusicPlaying: false, // Flag for Mii Maker etc.
   _pendingConnectSuccess: false,
 
   // Sound file mapping
@@ -49,16 +46,15 @@ const AudioManager = {
 
   // Music playlist
   playlist: [
-    { name: 'Eshop January 2016', file: 'assets/audio/Eshop January 2016.wav' },
-    { name: 'Eshop July 2014', file: 'assets/audio/Eshop July 2014.wav' },
-    { name: 'Eshop June 2015', file: 'assets/audio/Eshop June 2015.wav' },
-    { name: 'BXNJI', file: 'assets/audio/bxnji.mp3' },
-    { name: 'Thoughtbody', file: 'assets/audio/thoughtbody.mp3' }
+    { name: 'Eshop January 2016', file: 'assets/audio/Eshop January 2016.wav', cover: 'assets/icons/eshop.png' },
+    { name: 'Eshop July 2014', file: 'assets/audio/Eshop July 2014.wav', cover: 'assets/icons/eshop.png' },
+    { name: 'Eshop June 2015', file: 'assets/audio/Eshop June 2015.wav', cover: 'assets/icons/eshop.png' },
+    { name: 'BXNJI', file: 'assets/audio/bxnji.mp3', cover: 'assets/icons/music.png' },
+    { name: 'Thoughtbody', file: 'assets/audio/thoughtbody.mp3', cover: 'assets/icons/music.png' }
   ],
 
   init: function () {
     if (this._initialized) return;
-    
     // Preload all UI sound effects
     Object.entries(this.soundFiles).forEach(([key, path]) => {
       const audio = new Audio(path);
@@ -66,21 +62,7 @@ const AudioManager = {
       audio.volume = 0.4;
       this.sounds[key] = audio;
     });
-
     this._initialized = true;
-  },
-
-  _initAudioContext: function() {
-    if (this.audioContext) return;
-    try {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 256;
-      const bufferLength = this.analyser.frequencyBinCount;
-      this.dataArray = new Uint8Array(bufferLength);
-    } catch(e) {
-      console.error("Web Audio API not supported", e);
-    }
   },
 
   _play: function (key) {
@@ -141,12 +123,28 @@ const AudioManager = {
 
   // --- Music Playback ---
 
+  initAudioContext: function() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.analyser = this.ctx.createAnalyser();
+      this.analyser.fftSize = 256;
+      this.analyser.connect(this.ctx.destination);
+    } catch (e) {
+      console.warn("Web Audio API not supported:", e);
+    }
+  },
+
   playNextMusic: function () {
     this.pauseMusic();
+    this.initAudioContext();
+
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
 
     let nextIndex;
     if (this.playlist.length > 1) {
-      // Pick a random index that isn't the current one
       do {
         nextIndex = Math.floor(Math.random() * this.playlist.length);
       } while (nextIndex === this.currentTrackIndex);
@@ -159,27 +157,22 @@ const AudioManager = {
 
     this.currentMusicAudio = new Audio(track.file);
     this.currentMusicAudio.volume = 0.3;
-    this.currentMusicAudio.loop = false; // Disable loop for auto-advance
-
-    // Setup visualizer connection
-    this.currentMusicAudio.onplay = () => {
-      this._initAudioContext();
-      if (this.audioContext && !this.sourceNode) {
-        this.sourceNode = this.audioContext.createMediaElementSource(this.currentMusicAudio);
-        this.sourceNode.connect(this.analyser);
-        this.analyser.connect(this.audioContext.destination);
-      }
-      if (this.audioContext.state === 'suspended') {
-        this.audioContext.resume();
-      }
-    };
-
-    // Auto-advance to next track
-    this.currentMusicAudio.onended = () => {
-      this.playNextMusic();
-    };
+    this.currentMusicAudio.loop = false; // Disable loop to handle onended
+    
+    // Connect to Web Audio API
+    if (this.ctx && this.analyser) {
+      if (this._sourceNode) this._sourceNode.disconnect();
+      this._sourceNode = this.ctx.createMediaElementSource(this.currentMusicAudio);
+      this._sourceNode.connect(this.analyser);
+    }
 
     this.currentMusicAudio.play().catch(() => { });
+
+    this.currentMusicAudio.onended = () => {
+      this.playNextMusic();
+      // Broadcast update to UI if it's listening
+      if (window.updateVisualizerDisplay) window.updateVisualizerDisplay();
+    };
 
     this.isPlayingMusic = true;
   },

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/hub.css" />
   <link rel="stylesheet" href="css/window.css" />
   <link rel="stylesheet" href="mii maker app/css/mii.css" />
+  <link rel="stylesheet" href="css/visualizer.css" />
   
   <!-- Three.js and OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -168,18 +169,32 @@
     </div>
   </div>
 
-  <!-- Music Player Bar -->
-  <div id="music-bar">
-    <div class="music-bar-inner glossy-glass">
-      <div class="music-bar-icon">🎵</div>
-      <div class="music-bar-info">
-        <div id="music-track-name">Aucune musique</div>
-        <div class="music-bar-subtitle">Hylia Plaza</div>
-      </div>
-      <div class="music-bar-controls">
-        <button id="music-prev" class="music-ctrl-btn">⏮</button>
-        <button id="music-play" class="music-ctrl-btn play-btn">▶</button>
-        <button id="music-next" class="music-ctrl-btn">⏭</button>
+  <!-- Circular Audio Visualizer -->
+  <div id="circular-visualizer-container">
+    <div class="visualizer-info">
+      <div id="vis-track-title">Aucune musique</div>
+      <div class="vis-track-subtitle">Hylia Plaza</div>
+    </div>
+    
+    <canvas id="visualizer-canvas"></canvas>
+    
+    <svg class="progress-ring" width="300" height="300">
+      <circle
+        class="progress-ring__circle"
+        stroke="rgba(255, 255, 255, 0.2)"
+        stroke-width="4"
+        fill="transparent"
+        r="75"
+        cx="150"
+        cy="150" />
+    </svg>
+
+    <div class="visualizer-center">
+      <img src="assets/icons/music.png" alt="Album Art">
+      <div class="visualizer-controls">
+        <button id="vis-prev" class="vis-btn">⏮</button>
+        <button id="vis-play" class="vis-btn play-btn">▶</button>
+        <button id="vis-next" class="vis-btn">⏭</button>
       </div>
     </div>
   </div>
@@ -236,6 +251,7 @@
   <script src="mii maker app/js/miiPlaza.js?v=17"></script>
   <script src="gba app/js/gba.js"></script>
 
+  <script src="js/core/visualizer.js"></script>
   <script src="js/core/app.js"></script>
 </body>
 
