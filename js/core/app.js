@@ -296,6 +296,28 @@ function initAppTriggers() {
   });
 }
 
+window.showSplashScreen = function(callback) {
+  const splash = document.getElementById('app-splash-screen');
+  if (!splash) {
+    if (callback) callback();
+    return;
+  }
+  
+  splash.classList.remove('splash-exit');
+  splash.classList.add('splash-visible');
+  
+  // Wait for the pop-in + hover time (approx 1.2s total for a nice feel)
+  setTimeout(() => {
+    splash.classList.add('splash-exit');
+    
+    // Wait for pop-out animation
+    setTimeout(() => {
+      splash.classList.remove('splash-visible', 'splash-exit');
+      if (callback) callback();
+    }, 400);
+  }, 1200);
+};
+
 window.handleAppLaunch = function(trigger) {
   if (document.getElementById('auth-overlay').style.display !== 'none') return;
   
@@ -304,59 +326,62 @@ window.handleAppLaunch = function(trigger) {
   console.log('Launching appId:', appId, 'Data:', appData);
 
   if (appData) {
-    if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
-      // Audio Transition Logic
-      if (typeof AudioManager !== 'undefined') {
-        if (appId === 'miiMaker') {
-          AudioManager.playAppLaunchTransition('miiLaunch');
-        } else if (appId === 'gba') {
-          AudioManager.playAppLaunchTransition('gbaLaunch', 'gbaBgm');
-        } else {
-          AudioManager.fadeOut(600);
-        }
-      }
-
-      const fsContainer = document.createElement('div');
-      fsContainer.className = 'mii-fullscreen-container';
-      document.body.appendChild(fsContainer);
-      document.body.classList.add('app-open-active');
-      
-      document.getElementById('main-container').style.opacity = '0';
-      document.getElementById('main-container').style.transform = 'scale(0.95)';
-      
-      if (appData.render) {
-        appData.render(fsContainer);
-      }
-      
-      appData.close = function() {
-        fsContainer.classList.add('anim-window-close');
-        
-        // Restore Hub Audio
+    // Show splash screen first
+    window.showSplashScreen(() => {
+      if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
+        // Audio Transition Logic
         if (typeof AudioManager !== 'undefined') {
-          AudioManager.restoreHubAudio();
+          if (appId === 'miiMaker') {
+            AudioManager.playAppLaunchTransition('miiLaunch');
+          } else if (appId === 'gba') {
+            AudioManager.playAppLaunchTransition('gbaLaunch', 'gbaBgm');
+          } else {
+            AudioManager.fadeOut(600);
+          }
         }
 
-        setTimeout(() => {
-          if (fsContainer.parentNode) fsContainer.parentNode.removeChild(fsContainer);
-          document.body.classList.remove('app-open-active');
-          document.getElementById('main-container').style.opacity = '1';
-          document.getElementById('main-container').style.transform = 'scale(1)';
-        }, 300);
-      };
-    } else if (appId === 'themes') {
-      // Direct call for themes
-      if (appData.render) appData.render();
-      if (typeof AudioManager !== 'undefined') AudioManager.playPop();
-    } else {
-      WindowManager.openWindow(appId, appData.title, appData.render || function (container) {
-        container.innerHTML = `
-          <div class="app-inner">
-            <h2>${appData.title}</h2>
-            <p>Welcome to ${appData.title}. This application is currently being developed!</p>
-          </div>
-        `;
-      });
-    }
+        const fsContainer = document.createElement('div');
+        fsContainer.className = 'mii-fullscreen-container';
+        document.body.appendChild(fsContainer);
+        document.body.classList.add('app-open-active');
+        
+        document.getElementById('main-container').style.opacity = '0';
+        document.getElementById('main-container').style.transform = 'scale(0.95)';
+        
+        if (appData.render) {
+          appData.render(fsContainer);
+        }
+        
+        appData.close = function() {
+          fsContainer.classList.add('anim-window-close');
+          
+          // Restore Hub Audio
+          if (typeof AudioManager !== 'undefined') {
+            AudioManager.restoreHubAudio();
+          }
+
+          setTimeout(() => {
+            if (fsContainer.parentNode) fsContainer.parentNode.removeChild(fsContainer);
+            document.body.classList.remove('app-open-active');
+            document.getElementById('main-container').style.opacity = '1';
+            document.getElementById('main-container').style.transform = 'scale(1)';
+          }, 300);
+        };
+      } else if (appId === 'themes') {
+        // Direct call for themes
+        if (appData.render) appData.render();
+        if (typeof AudioManager !== 'undefined') AudioManager.playPop();
+      } else {
+        WindowManager.openWindow(appId, appData.title, appData.render || function (container) {
+          container.innerHTML = `
+            <div class="app-inner">
+              <h2>${appData.title}</h2>
+              <p>Welcome to ${appData.title}. This application is currently being developed!</p>
+            </div>
+          `;
+        });
+      }
+    });
   }
 };
 
