@@ -8,12 +8,12 @@ const CircularVisualizer = {
   ctx: null,
   container: null,
   animationId: null,
-  bars: 120, // Number of bars around the circle
+  bars: 140, // More bars for larger circle
   
   // Design config
-  centerRadius: 70,
-  maxBarHeight: 60,
-  glowStrength: 15,
+  centerRadius: 95,
+  maxBarHeight: 80,
+  glowStrength: 20,
   
   init: function() {
     this.container = document.getElementById('circular-visualizer-container');
