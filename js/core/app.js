@@ -306,7 +306,7 @@ window.showSplashScreen = function(callback) {
   splash.classList.remove('splash-exit');
   splash.classList.add('splash-visible');
   
-  // Wait for the pop-in + hover time (approx 1.2s total for a nice feel)
+  // Wait for the pop-in + hover time (Reduced to 800ms for faster feel)
   setTimeout(() => {
     splash.classList.add('splash-exit');
     
@@ -314,8 +314,8 @@ window.showSplashScreen = function(callback) {
     setTimeout(() => {
       splash.classList.remove('splash-visible', 'splash-exit');
       if (callback) callback();
-    }, 400);
-  }, 1200);
+    }, 300); // Slightly faster pop-out
+  }, 800);
 };
 
 window.handleAppLaunch = function(trigger) {
@@ -326,20 +326,21 @@ window.handleAppLaunch = function(trigger) {
   console.log('Launching appId:', appId, 'Data:', appData);
 
   if (appData) {
-    // Show splash screen first
+    // AUDIO TRIGGER: Play sound as soon as splash appears
+    if (typeof AudioManager !== 'undefined') {
+      if (appId === 'miiMaker') {
+        AudioManager.playAppLaunchTransition('miiLaunch');
+      } else if (appId === 'gba') {
+        AudioManager.playAppLaunchTransition('gbaLaunch', 'gbaBgm');
+      } else {
+        // For other apps, maybe a subtle pop or fadeout
+        if (appId !== 'themes') AudioManager.fadeOut(600);
+      }
+    }
+
+    // Show splash screen
     window.showSplashScreen(() => {
       if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
-        // Audio Transition Logic
-        if (typeof AudioManager !== 'undefined') {
-          if (appId === 'miiMaker') {
-            AudioManager.playAppLaunchTransition('miiLaunch');
-          } else if (appId === 'gba') {
-            AudioManager.playAppLaunchTransition('gbaLaunch', 'gbaBgm');
-          } else {
-            AudioManager.fadeOut(600);
-          }
-        }
-
         const fsContainer = document.createElement('div');
         fsContainer.className = 'mii-fullscreen-container';
         document.body.appendChild(fsContainer);
@@ -355,7 +356,6 @@ window.handleAppLaunch = function(trigger) {
         appData.close = function() {
           fsContainer.classList.add('anim-window-close');
           
-          // Restore Hub Audio
           if (typeof AudioManager !== 'undefined') {
             AudioManager.restoreHubAudio();
           }
@@ -368,7 +368,6 @@ window.handleAppLaunch = function(trigger) {
           }, 300);
         };
       } else if (appId === 'themes') {
-        // Direct call for themes
         if (appData.render) appData.render();
         if (typeof AudioManager !== 'undefined') AudioManager.playPop();
       } else {
