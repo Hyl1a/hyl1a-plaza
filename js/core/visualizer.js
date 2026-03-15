@@ -45,7 +45,18 @@ const CircularVisualizer = {
     window.updateVisualizerDisplay = () => {
       const centerEl = document.querySelector('.visualizer-center');
       if (AudioManager.isPlayingMusic && AudioManager.playlist[AudioManager.currentTrackIndex]) {
-        trackTitle.textContent = AudioManager.playlist[AudioManager.currentTrackIndex].name;
+        const newTitle = AudioManager.playlist[AudioManager.currentTrackIndex].name;
+        
+        // Trigger animation only if title changed or play was pressed
+        if (trackTitle.textContent !== newTitle || trackTitle.style.opacity === "0") {
+             trackTitle.textContent = newTitle;
+             
+             // Remove class, force reflow, re-add class to trigger animation perfectly
+             trackTitle.classList.remove('track-animate-in');
+             void trackTitle.offsetWidth; 
+             trackTitle.classList.add('track-animate-in');
+        }
+
         playBtn.textContent = '⏸';
         if (centerEl) centerEl.classList.add('playing');
         
@@ -58,6 +69,7 @@ const CircularVisualizer = {
         }
       } else {
         trackTitle.textContent = 'Aucune musique';
+        trackTitle.classList.remove('track-animate-in');
         playBtn.textContent = '▶';
         if (centerEl) centerEl.classList.remove('playing');
       }

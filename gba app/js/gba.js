@@ -1,14 +1,30 @@
 const GBA_GAMES = [
-  { name: 'Pokémon Émeraude', file: '/gba app/assets/roms/gba/Pokemon - Version Emeraude (France).gba', playtime: '12h 45m', cover: 'assets/icons/pkmnemeraude.jpg' },
-  { name: 'Pokémon Rouge Feu', file: '/gba app/assets/roms/gba/Pokemon - Version Rouge Feu (France).gba', playtime: '4h 30m', cover: 'assets/icons/pkmnrouge.jpg' },
-  { name: 'Kirby & the Amazing Mirror', file: '/gba app/assets/roms/gba/Kirby & the Amazing Mirror (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m', cover: 'assets/icons/kirby.jpg' },
-  { name: 'The Legend of Zelda: The Minish Cap', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m', cover: 'assets/icons/zelda.jpg' }
+  { name: 'Pokémon Émeraude', file: '/gba app/assets/roms/gba/Pokemon - Version Emeraude (France).gba', cover: 'assets/icons/pkmnemeraude.jpg' },
+  { name: 'Pokémon Rouge Feu', file: '/gba app/assets/roms/gba/Pokemon - Version Rouge Feu (France).gba', cover: 'assets/icons/pkmnrouge.jpg' },
+  { name: 'Kirby & the Amazing Mirror', file: '/gba app/assets/roms/gba/Kirby & the Amazing Mirror (Europe) (En,Fr,De,Es,It).zip', cover: 'assets/icons/kirby.jpg' },
+  { name: 'The Legend of Zelda: The Minish Cap', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe) (En,Fr,De,Es,It).zip', cover: 'assets/icons/zelda.jpg' }
 ];
+
+let gbaPlaytimes = {};
+let currentEmuStartTime = 0;
+let currentGameName = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     if (window.AppRegistry && window.AppRegistry['gba']) {
-      window.AppRegistry['gba'].render = function (container) {
+      window.AppRegistry['gba'].render = async function (container) {
+        if (window.Auth && window.Auth.currentUser && window.Firestore) {
+          try {
+            const uid = window.Auth.currentUser.uid;
+            const docRef = window.Firestore.doc(window.FirebaseDB, "users", uid);
+            const docSnap = await window.Firestore.getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().gba_playtimes) {
+              gbaPlaytimes = docSnap.data().gba_playtimes;
+            }
+          } catch (e) {
+            console.error("Error loading GBA playtimes:", e);
+          }
+        }
         renderGbaMenu(container);
       };
     }
@@ -16,94 +32,80 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let currentCoverIndex = 0;
-
 function renderGbaMenu(container) {
-  // Add CSS for Advanced Cover Flow if not exists
-  if (!document.getElementById('gba-adv-cover-styles')) {
+  // Add CSS for simple scrollable cover flow
+  if (!document.getElementById('gba-simple-cover-styles')) {
     const style = document.createElement('style');
-    style.id = 'gba-adv-cover-styles';
+    style.id = 'gba-simple-cover-styles';
     style.textContent = `
-      .gba-cf-container {
+      .gba-menu-wrapper {
         display: flex; flex-direction: column; width: 100%; height: 100%; font-family: 'Inter', sans-serif;
         background: transparent; color: #fff; overflow: hidden; position: relative;
-        animation: gbaFadeIn 0.5s ease-out;
+        animation: gbaFadeIn 0.3s ease-out;
       }
       @keyframes gbaFadeIn {
-        from { opacity: 0; transform: scale(1.05); }
+        from { opacity: 0; transform: scale(1.02); }
         to { opacity: 1; transform: scale(1); }
       }
-      .gba-cf-viewport {
-        flex: 1; perspective: 1200px; perspective-origin: 50% 50%; display: flex;
-        justify-content: center; align-items: center; position: relative; overflow: hidden;
+      
+      .gba-covers-row {
+        flex: 1; display: flex; align-items: center; justify-content: flex-start;
+        padding: 0 50vw; /* Padding to allow centering first/last items */
+        overflow-x: hidden; scroll-behavior: smooth; gap: 40px;
       }
-      .gba-cf-track {
-        position: relative; width: 0; height: 0; transform-style: preserve-3d;
+      
+      .gba-cover-item {
+        flex-shrink: 0; width: 220px; height: 320px; border-radius: 8px; cursor: pointer;
+        position: relative; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+        filter: brightness(0.5) grayscale(0.8);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       }
-      .gba-cf-cover {
-        position: absolute; width: 220px; height: 320px; top: -160px; left: -110px; border-radius: 8px;
-        transform-style: preserve-3d; cursor: pointer; will-change: transform, opacity;
-        transform-origin: center center; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.7));
-        transition: filter 0.3s ease;
+      
+      .gba-cover-item.active {
+        filter: brightness(1) grayscale(0);
+        transform: scale(1.15) translateY(-10px);
+        box-shadow: 0 0 40px rgba(90,180,255,0.6), 0 20px 40px rgba(0,0,0,0.8);
+        z-index: 10;
+        border: 2px solid rgba(255,255,255,0.8);
       }
-      .gba-cf-cover.active {
-        filter: drop-shadow(0 0 30px rgba(90,180,255,0.7)) drop-shadow(0 25px 50px rgba(0,0,0,0.8));
-        animation: gbaCoverIdle 3s ease-in-out infinite;
-      }
-      @keyframes gbaCoverIdle {
-        0%, 100% { margin-top: 0px; }
-        50%      { margin-top: -10px; }
-      }
-      .gba-cf-face {
-        position: absolute; inset: 0; border-radius: 8px; overflow: hidden;
-        border: 2.5px solid rgba(255,255,255,0.2); background: #111;
-        box-shadow: inset 0 0 60px rgba(0,0,0,0.5);
-      }
-      .gba-cf-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .gba-cf-fallback {
+      
+      .gba-cover-img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; display: block; }
+      
+      .gba-fallback {
         width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 16px; padding: 20px; text-align: center;
+        background: linear-gradient(135deg, #3a2b71, #1a1a2e); border-radius: 6px; text-align: center; padding: 15px;
       }
-      .gba-cf-shine {
-        position: absolute; inset: 0; z-index: 2; border-radius: 8px; pointer-events: none;
-        background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.00) 100%);
+      
+      .gba-info-panel {
+        height: 140px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); border-top: 1px solid rgba(255,255,255,0.1);
       }
-      .gba-cf-spine {
-        position: absolute; right: -20px; top: 0; width: 20px; height: 100%; display: flex; align-items: center; justify-content: center;
-        border-radius: 0 4px 4px 0; z-index: 0; overflow: hidden; transform: rotateY(-90deg) translateZ(-10px); transform-origin: left center;
-        background: linear-gradient(to bottom, #7e1fff, #3a2b71);
-        border: 2px solid rgba(255,255,255,0.1);
+      
+      .gba-title { font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 10px rgba(0,0,0,1); margin: 0; }
+      .gba-playtime { font-size: 14px; color: #7ec4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+      
+      .gba-controls { display: flex; gap: 20px; margin-top: 10px; }
+      .gba-btn {
+        display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 30px; padding: 6px 20px; font-size: 14px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.2s;
       }
-      .gba-cf-spine span {
-        writing-mode: vertical-rl; text-orientation: mixed; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.9);
-        letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 90%;
-      }
-      .gba-cf-arrow {
-        position: absolute; top: 50%; transform: translateY(-50%); z-index: 10000; width: 80px; height: 120px;
-        border-radius: 12px; border: none; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px);
-        color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.2s; box-shadow: 0 5px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
-      }
-      .gba-cf-arrow:hover { background: rgba(255,255,255,0.25); transform: translateY(-50%) scale(1.05); }
-      #gba-cf-arrow-left { left: 20px; }
-      #gba-cf-arrow-right { right: 20px; }
-      .gba-cf-arrow svg { width: 40px; height: 40px; }
+      .gba-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+      .gba-btn.primary { background: rgba(0, 150, 255, 0.3); border-color: rgba(0, 150, 255, 0.8); }
+      .gba-btn b { background: #fff; color: #000; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 
-      .gba-cf-info {
-        height: 140px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-        border-top: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;
+      .gba-arrow {
+        position: absolute; top: calc(50% - 70px); transform: translateY(-50%); z-index: 100; width: 60px; height: 100px;
+        border-radius: 12px; border: none; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+        color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3); outline: none;
       }
-      .gba-cf-title { font-size: 34px; font-weight: 800; color: white; text-shadow: 0 2px 20px rgba(0,0,0,1); letter-spacing: 0.02em; margin: 0; }
-      .gba-cf-playtime { font-size: 15px; color: #7ec4ff; font-weight: 600; margin-bottom: 10px; }
-      .gba-cf-controls { display: flex; gap: 30px; }
-      .gba-cf-btn {
-        display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2);
-        border-radius: 40px; padding: 8px 24px; font-size: 15px; color: #eee; font-weight: 700; cursor: pointer; transition: all 0.2s;
-      }
-      .gba-cf-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); border-color: rgba(255,255,255,0.4); }
-      .gba-cf-btn.primary { background: rgba(0, 150, 255, 0.25); border-color: rgba(0, 150, 255, 0.6); color: #fff; }
-      .gba-cf-btn.primary:hover { background: rgba(0, 150, 255, 0.4); border-color: rgba(0, 150, 255, 0.8); }
-      .gba-cf-btn b { background: #fff; color: #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; }
+      .gba-arrow:hover { background: rgba(255,255,255,0.15); transform: translateY(-50%) scale(1.05); }
+      .gba-arrow:active { transform: translateY(-50%) scale(0.95); }
+      
+      #gba-btn-prev { left: 30px; }
+      #gba-btn-next { right: 30px; }
+      .gba-arrow svg { width: 32px; height: 32px; opacity: 0.8; }
+      .gba-arrow:hover svg { opacity: 1; }
     `;
     document.head.appendChild(style);
   }
@@ -112,57 +114,45 @@ function renderGbaMenu(container) {
   if (currentCoverIndex < 0) currentCoverIndex = 0;
   if (currentCoverIndex >= GBA_GAMES.length) currentCoverIndex = GBA_GAMES.length - 1;
 
-  let html = `
-    <div class="gba-cf-container">
-      <div class="gba-cf-viewport" id="gba-cf-viewport">
-        <button id="gba-cf-arrow-left" class="gba-cf-arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button id="gba-cf-arrow-right" class="gba-cf-arrow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-        <div class="gba-cf-track" id="gba-cf-track">
-  `;
-
+  let coversHtml = '';
   GBA_GAMES.forEach((game, index) => {
-    const coverHtml = game.cover 
-      ? `<img src="${game.cover}" class="gba-cf-img" onerror="this.style.display='none'; this.nextSibling.style.display='flex';"/>
-         <div class="gba-cf-fallback" style="display:none; background: linear-gradient(165deg, #3a2b71, #1a1a2e);">
-           <span style="font-size: 56px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));">🎮</span>
-           <span style="font-size: 14px; font-weight: 800; opacity: 0.9; text-transform: uppercase;">Game Boy Advance</span>
-         </div>` 
-      : `<div class="gba-cf-fallback" style="background: linear-gradient(165deg, #3a2b71, #1a1a2e);">
-           <span style="font-size: 56px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));">🎮</span>
-           <span style="font-size: 14px; font-weight: 800; opacity: 0.9; text-transform: uppercase;">Game Boy Advance</span>
-           <div style="margin-top: 10px; font-size: 18px; font-weight: 700;">${game.name}</div>
+    const isFallback = !game.cover;
+    const content = isFallback
+      ? `<div class="gba-fallback">
+           <span style="font-size: 40px;">🎮</span>
+           <span style="font-size: 12px; opacity: 0.7; margin-top: 5px;">GBA</span>
+           <span style="font-weight: bold; margin-top: 10px; font-size: 16px;">${game.name}</span>
+         </div>`
+      : `<img src="${game.cover}" class="gba-cover-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+         <div class="gba-fallback" style="display:none;">
+           <span style="font-size: 40px;">🎮</span>
+           <span style="font-weight: bold; margin-top: 10px; font-size: 16px;">${game.name}</span>
          </div>`;
-    
-    html += `
-      <div class="gba-cf-cover" id="gba-cover-${index}" data-index="${index}">
-        <div class="gba-cf-shine"></div>
-        <div class="gba-cf-face">
-          ${coverHtml}
-        </div>
-        <div class="gba-cf-spine">
-          <span>${game.name}</span>
-        </div>
+
+    coversHtml += `
+      <div class="gba-cover-item" id="gba-item-${index}" data-index="${index}">
+        ${content}
       </div>
     `;
   });
 
-  html += `
-        </div>
+  const html = `
+    <div class="gba-menu-wrapper" tabindex="-1">
+      <button id="gba-btn-prev" class="gba-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button id="gba-btn-next" class="gba-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="gba-covers-row" id="gba-scroll-row">
+        ${coversHtml}
       </div>
-      <div class="gba-cf-info">
-        <h2 class="gba-cf-title" id="gba-game-title">${GBA_GAMES[currentCoverIndex].name}</h2>
-        <div class="gba-cf-playtime" id="gba-game-playtime">Temps de jeu : ${GBA_GAMES[currentCoverIndex].playtime}</div>
-        <div class="gba-cf-controls">
-           <div class="gba-cf-btn primary" id="gba-btn-play">
-              <b>A</b> DÉMARRER
-           </div>
-           <div class="gba-cf-btn" id="gba-btn-back">
-              <b>B</b> QUITTER
-           </div>
+      <div class="gba-info-panel">
+        <h2 class="gba-title" id="gba-ui-title">...</h2>
+        <div class="gba-playtime" id="gba-ui-playtime">...</div>
+        <div class="gba-controls">
+           <button class="gba-btn primary" id="gba-launch-btn"><b>A</b> JOUER</button>
+           <button class="gba-btn" id="gba-quit-btn"><b>B</b> QUITTER</button>
         </div>
       </div>
     </div>
@@ -170,58 +160,92 @@ function renderGbaMenu(container) {
 
   container.innerHTML = html;
   
-  // Ensure the menu can receive focus and focus it
-  container.setAttribute('tabindex', '-1');
-  container.focus();
+  const wrapper = container.querySelector('.gba-menu-wrapper');
+  wrapper.focus();
 
   if (GBA_GAMES.length > 0) {
-    updateCarouselTransforms();
+    updateSimpleCarousel(container);
 
-    const covers = container.querySelectorAll('.gba-cf-cover');
-    covers.forEach(cover => {
-      cover.addEventListener('click', () => {
-        const index = parseInt(cover.getAttribute('data-index'), 10);
+    const items = container.querySelectorAll('.gba-cover-item');
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        const index = parseInt(item.getAttribute('data-index'), 10);
         if (currentCoverIndex === index) {
           if (typeof AudioManager !== 'undefined') AudioManager.playClick();
           launchEmulator(container, GBA_GAMES[currentCoverIndex]);
         } else {
           currentCoverIndex = index;
-          if (typeof AudioManager !== 'undefined') AudioManager.playHover();
-          updateCarouselTransforms();
+          if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+          updateSimpleCarousel(container);
         }
       });
     });
 
-    document.getElementById('gba-cf-arrow-left').addEventListener('click', () => navigateGba(-1));
-    document.getElementById('gba-cf-arrow-right').addEventListener('click', () => navigateGba(1));
-    document.getElementById('gba-btn-play').addEventListener('click', () => {
+    container.querySelector('#gba-launch-btn').addEventListener('click', () => {
       if (typeof AudioManager !== 'undefined') AudioManager.playClick();
       launchEmulator(container, GBA_GAMES[currentCoverIndex]);
     });
 
-    // Scoped Key Handler (Attached with capture: true so it wins over everything)
+    container.querySelector('#gba-btn-prev').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentCoverIndex > 0) {
+        currentCoverIndex--;
+        if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+        updateSimpleCarousel(container);
+      }
+    });
+
+    container.querySelector('#gba-btn-next').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentCoverIndex < GBA_GAMES.length - 1) {
+        currentCoverIndex++;
+        if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+        updateSimpleCarousel(container);
+      }
+    });
+
+    // Scoped Key Handler
     const keyHandler = (e) => {
-      // If the menu is gone, clean up
-      if (!document.querySelector('.gba-cf-container')) {
+      console.log("[DEBUG] GBA keyHandler fired:", e.key, {
+        menuWrapper: !!document.querySelector('.gba-menu-wrapper'),
+        emuActive: !!document.querySelector('iframe[src*="gba_player.html"]'),
+        hasIframe: !!document.querySelector('iframe')
+      });
+      
+      const menuWrapper = document.querySelector('.gba-menu-wrapper');
+      if (!menuWrapper) {
         window.removeEventListener('keydown', keyHandler, true);
         return;
       }
-      // If emulator is active, let it handle its own keys
-      if (document.querySelector('iframe')) return;
+      // Specifically check if the GBA emulator iframe is active, not ANY global iframe
+      const emuActive = document.querySelector('iframe[src*="gba_player.html"]');
+      if (emuActive) return;
 
-      const keys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Enter', ' ', 'Escape', 'b'];
+      const keys = ['ArrowRight', 'ArrowLeft', 'Enter', 'b', 'Escape'];
       if (keys.includes(e.key)) {
         e.preventDefault();
         e.stopPropagation();
         
-        if (e.key === 'ArrowRight') navigateGba(1);
-        else if (e.key === 'ArrowLeft') navigateGba(-1);
+        if (e.key === 'ArrowRight') {
+          if (currentCoverIndex < GBA_GAMES.length - 1) {
+            currentCoverIndex++;
+            if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+            updateSimpleCarousel(container);
+          }
+        }
+        else if (e.key === 'ArrowLeft') {
+          if (currentCoverIndex > 0) {
+            currentCoverIndex--;
+            if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+            updateSimpleCarousel(container);
+          }
+        }
         else if (e.key === 'Enter') {
           if (typeof AudioManager !== 'undefined') AudioManager.playClick();
           launchEmulator(container, GBA_GAMES[currentCoverIndex]);
         }
         else if (e.key === 'b' || e.key === 'Escape') {
-          document.getElementById('gba-btn-back').click();
+          container.querySelector('#gba-quit-btn').click();
         }
       }
     };
@@ -231,7 +255,7 @@ function renderGbaMenu(container) {
     window.addEventListener('keydown', keyHandler, true);
   }
 
-  document.getElementById('gba-btn-back').addEventListener('click', () => {
+  container.querySelector('#gba-quit-btn').addEventListener('click', () => {
     if (typeof AudioManager !== 'undefined') AudioManager.playClick();
     if (window._gbaKeyHandler) {
       window.removeEventListener('keydown', window._gbaKeyHandler, true);
@@ -243,57 +267,66 @@ function renderGbaMenu(container) {
   });
 }
 
-function navigateGba(dir) {
-  const newIndex = currentCoverIndex + dir;
-  console.log("GBA: Navigate", dir, "Current:", currentCoverIndex, "New:", newIndex, "Length:", GBA_GAMES.length);
-  if (newIndex >= 0 && newIndex < GBA_GAMES.length) {
-    currentCoverIndex = newIndex;
-    if (typeof AudioManager !== 'undefined') AudioManager.playHover();
-    updateCarouselTransforms();
+function updateSimpleCarousel(container) {
+  const row = container.querySelector('#gba-scroll-row');
+  const items = container.querySelectorAll('.gba-cover-item');
+  const titleEl = container.querySelector('#gba-ui-title');
+  const playtimeEl = container.querySelector('#gba-ui-playtime');
+
+  if (!row || !items.length) return;
+
+  // Update text
+  const game = GBA_GAMES[currentCoverIndex];
+  if (titleEl) titleEl.textContent = game.name;
+  if (playtimeEl) {
+    const mins = gbaPlaytimes[game.name] || 0;
+    if (mins === 0) {
+      playtimeEl.textContent = `Temps de jeu : Vierge`;
+    } else {
+      const h = Math.floor(mins / 60);
+      const m = Math.floor(mins % 60);
+      playtimeEl.textContent = `Temps de jeu : ${h > 0 ? h + 'h ' : ''}${m}m`;
+    }
   }
-}
 
-function updateCarouselTransforms() {
-  const title = document.getElementById('gba-game-title');
-  const playtime = document.getElementById('gba-game-playtime');
-  if (title && GBA_GAMES[currentCoverIndex]) title.textContent = GBA_GAMES[currentCoverIndex].name;
-  if (playtime && GBA_GAMES[currentCoverIndex]) playtime.textContent = `Temps de jeu : ${GBA_GAMES[currentCoverIndex].playtime}`;
-
-  const COVER_WIDTH = 220;
-  const GAP = 80;
-  const ANGLE_SIDE = 75;
-  const Z_ACTIVE = 150;
-  const Z_SIDE = -180;
-
-  GBA_GAMES.forEach((game, index) => {
-    const cover = document.getElementById(`gba-cover-${index}`);
-    if (!cover) return;
-    
-    const offset = index - currentCoverIndex;
-    const absOff = Math.abs(offset);
-    
-    const hidden = absOff > 5;
-    cover.style.display = hidden ? 'none' : 'block';
-    
-    const tx = offset * (COVER_WIDTH + GAP);
-    const tz = offset === 0 ? Z_ACTIVE : Z_SIDE - absOff * 50;
-    const ry = offset === 0 ? 0 : (offset > 0 ? -ANGLE_SIDE : ANGLE_SIDE);
-    const scale = offset === 0 ? 1.1 : Math.max(0.6, 0.9 - absOff * 0.08);
-    const opacity = offset === 0 ? 1.0 : Math.max(0, 0.9 - absOff * 0.2);
-    
-    cover.style.transition = 'transform 0.5s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.5s ease, filter 0.5s ease';
-    cover.style.transform  = `translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${scale})`;
-    cover.style.opacity    = opacity;
-    cover.style.zIndex     = 100 - absOff;
-    
-    if (offset === 0) cover.classList.add('active');
-    else cover.classList.remove('active');
+  // Update classes and calculate scroll position
+  items.forEach((item, index) => {
+    if (index === currentCoverIndex) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
   });
+
+  // Scroll to bring active item to center
+  const activeItem = items[currentCoverIndex];
+  if (activeItem) {
+    // 50vw padding on left side means the first item starts exactly at the center
+    // We just need to scroll so the active item's center hits the screen center
+    const itemWidth = 220;
+    const gap = 40;
+    
+    // The total width before this item is (itemWidth + gap) * index
+    // The padding left is window.innerWidth / 2
+    // To center the item, we scroll such that the left edge of the item is at (window.innerWidth / 2) - (itemWidth / 2)
+    
+    // Since padding-left pushes all content, scrollLeft = 0 implies item 0 is at offset = paddingLeft
+    // So item 0 is already centered if we scrollLeft = itemWidth/2
+    const targetScroll = (currentCoverIndex * (itemWidth + gap)) + (itemWidth / 2);
+    
+    row.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth'
+    });
+  }
 }
 
 function launchEmulator(container, game) {
   const romUrl = encodeURIComponent(game.file);
   const gameName = encodeURIComponent(game.name);
+  
+  currentEmuStartTime = Date.now();
+  currentGameName = game.name;
   
   // Pause background music to avoid overlap
   if (typeof AudioManager !== 'undefined') {
@@ -321,6 +354,21 @@ function launchEmulator(container, game) {
   backBtn.addEventListener('mouseout', () => backBtn.style.background = 'rgba(255,255,255,0.1)');
   backBtn.addEventListener('click', () => {
     if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+    
+    // Calculate playtime and update Firestore
+    const elapsedMs = Date.now() - currentEmuStartTime;
+    const elapsedMinutes = Math.floor(elapsedMs / 60000);
+    const minsToAdd = Math.max(1, elapsedMinutes); // Count as at least 1 min
+    
+    gbaPlaytimes[currentGameName] = (gbaPlaytimes[currentGameName] || 0) + minsToAdd;
+    
+    if (window.Auth && window.Auth.currentUser && window.Firestore) {
+      const uid = window.Auth.currentUser.uid;
+      const docRef = window.Firestore.doc(window.FirebaseDB, "users", uid);
+      window.Firestore.setDoc(docRef, { gba_playtimes: gbaPlaytimes }, { merge: true })
+        .catch(e => console.error("Error saving playtime:", e));
+    }
+
     renderGbaMenu(container); 
   });
 

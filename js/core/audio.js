@@ -147,7 +147,12 @@ const AudioManager = {
     }
 
     let nextIndex;
-    if (this.playlist.length > 1) {
+    
+    // Force 'BXNJI' to play first if this is the very first track
+    if (this.currentTrackIndex === -1) {
+      nextIndex = this.playlist.findIndex(t => t.name.toLowerCase() === 'bxnji');
+      if (nextIndex === -1) nextIndex = 0; // Fallback just in case
+    } else if (this.playlist.length > 1) {
       do {
         nextIndex = Math.floor(Math.random() * this.playlist.length);
       } while (nextIndex === this.currentTrackIndex);

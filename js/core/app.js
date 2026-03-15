@@ -23,6 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.removeEventListener('click', autoPlayOnce);
     document.removeEventListener('keydown', autoPlayOnce);
   }
+  
+  // Try aggressive immediate autoplay (might be blocked by browser policy)
+  setTimeout(() => {
+    if (typeof AudioManager !== 'undefined' && !AudioManager.isPlayingMusic) {
+      try {
+        AudioManager.playNextMusic();
+        if (window.updateVisualizerDisplay) window.updateVisualizerDisplay();
+        document.removeEventListener('click', autoPlayOnce);
+        document.removeEventListener('keydown', autoPlayOnce);
+      } catch(e) { /* Blocked by browser */ }
+    }
+  }, 1000);
+
+  // Fallback: start on first interaction if blocked
   document.addEventListener('click', autoPlayOnce);
   document.addEventListener('keydown', autoPlayOnce);
 });
@@ -413,18 +427,37 @@ function initAuth() {
     }
   };
 
-  function generateAuthBackground() {
+  async function generateAuthBackground() {
     const bgContainer = document.getElementById('auth-bg');
     if (!bgContainer || bgContainer.children.length > 2) return; // Prevent regenerating
 
+    let avatars = [];
+    
+    // Try to fetch real Miis from Firestore
+    if (window.Firestore && window.FirebaseDB) {
+      try {
+        const avatarsRef = window.Firestore.collection(window.FirebaseDB, "avatars");
+        const qSnap = await window.Firestore.getDocs(avatarsRef);
+        qSnap.forEach(doc => {
+           if(doc.data().visual_base64 && doc.data().username) {
+               avatars.push({
+                   b64: doc.data().visual_base64,
+                   username: doc.data().username
+               });
+           }
+        });
+      } catch (e) {
+        console.warn("Could not fetch real Miis for background, falling back to SVGs", e);
+      }
+    }
+
+    const totalMiisToGenerate = 15;
+    
+    // Fallback data if no real Miis
     const faces = [
-      // Normal
       '<circle cx="22" cy="22" r="2" fill="#333" /><circle cx="38" cy="22" r="2" fill="#333" /><path d="M25 32 Q30 35 35 32" stroke="#333" stroke-width="2" fill="none" />',
-      // Happy
       '<path d="M18 22 Q22 18 26 22" stroke="#333" stroke-width="2" fill="none" /><path d="M34 22 Q38 18 42 22" stroke="#333" stroke-width="2" fill="none" /><path d="M25 30 Q30 36 35 30 Z" fill="#333" />',
-      // Surprised
       '<circle cx="22" cy="20" r="3" fill="#333" /><circle cx="38" cy="20" r="3" fill="#333" /><circle cx="30" cy="32" r="4" fill="#333" />',
-      // Sleepy
       '<path d="M18 22 L26 22" stroke="#333" stroke-width="2" fill="none" /><path d="M34 22 L42 22" stroke="#333" stroke-width="2" fill="none" /><circle cx="30" cy="32" r="2" fill="#333" />'
     ];
 
@@ -440,46 +473,60 @@ function initAuth() {
       "Tu as vu le nouveau thème ?"
     ];
 
-    for (let i = 0; i < 40; i++) {
-      const hue = Math.floor(Math.random() * 360);
-      const face = faces[Math.floor(Math.random() * faces.length)];
-      
+    for (let i = 0; i < totalMiisToGenerate; i++) {
       const svg = document.createElement('div');
       svg.className = 'auth-mii';
       
-      // Random position and animation properties
       const left = Math.random() * 100;
-      const size = 0.5 + Math.random() * 1.5; // Scale between 0.5 and 2
-      const duration = 10 + Math.random() * 20; // 10 to 30 seconds
-      const delay = Math.random() * -30; // Negative delay to start at random points
+      const size = 0.5 + Math.random() * 1.5; 
+      const duration = 10 + Math.random() * 20; 
+      const delay = Math.random() * -30; 
       
       svg.style.left = `${left}%`;
       svg.style.transform = `scale(${size})`;
       svg.style.animationDuration = `${duration}s`;
       svg.style.animationDelay = `${delay}s`;
-      // Small random z-index so they overlap interestingly
       svg.style.zIndex = Math.floor(Math.random() * 10);
       
-      // Randomly decide if this Mii gets a bubble (20% chance)
       let bubbleHtml = '';
-      if (Math.random() > 0.8) {
-        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-        const bubbleDelay = Math.random() * 5; // offset bubble animation
-        bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${phrase}</div>`;
+      let miiContentHtml = '';
+
+      if (avatars.length > 0) {
+        // Pick a random real Mii
+        const realMii = avatars[Math.floor(Math.random() * avatars.length)];
+        const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(realMii.b64)}&verifyCharInfo=0&type=face&width=128&shaderType=wiiu`;
+        miiContentHtml = `<img src="${thumbUrl}" style="width: 60px; height: 60px; object-fit: cover; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); border-radius: 50%;">`;
+        
+        if (Math.random() > 0.8) {
+           const bubbleDelay = Math.random() * 5;
+           bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${realMii.username} : ${phrases[Math.floor(Math.random() * phrases.length)]}</div>`;
+        }
+      } else {
+        // Fallback SVG Mii
+        const hue = Math.floor(Math.random() * 360);
+        const face = faces[Math.floor(Math.random() * faces.length)];
+        
+        miiContentHtml = `
+          <svg viewBox="0 0 60 90" width="60" height="90" style="filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));">
+            <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
+            <path d="M17 46 Q30 41 43 46 L38 84 Q30 88 22 84 Z" fill="hsl(${hue}, 70%, 60%)" />
+            <path d="M20 48 Q30 43 40 48 L35 80 Q30 84 25 80 Z" fill="hsl(${hue}, 70%, 75%)" />
+            <circle cx="30" cy="25" r="20" fill="#e6c2a5" />
+            <circle cx="28" cy="23" r="18" fill="#ffdfc4" />
+            <g class="avatar-face">${face}</g>
+          </svg>
+        `;
+
+        if (Math.random() > 0.8) {
+          const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+          const bubbleDelay = Math.random() * 5;
+          bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${phrase}</div>`;
+        }
       }
       
       svg.innerHTML = `
         ${bubbleHtml}
-        <svg viewBox="0 0 60 90" width="60" height="90" style="filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));">
-          <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
-          <path d="M17 46 Q30 41 43 46 L38 84 Q30 88 22 84 Z" fill="hsl(${hue}, 70%, 60%)" />
-          <path d="M20 48 Q30 43 40 48 L35 80 Q30 84 25 80 Z" fill="hsl(${hue}, 70%, 75%)" />
-          <circle cx="30" cy="25" r="20" fill="#e6c2a5" />
-          <circle cx="28" cy="23" r="18" fill="#ffdfc4" />
-          <g class="avatar-face">
-            ${face}
-          </g>
-        </svg>
+        ${miiContentHtml}
       `;
       bgContainer.appendChild(svg);
     }
