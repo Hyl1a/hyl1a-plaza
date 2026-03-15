@@ -78,34 +78,40 @@ function renderGbaMenu(container) {
       }
       
       .gba-info-panel {
-        height: 140px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); border-top: 1px solid rgba(255,255,255,0.1);
+        height: 160px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
+        padding-bottom: 30px; gap: 12px; z-index: 1000;
+        background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); border-top: 1px solid rgba(255,255,255,0.1);
       }
       
-      .gba-title { font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 10px rgba(0,0,0,1); margin: 0; }
-      .gba-playtime { font-size: 14px; color: #7ec4ff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+      .gba-title { font-size: 34px; font-weight: 900; color: white; text-shadow: 0 4px 15px rgba(0,0,0,1); margin: 0; }
+      .gba-playtime { font-size: 15px; color: #7ec4ff; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
       
-      .gba-controls { display: flex; gap: 20px; margin-top: 10px; }
+      .gba-controls { display: flex; gap: 25px; margin-top: 15px; position: relative; z-index: 1001; }
       .gba-btn {
-        display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
-        border-radius: 30px; padding: 6px 20px; font-size: 14px; color: #fff; font-weight: 700; cursor: pointer; transition: 0.2s;
+        display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 40px; padding: 10px 25px; font-size: 16px; color: #fff; font-weight: 800; cursor: pointer; transition: all 0.2s;
       }
-      .gba-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
-      .gba-btn.primary { background: rgba(0, 150, 255, 0.3); border-color: rgba(0, 150, 255, 0.8); }
-      .gba-btn b { background: #fff; color: #000; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+      .gba-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); border-color: #fff; }
+      .gba-btn.primary { 
+        background: #0096ff; color: #fff; border: none; 
+        box-shadow: 0 0 20px rgba(0, 150, 255, 0.4);
+        width: 240px; justify-content: center;
+      }
+      .gba-btn.primary:hover { background: #3ab1ff; transform: scale(1.1); box-shadow: 0 0 30px rgba(0, 150, 255, 0.7); }
+      .gba-btn b { background: #fff; color: #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
 
       .gba-arrow {
-        position: absolute; top: calc(50% - 70px); transform: translateY(-50%); z-index: 200; width: 70px; height: 110px;
-        border-radius: 15px; border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6);
+        position: absolute; top: calc(50% - 80px); transform: translateY(-50%); z-index: 1000; width: 80px; height: 120px;
+        border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.7);
         color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: all 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); outline: none;
+        transition: all 0.2s; box-shadow: 0 10px 40px rgba(0,0,0,0.6); outline: none;
       }
-      .gba-arrow:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.1); border-color: #fff; }
+      .gba-arrow:hover { background: rgba(0,0,0,0.9); transform: translateY(-50%) scale(1.1); border-color: #7ec4ff; }
       .gba-arrow:active { transform: translateY(-50%) scale(0.95); }
       
       #gba-btn-prev { left: 40px; }
       #gba-btn-next { right: 40px; }
-      .gba-arrow svg { width: 40px; height: 40px; opacity: 1; stroke: #7ec4ff; }
+      .gba-arrow svg { width: 45px; height: 45px; opacity: 1; stroke: #7ec4ff; }
       .gba-arrow:hover svg { stroke: #fff; }
     `;
     document.head.appendChild(style);
