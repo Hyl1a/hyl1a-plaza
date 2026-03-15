@@ -328,10 +328,15 @@ function launchEmulator(container, game) {
   currentEmuStartTime = Date.now();
   currentGameName = game.name;
   
-  // Pause background music to avoid overlap
+  // Stop background music to avoid overlap
   if (typeof AudioManager !== 'undefined') {
-    console.log("GBA: Pausing background music...");
+    console.log("GBA: Stopping background music...");
     AudioManager.pauseMusic();
+    if (AudioManager.appBgm) {
+      AudioManager.appBgm.pause();
+      AudioManager.appBgm.currentTime = 0;
+      AudioManager.appBgm = null;
+    }
   }
 
   container.innerHTML = `
@@ -353,7 +358,11 @@ function launchEmulator(container, game) {
   backBtn.addEventListener('mouseover', () => backBtn.style.background = 'rgba(255,255,255,0.2)');
   backBtn.addEventListener('mouseout', () => backBtn.style.background = 'rgba(255,255,255,0.1)');
   backBtn.addEventListener('click', () => {
-    if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.playClick();
+      // Restart menu music
+      AudioManager.playAppLaunchTransition(null, 'gbaBgm');
+    }
     
     // Calculate playtime and update Firestore
     const elapsedMs = Date.now() - currentEmuStartTime;
