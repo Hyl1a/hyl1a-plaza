@@ -182,7 +182,7 @@ window.gbaTurbo = {
           <div style="width: 100px; color: #ff4b4b; font-size: 10px; font-weight: 900;">CORE: GPSP</div>
         </div>
         <div style="flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #300, #000);">
-          <iframe src="/gba%20app/gba_player.html#rom=${romUrl}&name=${gameName}&core=gpsp" style="border: none; width: 100%; height: 100%; max-width: 1280px;" allow="autoplay; fullscreen"></iframe>
+          <iframe src="/gba%20app/gba_player.html#rom=${romUrl}&name=${gameName}&core=gba" style="border: none; width: 100%; height: 100%; max-width: 1280px;" allow="autoplay; fullscreen"></iframe>
         </div>
       </div>
     `;

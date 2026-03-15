@@ -54,18 +54,18 @@
             window.EJS_core = core; 
             window.EJS_gameUrl = romUrl;
             window.EJS_gameName = gameName; 
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/v4.0.10/data/'; // Stable version with gpSP
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/'; 
             window.EJS_startOnLoaded = true;
-            window.EJS_threads = true; // Enable multi-threading for major speed boost
+            window.EJS_threads = false; // Disable threads as they require special server headers (COOP/COEP)
             
             // Performance flags
             const isTurbo = core === 'gpsp' || core === 'gba_turbo';
             window.EJS_defaultOptions = {
                 'save-state-location': 'browser',
-                'f-skip': isTurbo ? '2' : '1', // Aggressive skip for Turbo
+                'f-skip': isTurbo ? '1' : '0', // Keep it conservative for stability
                 'performance': 'true',
                 'lowlatency': 'true',
-                'rewind': 'false' // Disable rewind for performance
+                'rewind': 'false' 
             };
             
             window.EJS_fixedSaveInterval = 5000;
