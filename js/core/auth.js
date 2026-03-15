@@ -61,23 +61,23 @@ window.Auth = {
                   welcomeMsg.id = 'login-welcome-msg';
                   welcomeMsg.style.cssText = `
                     position: fixed;
-                    top: 50%;
+                    top: 20%;
                     left: 50%;
                     transform: translate(-50%, -50%);
                     background: rgba(255, 255, 255, 0.08);
                     backdrop-filter: blur(35px) saturate(180%);
                     color: white;
-                    padding: 50px 100px;
-                    border-radius: 120px;
-                    font-size: 64px;
+                    padding: 20px 40px;
+                    border-radius: 40px;
+                    font-size: 32px;
                     font-weight: 900;
                     z-index: 20000;
-                    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 
-                                inset 0 0 40px rgba(255,255,255,0.2),
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 
+                                inset 0 0 20px rgba(255,255,255,0.2),
                                 0 0 0 1px rgba(255,255,255,0.4);
                     pointer-events: none;
-                    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                    letter-spacing: -2px;
+                    text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+                    letter-spacing: -1px;
                     text-align: center;
                     animation: welcomeCinematic 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
                   `;
@@ -89,10 +89,10 @@ window.Auth = {
                     style.id = 'welcome-anim-style';
                     style.textContent = `
                       @keyframes welcomeCinematic {
-                        0% { opacity: 0; transform: translate(-50%, -40%) scale(0.6); filter: blur(20px) brightness(2); }
-                        15% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px) brightness(1); }
-                        85% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); filter: blur(0px) brightness(1); }
-                        100% { opacity: 0; transform: translate(-50%, -60%) scale(1.1); filter: blur(30px) brightness(0.5); }
+                        0% { opacity: 0; transform: translate(-50%, -10%) scale(0.7); filter: blur(15px) brightness(1.5); }
+                        15% { opacity: 1; transform: translate(-50%, -20%) scale(1); filter: blur(0px) brightness(1); }
+                        85% { opacity: 1; transform: translate(-50%, -20%) scale(1.02); filter: blur(0px) brightness(1); }
+                        100% { opacity: 0; transform: translate(-50%, -30%) scale(1.05); filter: blur(20px) brightness(0.8); }
                       }
                       @keyframes textShine {
                         to { background-position: 200% center; }
