@@ -53,18 +53,21 @@
             window.EJS_player = '#game';
             window.EJS_core = core; 
             window.EJS_gameUrl = romUrl;
-            window.EJS_gameName = gameName; // Ensures save states are tied to the specific game AND user
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
+            window.EJS_gameName = gameName; 
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/v4.0.10/data/'; // Stable version with gpSP
             window.EJS_startOnLoaded = true;
+            window.EJS_threads = true; // Enable multi-threading for major speed boost
             
-            // Forcer la sauvegarde dans le navigateur au lieu de télécharger un fichier
+            // Performance flags
+            const isTurbo = core === 'gpsp' || core === 'gba_turbo';
             window.EJS_defaultOptions = {
                 'save-state-location': 'browser',
-                'f-skip': '1', // Frame skip to help performance on slower machines
-                'performance': 'true'
+                'f-skip': isTurbo ? '2' : '1', // Aggressive skip for Turbo
+                'performance': 'true',
+                'lowlatency': 'true',
+                'rewind': 'false' // Disable rewind for performance
             };
             
-            // Forcer l'écriture automatique de la sauvegarde (SRAM) toutes les 5 secondes
             window.EJS_fixedSaveInterval = 5000;
 
             // UI Enhancement: Show controls on the sides if there's space
