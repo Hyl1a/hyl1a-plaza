@@ -41,7 +41,10 @@ const AudioManager = {
     pop: 'assets/audio/pop_interaction.wav',
     windowOpen: 'assets/audio/ouverture_fenetre.wav',
     windowClose: 'assets/audio/fermeture_fenetre.wav',
-    connectSuccess: 'assets/audio/CONNECT_SUCCESS.wav'
+    connectSuccess: 'assets/audio/CONNECT_SUCCESS.wav',
+    miiLaunch: 'assets/audio/MiiSF.wav',
+    gbaLaunch: 'assets/audio/EmuSF.wav',
+    gbaBgm: 'assets/audio/GbaSF.mp3'
   },
 
   // Music playlist
@@ -49,8 +52,8 @@ const AudioManager = {
     { name: 'Eshop January 2016', file: 'assets/audio/Eshop January 2016.wav', cover: 'assets/icons/eshop.png' },
     { name: 'Eshop July 2014', file: 'assets/audio/Eshop July 2014.wav', cover: 'assets/icons/eshop.png' },
     { name: 'Eshop June 2015', file: 'assets/audio/Eshop June 2015.wav', cover: 'assets/icons/eshop.png' },
-    { name: 'BXNJI', file: 'assets/audio/bxnji.mp3', cover: 'assets/icons/music.png' },
-    { name: 'Thoughtbody', file: 'assets/audio/thoughtbody.mp3', cover: 'assets/icons/music.png' }
+    { name: 'BXNJI', file: 'assets/audio/bxnji.mp3', cover: 'assets/icons/nico.png' },
+    { name: 'Thoughtbody', file: 'assets/audio/thoughtbody.mp3', cover: 'assets/icons/nico.png' }
   ],
 
   init: function () {
@@ -220,5 +223,65 @@ const AudioManager = {
       audio.volume = Math.min(target, (target / steps) * i);
       if (i >= steps) clearInterval(iv);
     }, stepTime);
+  },
+
+  // --- App Special Transitions ---
+  
+  playAppLaunchTransition: async function(sfKey, bgmKey) {
+    // 1. Fade out hub music
+    await this.fadeOut(600);
+    
+    // 2. Play the launch SFX
+    if (sfKey && this.soundFiles[sfKey]) {
+      const sfx = new Audio(this.soundFiles[sfKey]);
+      sfx.volume = 0.5;
+      sfx.play().catch(() => {});
+    }
+    
+    // 3. Start new BGM if provided
+    if (bgmKey && this.soundFiles[bgmKey]) {
+      setTimeout(() => {
+        this.appBgm = new Audio(this.soundFiles[bgmKey]);
+        this.appBgm.volume = 0;
+        this.appBgm.loop = true;
+        this.appBgm.play().catch(() => {});
+        
+        // Fade in app music
+        let vol = 0;
+        const iv = setInterval(() => {
+          vol += 0.05;
+          if (this.appBgm) this.appBgm.volume = Math.min(0.4, vol);
+          if (vol >= 0.4) clearInterval(iv);
+        }, 50);
+      }, 500);
+    }
+  },
+  
+  restoreHubAudio: async function() {
+    // 1. Fade out app music if any
+    if (this.appBgm) {
+      const audio = this.appBgm;
+      const steps = 10;
+      const volStep = audio.volume / steps;
+      let i = 0;
+      const iv = setInterval(() => {
+        i++;
+        audio.volume = Math.max(0, audio.volume - volStep);
+        if (i >= steps) {
+          clearInterval(iv);
+          audio.pause();
+          this.appBgm = null;
+        }
+      }, 50);
+      
+      await new Promise(r => setTimeout(r, 600));
+    }
+    
+    // 2. Fade in hub music
+    this.playNextMusic(); // Restarts hub playlist with fade internally? 
+    // Actually playNextMusic doesn't fade in. Let's force it.
+    setTimeout(() => {
+      this.fadeIn(600);
+    }, 100);
   }
 };

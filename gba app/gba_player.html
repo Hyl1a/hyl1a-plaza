@@ -68,6 +68,10 @@
             script.src = 'https://cdn.emulatorjs.org/latest/data/loader.js';
             document.body.appendChild(script);
 
+            // Auto-focus window for keys
+            window.focus();
+            document.addEventListener('mousedown', () => window.focus());
+
             // Report mouse acts to parent for custom cursor support
             window.addEventListener('mousemove', (e) => {
                 window.parent.postMessage({ type: 'mii-mousemove', x: e.clientX, y: e.clientY }, '*');

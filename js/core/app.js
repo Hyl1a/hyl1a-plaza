@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initEnvironment();
   initAppTriggers();
-  initFocusNavigation();   // Console-style tile focus + spatial nav
+  // initFocusNavigation();   // Legacy console-style tile focus
   initClockWidget();
   initMusicBar();          // Initialize song controls
   initAuth(); // Initialize authentication system
@@ -52,8 +52,21 @@ function initFocusNavigation() {
 
   // BG accent hues matching glow colours
   const bgAccentHues = [210, 25, 188, 280, 140, 340, 255, 45];
-
-  let focusedIndex = 0;
+  
+  window.setGlobalHueFromIndex = (index) => {
+    const hue = bgAccentHues[index % bgAccentHues.length];
+    document.documentElement.style.setProperty('--bg-accent-h', hue);
+    
+    // Also update tile glow variables for visualizer/carousel sync
+    const glowColorsSolid = ['#4facfe', '#ff9a56', '#6adae4', '#c471ed', '#43e97b', '#ff758c', '#a38cd1', '#ffd364'];
+    const glowColorsSoft = [
+      'rgba(79,172,254,0.4)', 'rgba(255,154,86,0.4)', 'rgba(106,218,228,0.4)', 
+      'rgba(196,113,237,0.4)', 'rgba(67,233,123,0.4)', 'rgba(255,117,140,0.4)',
+      'rgba(163,140,209,0.4)', 'rgba(255,211,100,0.4)'
+    ];
+    document.documentElement.style.setProperty('--tile-glow', glowColorsSoft[index % glowColorsSoft.length]);
+    document.documentElement.style.setProperty('--tile-glow-solid', glowColorsSolid[index % glowColorsSolid.length]);
+  };
 
   function setFocus(index, source) {
     if (index < 0 || index >= tiles.length) return;
@@ -131,6 +144,8 @@ function initFocusNavigation() {
   document.addEventListener('keydown', (e) => {
     // BLOCK INTERACTION IF LOGIN OVERLAY IS VISIBLE
     if (document.getElementById('auth-overlay').style.display !== 'none') return;
+    if (document.body.classList.contains('app-open-active')) return;
+    if (document.querySelector('.mii-fullscreen-container')) return;
     
     const dirMap = { ArrowRight: 'right', ArrowLeft:  'left', ArrowDown:  'down', ArrowUp:    'up' };
     const dir = dirMap[e.key];
@@ -152,7 +167,7 @@ function initFocusNavigation() {
   });
 
   // Set initial focus
-  setFocus(0, 'init');
+  // setFocus(0, 'init');
 }
 
 
@@ -186,57 +201,10 @@ function initClockWidget() {
 
 
 function initEnvironment() {
-  // Theme tile click handler
-  const themeTile = document.getElementById('theme-tile');
-  if (themeTile) {
-    themeTile.addEventListener('click', () => {
-      if (document.getElementById('auth-overlay').style.display !== 'none') return;
-      if (typeof AudioManager !== 'undefined') AudioManager.playPop();
-      ThemeManager.openSelector();
-    });
-  }
-
-  initGifGrid();
+  // initGifGrid(); // Disabled: user request to remove gifs
 }
 
-function initGifGrid() {
-  const grid = document.getElementById('app-grid');
-  if (!grid) return;
-
-  const gifs = [
-    'assets/gif/kirby-nintendo.gif',
-    'assets/gif/pokemon1.gif',
-    'assets/gif/nintendo-video-game.gif'
-  ];
-
-  const appTiles = Array.from(grid.children);
-  let gifIndex = 0;
-
-  // Insert a GIF tile every 2 applications
-  for (let i = 2; i < appTiles.length + (appTiles.length / 2); i += 3) {
-    if (gifIndex >= gifs.length) break;
-
-    const gifTile = document.createElement('div');
-    gifTile.className = 'grid-tile tile-square gif-tile';
-    gifTile.innerHTML = `
-      <div class="tile-inner">
-        <img src="${gifs[gifIndex]}" alt="GIF" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
-      </div>
-    `;
-    
-    // Insert before the (i)th element
-    if (grid.children[i]) {
-      grid.insertBefore(gifTile, grid.children[i]);
-    } else {
-      grid.appendChild(gifTile);
-    }
-    
-    gifIndex++;
-  }
-
-  // Update spatial navigation because the grid has changed
-  if (window.initFocusNavigation) window.initFocusNavigation();
-}
+// function initGifGrid() { ... } removed as per user request
 
 function initAppTriggers() {
   window.AppRegistry = {
@@ -248,7 +216,41 @@ function initAppTriggers() {
     'hallOfFame': { title: '👾 Hall of Fame Arcade', render: null },
     'miiMaker': { title: '👤 Mii Maker', render: null },
     'miiPlaza': { title: '🏕️ Mii Plaza', render: null },
-    'gba': { title: '🎮 Émulateur GBA', render: null }
+    'gba': { title: '🎮 Émulateur GBA', render: null },
+    'themes': { title: '🎨 Thèmes & Couleurs', render: () => {
+      if (typeof ThemeManager !== 'undefined') ThemeManager.openSelector();
+    }},
+    'bio': { title: '👤 À propos de Hyl1a', render: (container) => {
+      container.innerHTML = `
+        <div class="bio-window">
+          <div class="bio-header">
+            <img src="assets/icons/bobaboy.jpg" class="bio-avatar">
+            <div class="bio-title-group">
+              <h1>Hyl1a</h1>
+              <p>Developer • 20 years old</p>
+            </div>
+          </div>
+          <div class="bio-content">
+            <p>J'ai voulu créer un projet similaire à <strong>IISU</strong> mais sur navigateur pour pouvoir jouer directement sur le web avec une gestion fluide de sauvegarde et de compte.</p>
+            <div class="bio-socials">
+              <div class="social-item"><i class="fas fa-envelope"></i> mohznpro@gmail.com</div>
+              <div class="social-item"><i class="fab fa-discord"></i> hyl1a_</div>
+              <a href="https://discord.gg/ww4A6BAz" target="_blank" class="social-btn discord-server">Join my Discord</a>
+            </div>
+            <div class="bio-projects">
+              <h3>Mes autres projets</h3>
+              <a href="https://hyl1a.github.io/Hyl1a-web/" target="_blank" class="project-card">
+                <div class="project-info">
+                  <strong>Hyl1a Web</strong>
+                  <span>Frutiger Aero aesthetic website</span>
+                </div>
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }}
   };
 
   const dynamicTitle = document.getElementById('dynamic-title-pill');
@@ -277,53 +279,72 @@ function initAppTriggers() {
         trigger.click();
       }
     });
-
-      trigger.addEventListener('click', () => {
-        if (document.getElementById('auth-overlay').style.display !== 'none') return;
-        const appId = trigger.getAttribute('data-app');
-        const appData = window.AppRegistry[appId];
-        console.log('Launching appId:', appId, 'Data:', appData);
-
-        if (appData) {
-          if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
-          // Launch custom fullscreen standalone app experience
-          const fsContainer = document.createElement('div');
-          fsContainer.className = 'mii-fullscreen-container';
-          document.body.appendChild(fsContainer);
-          document.body.classList.add('app-open-active');
-          
-          // Smoothly fade out the hub
-          document.getElementById('main-container').style.opacity = '0';
-          document.getElementById('main-container').style.transform = 'scale(0.95)';
-          
-          if (appData.render) {
-            appData.render(fsContainer);
-          }
-          
-          // Provide a close method for the app
-          appData.close = function() {
-            fsContainer.classList.add('anim-window-close');
-            setTimeout(() => {
-              if (fsContainer.parentNode) fsContainer.parentNode.removeChild(fsContainer);
-              document.body.classList.remove('app-open-active');
-              document.getElementById('main-container').style.opacity = '1';
-              document.getElementById('main-container').style.transform = 'scale(1)';
-            }, 300);
-          };
-        } else {
-          WindowManager.openWindow(appId, appData.title, appData.render || function (container) {
-            container.innerHTML = `
-              <div class="app-inner">
-                <h2>${appData.title}</h2>
-                <p>Welcome to ${appData.title}. This application is currently being developed!</p>
-              </div>
-            `;
-          });
-        }
-      }
-    });
   });
 }
+
+window.handleAppLaunch = function(trigger) {
+  if (document.getElementById('auth-overlay').style.display !== 'none') return;
+  
+  const appId = trigger.getAttribute('data-app');
+  const appData = window.AppRegistry[appId];
+  console.log('Launching appId:', appId, 'Data:', appData);
+
+  if (appData) {
+    if (appId === 'miiMaker' || appId === 'miiPlaza' || appId === 'gba') {
+      // Audio Transition Logic
+      if (typeof AudioManager !== 'undefined') {
+        if (appId === 'miiMaker') {
+          AudioManager.playAppLaunchTransition('miiLaunch');
+        } else if (appId === 'gba') {
+          AudioManager.playAppLaunchTransition('gbaLaunch', 'gbaBgm');
+        } else {
+          AudioManager.fadeOut(600);
+        }
+      }
+
+      const fsContainer = document.createElement('div');
+      fsContainer.className = 'mii-fullscreen-container';
+      document.body.appendChild(fsContainer);
+      document.body.classList.add('app-open-active');
+      
+      document.getElementById('main-container').style.opacity = '0';
+      document.getElementById('main-container').style.transform = 'scale(0.95)';
+      
+      if (appData.render) {
+        appData.render(fsContainer);
+      }
+      
+      appData.close = function() {
+        fsContainer.classList.add('anim-window-close');
+        
+        // Restore Hub Audio
+        if (typeof AudioManager !== 'undefined') {
+          AudioManager.restoreHubAudio();
+        }
+
+        setTimeout(() => {
+          if (fsContainer.parentNode) fsContainer.parentNode.removeChild(fsContainer);
+          document.body.classList.remove('app-open-active');
+          document.getElementById('main-container').style.opacity = '1';
+          document.getElementById('main-container').style.transform = 'scale(1)';
+        }, 300);
+      };
+    } else if (appId === 'themes') {
+      // Direct call for themes
+      if (appData.render) appData.render();
+      if (typeof AudioManager !== 'undefined') AudioManager.playPop();
+    } else {
+      WindowManager.openWindow(appId, appData.title, appData.render || function (container) {
+        container.innerHTML = `
+          <div class="app-inner">
+            <h2>${appData.title}</h2>
+            <p>Welcome to ${appData.title}. This application is currently being developed!</p>
+          </div>
+        `;
+      });
+    }
+  }
+};
 
 function initAuth() {
   const overlay = document.getElementById('auth-overlay');

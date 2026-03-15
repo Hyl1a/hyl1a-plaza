@@ -43,9 +43,11 @@ const CircularVisualizer = {
     if (!playBtn || typeof AudioManager === 'undefined') return;
 
     window.updateVisualizerDisplay = () => {
+      const centerEl = document.querySelector('.visualizer-center');
       if (AudioManager.isPlayingMusic && AudioManager.playlist[AudioManager.currentTrackIndex]) {
         trackTitle.textContent = AudioManager.playlist[AudioManager.currentTrackIndex].name;
         playBtn.textContent = '⏸';
+        if (centerEl) centerEl.classList.add('playing');
         
         // Update album art if we have it, else use default icon
         const albumArt = document.querySelector('.visualizer-center img');
@@ -57,6 +59,7 @@ const CircularVisualizer = {
       } else {
         trackTitle.textContent = 'Aucune musique';
         playBtn.textContent = '▶';
+        if (centerEl) centerEl.classList.remove('playing');
       }
     };
 
@@ -126,8 +129,12 @@ const CircularVisualizer = {
     for (let i = 0; i < this.bars; i++) {
       const angle = (i / this.bars) * Math.PI * 2;
       
-      // Map bars to frequency data (skip very high frequencies that are usually empty)
-      const dataIdx = Math.floor((i / this.bars) * (bufferLength * 0.8));
+      // Symmetrical Mapping: Map the first 60% of frequencies (most active) 
+      // around the circle by mirroring them.
+      const halfBars = this.bars / 2;
+      const relativeIdx = i < halfBars ? i : (this.bars - i);
+      const dataIdx = Math.floor((relativeIdx / halfBars) * (bufferLength * 0.6));
+      
       const value = dataArray[dataIdx];
       const barHeight = (value / 255) * this.maxBarHeight;
       

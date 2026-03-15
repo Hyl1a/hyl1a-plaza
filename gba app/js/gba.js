@@ -1,8 +1,8 @@
 const GBA_GAMES = [
   { name: 'Pokémon Émeraude', file: '/gba app/assets/roms/gba/Pokemon - Version Emeraude (France).gba', playtime: '12h 45m', cover: 'assets/icons/pkmnemeraude.jpg' },
   { name: 'Pokémon Rouge Feu', file: '/gba app/assets/roms/gba/Pokemon - Version Rouge Feu (France).gba', playtime: '4h 30m', cover: 'assets/icons/pkmnrouge.jpg' },
-  { name: 'Kirby & the Amazing Mirror', file: '/gba app/assets/roms/gba/Kirby & the Amazing Mirror (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m' },
-  { name: 'The Legend of Zelda: The Minish Cap', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m' }
+  { name: 'Kirby & the Amazing Mirror', file: '/gba app/assets/roms/gba/Kirby & the Amazing Mirror (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m', cover: 'assets/icons/kirby.jpg' },
+  { name: 'The Legend of Zelda: The Minish Cap', file: '/gba app/assets/roms/gba/Legend of Zelda, The - The Minish Cap (Europe) (En,Fr,De,Es,It).zip', playtime: '0h 00m', cover: 'assets/icons/zelda.jpg' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -169,6 +169,10 @@ function renderGbaMenu(container) {
   `;
 
   container.innerHTML = html;
+  
+  // Ensure the menu can receive focus and focus it
+  container.setAttribute('tabindex', '-1');
+  container.focus();
 
   if (GBA_GAMES.length > 0) {
     updateCarouselTransforms();
@@ -195,32 +199,44 @@ function renderGbaMenu(container) {
       launchEmulator(container, GBA_GAMES[currentCoverIndex]);
     });
 
+    // Scoped Key Handler (Attached with capture: true so it wins over everything)
     const keyHandler = (e) => {
+      // If the menu is gone, clean up
       if (!document.querySelector('.gba-cf-container')) {
-        window.removeEventListener('keydown', keyHandler);
+        window.removeEventListener('keydown', keyHandler, true);
         return;
       }
-      if (e.key === 'ArrowRight') { e.preventDefault(); navigateGba(1); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); navigateGba(-1); }
-      else if (e.key === 'Enter') { 
-        e.preventDefault(); 
-        if (typeof AudioManager !== 'undefined') AudioManager.playClick();
-        launchEmulator(container, GBA_GAMES[currentCoverIndex]); 
-      }
-      else if (e.key === 'b' || e.key === 'Escape') {
+      // If emulator is active, let it handle its own keys
+      if (document.querySelector('iframe')) return;
+
+      const keys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Enter', ' ', 'Escape', 'b'];
+      if (keys.includes(e.key)) {
         e.preventDefault();
-        document.getElementById('gba-btn-back').click();
+        e.stopPropagation();
+        
+        if (e.key === 'ArrowRight') navigateGba(1);
+        else if (e.key === 'ArrowLeft') navigateGba(-1);
+        else if (e.key === 'Enter') {
+          if (typeof AudioManager !== 'undefined') AudioManager.playClick();
+          launchEmulator(container, GBA_GAMES[currentCoverIndex]);
+        }
+        else if (e.key === 'b' || e.key === 'Escape') {
+          document.getElementById('gba-btn-back').click();
+        }
       }
     };
-    
-    if (window._gbaKeyHandler) window.removeEventListener('keydown', window._gbaKeyHandler);
+
+    if (window._gbaKeyHandler) window.removeEventListener('keydown', window._gbaKeyHandler, true);
     window._gbaKeyHandler = keyHandler;
-    window.addEventListener('keydown', keyHandler);
+    window.addEventListener('keydown', keyHandler, true);
   }
 
   document.getElementById('gba-btn-back').addEventListener('click', () => {
     if (typeof AudioManager !== 'undefined') AudioManager.playClick();
-    if (window._gbaKeyHandler) window.removeEventListener('keydown', window._gbaKeyHandler);
+    if (window._gbaKeyHandler) {
+      window.removeEventListener('keydown', window._gbaKeyHandler, true);
+      window._gbaKeyHandler = null;
+    }
     if (window.AppRegistry['gba'] && window.AppRegistry['gba'].close) {
       window.AppRegistry['gba'].close();
     }
@@ -279,9 +295,6 @@ function launchEmulator(container, game) {
   const romUrl = encodeURIComponent(game.file);
   const gameName = encodeURIComponent(game.name);
   
-  // Clean up global key listener before iframe takes over
-  if (window._gbaKeyHandler) window.removeEventListener('keydown', window._gbaKeyHandler);
-
   // Pause background music to avoid overlap
   if (typeof AudioManager !== 'undefined') {
     console.log("GBA: Pausing background music...");
@@ -310,4 +323,31 @@ function launchEmulator(container, game) {
     if (typeof AudioManager !== 'undefined') AudioManager.playClick();
     renderGbaMenu(container); 
   });
+
+  // Focus the iframe automatically so keyboard works immediately
+  const emuIframe = container.querySelector('iframe');
+  if (emuIframe) {
+    const focusEmu = () => {
+      if (document.activeElement !== emuIframe) {
+        emuIframe.focus();
+        if (emuIframe.contentWindow) emuIframe.contentWindow.focus();
+      }
+    };
+
+    emuIframe.onload = () => {
+      console.log("GBA: Emulator loaded, focusing...");
+      setTimeout(focusEmu, 500);
+      // Heartbeat focus to ensure it keeps focus
+      const focusInterval = setInterval(() => {
+        if (!document.querySelector('iframe')) {
+            clearInterval(focusInterval);
+            return;
+        }
+        // Only focus if the user hasn't actively clicked elsewhere (like the back button)
+        if (document.activeElement === document.body) {
+            focusEmu();
+        }
+      }, 2000);
+    };
+  }
 }

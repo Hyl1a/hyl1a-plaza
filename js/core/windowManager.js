@@ -23,34 +23,37 @@ const WindowManager = {
     
     // Create element
     const win = document.createElement('div');
-    win.className = 'app-window glossy-panel open anim-window-open';
+    win.className = 'app-window';
     win.id = `window-${appId}`;
     
     this.zIndexCounter++;
     win.style.zIndex = this.zIndexCounter;
     
-    // Visual HTML Structure
-    win.innerHTML = `
-      <div class="window-header bar-glint">
-        <span class="window-title">${title}</span>
-        <button class="window-close-btn" aria-label="Close"></button>
-      </div>
-      <div class="window-content" id="content-${appId}">
-        <!-- App content injected here -->
-      </div>
-    `;
-    
     layer.appendChild(win);
     this.windows[appId] = win;
     
-    // Offset position for multiple windows so they don't completely overlap
+    // Create inner body for animation decoupling
+    win.innerHTML = `
+      <div class="window-body glossy-panel open anim-window-open">
+        <div class="window-header bar-glint">
+          <span class="window-title">${title}</span>
+          <button class="window-close-btn" aria-label="Close"></button>
+        </div>
+        <div class="window-content" id="content-${appId}">
+          <!-- App content injected here -->
+        </div>
+      </div>
+    `;
+    
+    const winBody = win.querySelector('.window-body');
+    
+    // Initial position
     const offset = (Object.keys(this.windows).length * 20) % 100;
-    // We update the translation in the transform because CSS sets it to -50% -50%
-    win.style.transform = `translate(calc(-50% + ${offset}px), calc(-50% + ${offset}px)) scale(1)`;
-    // Wait for insertion to set custom translations cleanly later when dragging.
+    win.style.left = `calc(50% + ${offset}px)`;
+    win.style.top = `calc(42% + ${offset}px)`;
     
     // Render the App Content
-    const contentArea = win.querySelector(`#content-${appId}`);
+    const contentArea = winBody.querySelector(`#content-${appId}`);
     if (contentRenderFn) {
       contentRenderFn(contentArea);
     }
@@ -58,13 +61,18 @@ const WindowManager = {
     // Event Listeners
     win.addEventListener('mousedown', () => this.focusWindow(appId));
     
-    const closeBtn = win.querySelector('.window-close-btn');
+    // Prevent scrolling inside the window from scrolling the carousel
+    win.addEventListener('wheel', (e) => {
+      e.stopPropagation();
+    }, { passive: false });
+    
+    const closeBtn = winBody.querySelector('.window-close-btn');
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.closeWindow(appId);
     });
     
-    this.setupDraggable(win, win.querySelector('.window-header'));
+    this.setupDraggable(win, winBody.querySelector('.window-header'));
     this.focusWindow(appId);
   },
   
@@ -73,8 +81,9 @@ const WindowManager = {
     
     const win = this.windows[appId];
     if (win) {
-      win.classList.remove('anim-window-open');
-      win.classList.add('anim-window-close');
+      const winBody = win.querySelector('.window-body');
+      winBody.classList.remove('anim-window-open');
+      winBody.classList.add('anim-window-close');
       
       if (window.restoreCoverflow) window.restoreCoverflow();
 
@@ -93,8 +102,12 @@ const WindowManager = {
       win.style.zIndex = this.zIndexCounter;
       
       // Clear active state on all windows
-      Object.values(this.windows).forEach(w => w.classList.remove('active'));
-      win.classList.add('active');
+      Object.values(this.windows).forEach(w => {
+        const body = w.querySelector('.window-body');
+        if (body) body.classList.remove('active');
+      });
+      const winBody = win.querySelector('.window-body');
+      if (winBody) winBody.classList.add('active');
     }
   },
   
@@ -107,23 +120,22 @@ const WindowManager = {
       startX = e.clientX;
       startY = e.clientY;
       
-      // Parse current transform
-      const style = window.getComputedStyle(winElement);
-      const matrix = new DOMMatrixReadOnly(style.transform);
-      initialTranslateX = matrix.m41;
-      initialTranslateY = matrix.m42;
+      const rect = winElement.getBoundingClientRect();
+      initialTranslateX = rect.left;
+      initialTranslateY = rect.top;
       
-      winElement.style.transition = 'none'; // Disable transition while dragging
+      winElement.style.transition = 'none'; 
     });
     
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
-      e.preventDefault(); // keep text from selecting
+      e.preventDefault(); 
       
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
       
-      winElement.style.transform = `translate(${initialTranslateX + dx}px, ${initialTranslateY + dy}px) scale(1)`;
+      winElement.style.left = `${initialTranslateX + dx + (winElement.offsetWidth / 2)}px`;
+      winElement.style.top = `${initialTranslateY + dy + (winElement.offsetHeight / 2)}px`;
     });
     
     document.addEventListener('mouseup', () => {

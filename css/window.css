@@ -12,30 +12,37 @@
 
 .app-window {
   position: absolute;
-  top: 50%;
+  top: 42%;
   left: 50%;
   width: 600px;
   height: 450px;
+  margin-left: -300px; /* Center without transform */
+  margin-top: -225px;  /* Center without transform */
   display: flex;
   flex-direction: column;
-  pointer-events: auto; /* Catch clicks on the window */
-  transform: translate(-50%, -50%) scale(0.8);
+  pointer-events: auto;
+  z-index: 100;
+}
+
+.window-body {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
   opacity: 0;
   visibility: hidden;
   transition: box-shadow 0.3s ease;
   overflow: hidden;
 }
 
-/* When window opens */
-.app-window.open {
-  transform: translate(-50%, -50%) scale(1);
+.window-body.open {
   opacity: 1;
   visibility: visible;
-  /* Open animation handled via JS dynamically or via classes */
 }
 
 /* Active window style */
-.app-window.active {
+.window-body.active {
   box-shadow: 0 15px 40px rgba(0, 100, 200, 0.3), var(--shadow-inner-glow);
 }
 

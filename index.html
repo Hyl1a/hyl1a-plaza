@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="css/window.css" />
   <link rel="stylesheet" href="mii maker app/css/mii.css" />
   <link rel="stylesheet" href="css/visualizer.css" />
-  
+
   <!-- Three.js and OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -21,8 +21,9 @@
 
 <body>
   <!-- AUTHENTICATION OVERLAY -->
-  <div id="auth-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; flex-direction: column; backdrop-filter: blur(10px); overflow: hidden;">
-    
+  <div id="auth-overlay"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; flex-direction: column; backdrop-filter: blur(10px); overflow: hidden;">
+
     <!-- Background layer for Miis -->
     <div id="auth-bg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;">
       <style>
@@ -30,6 +31,7 @@
           position: absolute;
           animation: floatMii linear infinite;
         }
+
         .auth-bubble {
           position: absolute;
           top: -30px;
@@ -42,10 +44,11 @@
           font-size: 12px;
           font-weight: bold;
           white-space: nowrap;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
           opacity: 0;
           pointer-events: none;
         }
+
         .auth-bubble::after {
           content: '';
           position: absolute;
@@ -56,40 +59,79 @@
           border-style: solid;
           border-color: white transparent transparent transparent;
         }
+
         @keyframes floatMii {
-          0% { transform: translateY(100vh) rotate(-10deg); opacity: 0; }
-          10% { opacity: 0.6; }
-          90% { opacity: 0.6; }
-          100% { transform: translateY(-20vh) rotate(10deg); opacity: 0; }
+          0% {
+            transform: translateY(100vh) rotate(-10deg);
+            opacity: 0;
+          }
+
+          10% {
+            opacity: 0.6;
+          }
+
+          90% {
+            opacity: 0.6;
+          }
+
+          100% {
+            transform: translateY(-20vh) rotate(10deg);
+            opacity: 0;
+          }
         }
+
         @keyframes popBubble {
-          0%, 20% { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.8); }
-          25%, 75% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-          80%, 100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.8); }
+
+          0%,
+          20% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px) scale(0.8);
+          }
+
+          25%,
+          75% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+          }
+
+          80%,
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-10px) scale(0.8);
+          }
         }
       </style>
     </div>
 
     <!-- Login Box -->
-    <div style="position: relative; z-index: 10; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 40px; text-align: center; color: white; width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(20px);">
-      <h1 style="margin: 0 0 20px 0; font-size: 28px; background: linear-gradient(135deg, #7ec4ff, #4a9fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Hylia Plaza</h1>
+    <div
+      style="position: relative; z-index: 10; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 40px; text-align: center; color: white; width: 350px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(20px);">
+      <h1
+        style="margin: 0 0 20px 0; font-size: 28px; background: linear-gradient(135deg, #7ec4ff, #4a9fff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+        Hylia Plaza</h1>
       <p style="margin-bottom: 30px; font-size: 14px; color: #ccc;">Connectez-vous pour accéder à vos sauvegardes.</p>
 
-      <input type="text" id="auth-username" placeholder="Nom d'utilisateur" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; box-sizing: border-box;">
-      <input type="password" id="auth-password" placeholder="Mot de passe" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; box-sizing: border-box;">
-      
+      <input type="text" id="auth-username" placeholder="Nom d'utilisateur"
+        style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; box-sizing: border-box;">
+      <input type="password" id="auth-password" placeholder="Mot de passe"
+        style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; outline: none; box-sizing: border-box;">
+
       <div id="auth-error" style="color: #ff6b6b; font-size: 13px; margin-bottom: 15px; display: none;"></div>
 
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button id="btn-login" style="padding: 10px 20px; border-radius: 8px; border: none; background: #4a9fff; color: white; font-weight: bold; cursor: pointer; flex: 1;">Connexion</button>
-        <button id="btn-register" style="padding: 10px 20px; border-radius: 8px; border: 1px solid #4a9fff; background: transparent; color: #4a9fff; font-weight: bold; cursor: pointer; flex: 1;">Créer un compte</button>
+        <button id="btn-login"
+          style="padding: 10px 20px; border-radius: 8px; border: none; background: #4a9fff; color: white; font-weight: bold; cursor: pointer; flex: 1;">Connexion</button>
+        <button id="btn-register"
+          style="padding: 10px 20px; border-radius: 8px; border: 1px solid #4a9fff; background: transparent; color: #4a9fff; font-weight: bold; cursor: pointer; flex: 1;">Créer
+          un compte</button>
       </div>
     </div>
   </div>
 
   <!-- Background Environment (Skies, bubbles, particles) -->
-  <video id="bg-video" autoplay loop muted playsinline style="position:fixed; top:0; left:0; width:100vw; height:100vh; object-fit:cover; z-index:-10; filter:brightness(0.9); transition: opacity 0.5s; pointer-events:none;"></video>
-  
+  <video id="bg-video" autoplay loop muted playsinline
+    style="position:fixed; top:0; left:0; width:100vw; height:100vh; object-fit:cover; z-index:-10; filter:brightness(0.9); transition: opacity 0.5s; pointer-events:none;"></video>
+
   <!-- MII PLAZA LAYER (Miis walking around background) -->
   <div id="mii-plaza-layer"></div>
 
@@ -104,7 +146,7 @@
 
   <!-- Clock Panel — floating top-right -->
   <div id="clock-panel">
-    <span class="status-icon">🕐</span>
+
     <span id="top-time">12:00 PM</span>
     <span style="color:rgba(0,0,0,0.2);">|</span>
     <span id="top-date">08/25</span>
@@ -122,7 +164,15 @@
   <div id="main-container">
     <!-- Ambient glow that follows focused tile -->
     <div id="focus-glow"></div>
+    <button id="carousel-nav-prev" class="carousel-nav-btn" aria-label="Previous App">‹</button>
     <div id="app-grid">
+
+      <!-- Bio -->
+      <div class="grid-tile tile-square app-trigger" data-app="bio" data-title="Hyl1a Bio" tabindex="0">
+        <div class="tile-inner">
+          <img class="tile-icon" src="assets/icons/parametre.png" alt="Bio">
+        </div>
+      </div>
 
       <!-- Gallery -->
       <div class="grid-tile tile-square app-trigger" data-app="gallery" data-title="Memory Gallery" tabindex="0">
@@ -132,7 +182,7 @@
       </div>
 
       <!-- Themes -->
-      <div class="grid-tile tile-square" id="theme-tile" data-title="Themes" tabindex="0">
+      <div class="grid-tile tile-square app-trigger" id="theme-tile" data-app="themes" data-title="Themes" tabindex="0">
         <div class="tile-inner">
           <img class="tile-icon" src="assets/icons/eshop.png" alt="Themes">
         </div>
@@ -167,6 +217,7 @@
       </div>
 
     </div>
+    <button id="carousel-nav-next" class="carousel-nav-btn" aria-label="Next App">›</button>
   </div>
 
   <!-- Circular Audio Visualizer -->
@@ -175,18 +226,12 @@
       <div id="vis-track-title">Aucune musique</div>
       <div class="vis-track-subtitle">Hylia Plaza</div>
     </div>
-    
+
     <canvas id="visualizer-canvas"></canvas>
-    
+
     <svg class="progress-ring" width="400" height="400">
-      <circle
-        class="progress-ring__circle"
-        stroke="rgba(255, 255, 255, 0.2)"
-        stroke-width="5"
-        fill="transparent"
-        r="95"
-        cx="200"
-        cy="200" />
+      <circle class="progress-ring__circle" stroke="rgba(255, 255, 255, 0.2)" stroke-width="5" fill="transparent" r="95"
+        cx="200" cy="200" />
     </svg>
 
     <div class="visualizer-center">
@@ -199,24 +244,15 @@
     </div>
   </div>
 
-  <!-- Bottom Bar Controls -->
-  <div id="bottom-bar">
-    <div class="bottom-group left">
-      <button class="btn-prompt"><span class="btn-key">Y</span> Edit</button>
-      <button class="btn-prompt"><span class="btn-key">-</span> Details</button>
-    </div>
-
-    <div class="pagination-dots">
-      <div class="dot active"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-
-    <div class="bottom-group right">
-      <button class="btn-prompt"><span class="btn-key">A</span> Select</button>
-      <button class="btn-prompt"><span class="btn-key">+</span> Menu</button>
+  <!-- Scrolling Welcome Banner (Replaces Bottom Bar) -->
+  <div class="welcome-marquee-container">
+    <div class="welcome-marquee">
+      <span class="marquee-text">Bienvenue à Hylia Plaza ! Explorez vos applications, personnalisez votre profil et
+        profitez de l'ambiance. • Welcome to Hylia Plaza! Explore your apps, customize your profile, and enjoy the vibe.
+        •</span>
+      <span class="marquee-text">Bienvenue à Hylia Plaza ! Explorez vos applications, personnalisez votre profil et
+        profitez de l'ambiance. • Welcome to Hylia Plaza! Explore your apps, customize your profile, and enjoy the vibe.
+        •</span>
     </div>
   </div>
 
@@ -252,6 +288,7 @@
   <script src="gba app/js/gba.js"></script>
 
   <script src="js/core/visualizer.js"></script>
+  <script src="js/core/carousel.js"></script>
   <script src="js/core/app.js"></script>
 </body>
 
