@@ -33,7 +33,7 @@ window.MiiManager = {
   renderPasswordPrompt() {
     this.container.innerHTML = `
       <div class="mii-manager-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; background: #16162a; color: white; font-family: 'Inter', sans-serif;">
-        <div style="font-size: 50px;">🔒</div>
+        <div style="font-size: 50px;"></div>
         <h2 style="margin: 0; color: #7eb8ff;">Accès Protégé</h2>
         <p style="color: rgba(255,255,255,0.6); margin: 0;">Entrez le code pour gérer les Miis</p>
         <div style="display: flex; gap: 10px;">
@@ -80,16 +80,16 @@ window.MiiManager = {
 
   async fetchUserMiis(uid) {
     if (!window.Firestore || !window.FirebaseDB) return [];
-    
+
     // In this implementation, we fetch all Miis and filter by owner if we had an owner field.
     // For now, based on auth.js, we might only have one Mii per user in 'avatars' collection indexed by UID.
     // However, the user request implies multiple Miis ("selectionner les mii a supprimer").
     // Let's check how many Miis are stored.
-    
+
     const avatarsRef = window.Firestore.collection(window.FirebaseDB, "avatars");
     const qSnap = await window.Firestore.getDocs(avatarsRef);
     const miis = [];
-    
+
     qSnap.forEach(doc => {
       const data = doc.data();
       // If we want to restrict to current user, we'd check an owner field.
@@ -103,7 +103,7 @@ window.MiiManager = {
         });
       }
     });
-    
+
     return miis;
   },
 
@@ -155,16 +155,16 @@ window.MiiManager = {
       // We don't have a deleteDoc export in firebase.js KI, let's check what's available.
       // Wait, firebase.js has { doc, setDoc, getDoc, collection, getDocs }.
       // I might need deleteDoc.
-      
+
       this.container.querySelector(`#mii-card-${id}`).style.opacity = '0.5';
       this.container.querySelector(`#mii-card-${id} .mii-btn-delete`).disabled = true;
       this.container.querySelector(`#mii-card-${id} .mii-btn-delete`).textContent = '...';
 
       await window.Firestore.deleteDoc(docRef);
-      
+
       this.container.querySelector(`#mii-card-${id}`).style.transform = 'scale(0.8)';
       this.container.querySelector(`#mii-card-${id}`).style.opacity = '0';
-      
+
       setTimeout(() => {
         const user = window.Auth ? window.Auth.currentUser : null;
         if (user) this.open(this.container);

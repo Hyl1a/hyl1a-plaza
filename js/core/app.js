@@ -477,29 +477,25 @@ function initAuth() {
 
   async function generateAuthBackground() {
     const bgContainer = document.getElementById('auth-bg');
-    if (!bgContainer || bgContainer.children.length > 2) return; // Prevent regenerating
+    if (!bgContainer || bgContainer.children.length > 2) return;
 
     let avatars = [];
-
-    // Try to fetch real Miis from Firestore
     if (window.Firestore && window.FirebaseDB) {
       try {
         const avatarsRef = window.Firestore.collection(window.FirebaseDB, "avatars");
         const qSnap = await window.Firestore.getDocs(avatarsRef);
         qSnap.forEach(doc => {
           if (doc.data().visual_base64 && doc.data().username) {
-            avatars.push({
-              b64: doc.data().visual_base64,
-              username: doc.data().username
-            });
+            avatars.push({ b64: doc.data().visual_base64, username: doc.data().username });
           }
         });
       } catch (e) {
-        console.warn("Could not fetch real Miis for background, falling back to SVGs", e);
+        console.warn("Could not fetch Miis, falling back to SVGs", e);
       }
     }
 
-    const totalMiisToGenerate = 15;
+    const totalMiisToGenerate = 18;
+    const occupiedZones = [];
 
     // Fallback data if no real Miis
     const faces = [
@@ -509,50 +505,38 @@ function initAuth() {
       '<path d="M18 22 L26 22" stroke="#333" stroke-width="2" fill="none" /><path d="M34 22 L42 22" stroke="#333" stroke-width="2" fill="none" /><circle cx="30" cy="32" r="2" fill="#333" />'
     ];
 
-    const phrases = [
-      "J'adore la Wii...",
-      "C'est quoi ton jeu préféré ?",
-      "Il fait beau aujourd'hui !",
-      "Zzz...",
-      "Où est la place Mii ?",
-      "Nintendo !",
-      "Je vais jouer à Pokémon.",
-      "Hello !",
-      "Tu as vu le nouveau thème ?"
-    ];
-
     for (let i = 0; i < totalMiisToGenerate; i++) {
+      let left;
+      let attempts = 0;
+      do {
+        left = Math.random() * 100;
+        attempts++;
+      } while (occupiedZones.some(z => Math.abs(z - left) < 6) && attempts < 15);
+      occupiedZones.push(left);
+
       const svg = document.createElement('div');
       svg.className = 'auth-mii';
 
-      const left = Math.random() * 100;
-      const size = 1.0 + Math.random() * 2.5; // SLIGHT REDUCTION: from [1.5, 5.5] to [1.0, 3.5]
-      const duration = 12 + Math.random() * 30;
-      const delay = Math.random() * -60;
+      const size = 0.8 + Math.random() * 2.2;
+      const duration = 15 + Math.random() * 35;
+      const delay = Math.random() * -80;
 
       svg.style.left = `${left}%`;
       svg.style.setProperty('--mii-scale', size);
       svg.style.animationDuration = `${duration}s`;
       svg.style.animationDelay = `${delay}s`;
       svg.style.zIndex = Math.floor(Math.random() * 5);
-      let bubbleHtml = '';
+
       let miiContentHtml = '';
+      const miiIndex = avatars.length > 0 ? (i % avatars.length) : 0;
 
       if (avatars.length > 0) {
-        // Pick a random real Mii
-        const realMii = avatars[Math.floor(Math.random() * avatars.length)];
+        const realMii = avatars[miiIndex];
         const thumbUrl = `https://mii-unsecure.ariankordi.net/miis/image.png?data=${encodeURIComponent(realMii.b64)}&verifyCharInfo=0&type=face&width=128&shaderType=wiiu`;
-        miiContentHtml = `<img src="${thumbUrl}" style="width: 60px; height: 60px; object-fit: cover; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); border-radius: 50%;">`;
-
-        if (Math.random() > 0.8) {
-          const bubbleDelay = Math.random() * 5;
-          bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${realMii.username} : ${phrases[Math.floor(Math.random() * phrases.length)]}</div>`;
-        }
+        miiContentHtml = `<img src="${thumbUrl}" style="width: 60px; height: 60px; object-fit: cover; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4)); border-radius: 50%;">`;
       } else {
-        // Fallback SVG Mii
-        const hue = Math.floor(Math.random() * 360);
-        const face = faces[Math.floor(Math.random() * faces.length)];
-
+        const faceIndex = i % faces.length;
+        const hue = (i * 137) % 360;
         miiContentHtml = `
           <svg viewBox="0 0 60 90" width="60" height="90" style="filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3));">
             <path d="M15 45 Q30 40 45 45 L40 85 Q30 90 20 85 Z" fill="hsl(${hue}, 70%, 50%)" />
@@ -560,21 +544,11 @@ function initAuth() {
             <path d="M20 48 Q30 43 40 48 L35 80 Q30 84 25 80 Z" fill="hsl(${hue}, 70%, 75%)" />
             <circle cx="30" cy="25" r="20" fill="#e6c2a5" />
             <circle cx="28" cy="23" r="18" fill="#ffdfc4" />
-            <g class="avatar-face">${face}</g>
-          </svg>
-        `;
-
-        if (Math.random() > 0.8) {
-          const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-          const bubbleDelay = Math.random() * 5;
-          bubbleHtml = `<div class="auth-bubble" style="animation: popBubble 8s ${bubbleDelay}s infinite;">${phrase}</div>`;
-        }
+            <g class="avatar-face">${faces[faceIndex]}</g>
+          </svg>`;
       }
 
-      svg.innerHTML = `
-        ${bubbleHtml}
-        ${miiContentHtml}
-      `;
+      svg.innerHTML = miiContentHtml;
       bgContainer.appendChild(svg);
     }
   }

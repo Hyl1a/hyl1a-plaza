@@ -27,8 +27,10 @@
     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 15, 0.75); display: flex; align-items: center; justify-content: center; z-index: 10000; flex-direction: column; backdrop-filter: blur(10px); overflow: hidden;">
 
     <!-- CONSTRUCTION BANNER (Matched to marquee style) -->
-    <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 60px); max-width: 1400px; height: 44px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px) saturate(2); -webkit-backdrop-filter: blur(25px) saturate(2); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 22px; display: flex; align-items: center; justify-content: center; z-index: 10001; pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-      <div style="display: flex; gap: 15px; align-items: center; color: rgba(255, 255, 255, 0.8); font-weight: 700; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase;">
+    <div
+      style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 60px); max-width: 1400px; height: 44px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px) saturate(2); -webkit-backdrop-filter: blur(25px) saturate(2); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 22px; display: flex; align-items: center; justify-content: center; z-index: 10001; pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+      <div
+        style="display: flex; gap: 15px; align-items: center; color: rgba(255, 255, 255, 0.8); font-weight: 700; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase;">
         <span>ℹ️</span> SITE EN COURS DE CONSTRUCTION <span>ℹ️</span>
       </div>
     </div>
@@ -113,16 +115,24 @@
         .auth-logo {
           width: 480px;
           height: auto;
-          margin-bottom: -10px; /* Slight overlap with the glass box for better depth */
-          filter: drop-shadow(0 15px 30px rgba(0,0,0,0.5));
+          margin-bottom: -10px;
+          /* Slight overlap with the glass box for better depth */
+          filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.5));
           animation: logoFloat 4s ease-in-out infinite;
           z-index: 20;
           pointer-events: none;
         }
 
         @keyframes logoFloat {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-10px) scale(1.02); }
+
+          0%,
+          100% {
+            transform: translateY(0) scale(1);
+          }
+
+          50% {
+            transform: translateY(-10px) scale(1.02);
+          }
         }
       </style>
     </div>
@@ -327,10 +337,10 @@
   <div class="welcome-marquee-container">
     <div class="welcome-marquee">
       <span class="marquee-text">Bienvenue à Hylia Plaza ! Explorez vos applications, personnalisez votre profil et
-        profitez de l'ambiance. • Welcome to Hylia Plaza! Explore your apps, customize your profile, and enjoy the vibe.
+        profitez de l'ambiance • Welcome to Hylia Plaza! Explore your apps, customize your profile, and enjoy the vibe
         •</span>
       <span class="marquee-text">Bienvenue à Hylia Plaza ! Explorez vos applications, personnalisez votre profil et
-        profitez de l'ambiance. • Welcome to Hylia Plaza! Explore your apps, customize your profile, and enjoy the vibe.
+        profitez de l'ambiance • Welcome to Hylia Plaza! Explore your apps, customize your profile, and enjoy the vibe
         •</span>
     </div>
   </div>
