@@ -30,37 +30,45 @@
 .mii-topbar {
   display: flex;
   align-items: center;
-  background: #16162a;
-  border-bottom: 1px solid #2a2a4a;
+  justify-content: center; /* Center everything in the flow */
+  background: rgba(180, 255, 220, 0.25);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   padding: 0 16px;
   height: 70px;
   flex-shrink: 0;
-  gap: 4px;
+  gap: 8px;
+  position: relative; /* Base for absolute children */
 }
 .mii-topbar-title {
   font-size: 18px;
   font-weight: 800;
-  color: #7eb8ff;
-  margin-right: 20px;
+  color: #008a35;
+  text-shadow: 0 0 15px rgba(255,255,255,0.5);
+  margin-right: 30px; /* Keep title to the left side of the center-ish group */
   white-space: nowrap;
   letter-spacing: -0.5px;
+  position: absolute;
+  left: 20px;
 }
 .mii-cat-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 54px; height: 54px;
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background: #22223a;
-  color: #bbb;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: #005a22;
   cursor: pointer;
   font-size: 20px;
   transition: all 0.15s;
   flex-shrink: 0;
 }
 .mii-cat-btn:hover {
-  background: #2e2e50;
+  background: rgba(0, 189, 72, 0.3); /* Mint green hover */
+  border-color: rgba(255, 255, 255, 0.5);
   color: #fff;
 }
 .mii-cat-btn img, .mii-cat-btn span {
@@ -76,7 +84,14 @@
   transform: scale(1.3);
 }
 .mii-topbar-spacer {
-  flex: 1;
+  display: none; /* Removed to allow centering */
+}
+.mii-topbar-controls {
+  position: absolute;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .mii-close-btn {
   display: flex;
@@ -108,7 +123,7 @@
 .mii-canvas-area {
   flex: 1.5;
   position: relative;
-  background: radial-gradient(ellipse at 50% 60%, #2a2a4a 0%, #16162a 100%);
+  background: radial-gradient(ellipse at 50% 60%, rgba(180, 255, 220, 0.1) 0%, transparent 100%);
   min-width: 55%;
   overflow: hidden; /* Prevent 105% wide Mii image from overlapping controls */
 }
@@ -133,8 +148,10 @@
 /* ===== CONTROLS PANEL (RIGHT) ===== */
 .mii-controls-area {
   width: 380px;
-  background: #1e1e36;
-  border-left: 1px solid #2a2a4a;
+  background: rgba(180, 255, 220, 0.2);
+  backdrop-filter: blur(25px) brightness(1.1);
+  -webkit-backdrop-filter: blur(25px) brightness(1.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -168,8 +185,8 @@
   transform: scale(1.1);
 }
 .mii-subtab.active {
-  color: #7eb8ff;
-  border-bottom-color: #3366cc;
+  color: #008a35;
+  border-bottom-color: #00bd48;
 }
 
 /* Panel scrollable content */
@@ -195,43 +212,46 @@
 /* ===== STYLE / TYPE GRID ===== */
 .mii-style-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr); /* Back to 3 columns for smaller buttons */
+  gap: 15px; /* More spacing */
   margin-bottom: 20px;
 }
 .mii-style-btn {
   aspect-ratio: 1;
-  border-radius: 10px;
-  border: 2px solid #2a2a4a;
-  background: #22223a;
-  color: #ccc;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  color: #005a22;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.12s;
+  transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   text-align: center;
   line-height: 1.2;
-  padding: 4px;
+  padding: 8px;
+  overflow: hidden; /* Prevent Mii from overflowing the square */
 }
 .mii-style-btn:hover {
-  background: #2e2e50;
-  border-color: #4a4a7a;
-  transform: scale(1.08);
+  background: rgba(0, 189, 72, 0.3);
+  border-color: #53ee8f;
+  transform: scale(1.4); /* Balanced hover zoom */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
 }
 .mii-style-btn img {
   transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 .mii-style-btn:hover img {
-  transform: scale(1.15);
+  transform: scale(1.25); /* Reduced scale to keep Mii within the square */
 }
 .mii-style-btn.active {
-  background: #3366cc;
-  border-color: #5588ee;
+  background: #00bd48;
+  border-color: #53ee8f;
   color: #fff;
-  box-shadow: 0 0 10px rgba(51,102,204,0.35);
+  box-shadow: 0 8px 20px rgba(0, 189, 72, 0.3);
 }
 
 /* ===== COLOR GRID ===== */
@@ -296,12 +316,12 @@
 .mii-input, .mii-textarea {
   width: 100%;
   padding: 12px 14px;
-  border: 2px solid #2a2a4a;
+  border: 1px solid rgba(0,0,0,0.1);
   border-radius: 10px;
   font-size: 14px;
   box-sizing: border-box;
-  background: #22223a;
-  color: #e0e0e0;
+  background: rgba(255,255,255,0.4);
+  color: #111;
   font-family: inherit;
   transition: border-color 0.2s;
 }
@@ -331,15 +351,15 @@
 .mii-save-btn {
   margin: 16px 20px 20px;
   padding: 14px;
-  background: linear-gradient(135deg, #3366cc, #2255aa);
+  background: linear-gradient(135deg, #00bd48, #008a35);
   color: white;
   font-size: 16px;
   font-weight: 800;
   border: none;
-  border-radius: 14px;
+  border-radius: 16px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(51,102,204,0.35);
-  transition: all 0.15s;
+  box-shadow: 0 8px 20px rgba(0, 189, 72, 0.3);
+  transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
   text-transform: uppercase;
   letter-spacing: 1px;
   flex-shrink: 0;

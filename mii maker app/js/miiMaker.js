@@ -1,3 +1,60 @@
+// --- Mii Maker Music (crossfade with main music) ---
+let miiMusic = null;
+let mainMusicWasPlaying = false;
+
+function startMiiMusic() {
+  if (miiMusic) return; // Already playing
+  miiMusic = new Audio('assets/audio/Mii Maker.mp3');
+  miiMusic.volume = 0.3;
+  miiMusic.loop = true;
+
+  if (typeof AudioManager !== 'undefined') {
+    AudioManager.isExternalMusicPlaying = true;
+    if (AudioManager.isPlayingMusic) {
+      mainMusicWasPlaying = true;
+      AudioManager.fadeOut(300).then(() => {
+        if (miiMusic) miiMusic.play().catch(() => { });
+      });
+    } else {
+      mainMusicWasPlaying = false;
+      miiMusic.play().catch(() => { });
+    }
+  } else {
+    mainMusicWasPlaying = false;
+    miiMusic.play().catch(() => { });
+  }
+
+  // Set Mii Maker background video
+  const bgVideo = document.getElementById('bg-video');
+  if (bgVideo) {
+    bgVideo.src = 'assets/icons/video/miimakerBC.mp4';
+    bgVideo.style.opacity = '1';
+    bgVideo.play().catch(e => console.log('Video play error:', e));
+  }
+}
+
+function stopMiiMusic() {
+  if (typeof AudioManager !== 'undefined') {
+    AudioManager.isExternalMusicPlaying = false;
+  }
+  if (miiMusic) {
+    miiMusic.pause();
+    miiMusic.currentTime = 0;
+    miiMusic = null;
+  }
+  // Restore main music if it was playing before
+  if (mainMusicWasPlaying && typeof AudioManager !== 'undefined' && AudioManager.currentMusicAudio) {
+    AudioManager.fadeIn(800);
+  }
+}
+
+function playMiiSFX(name) {
+  const sfx = new Audio(`/assets/audio/${name}.wav`);
+  sfx.preload = "auto";
+  sfx.volume = 0.5;
+  sfx.play().catch(err => console.error(`Failed to play SFX: ${name}`, err));
+}
+
 // Mii Maker Implementation – Redesigned to match datkat21/mii-creator style
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
@@ -11,7 +68,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clean up any lingering login welcome messages
         const oldWelcome = document.getElementById('login-welcome-msg');
         if (oldWelcome) oldWelcome.remove();
-        
+
+        // Start Music immediately (wait for launch SFX)
+        if (typeof AudioManager !== 'undefined' && AudioManager.activeLaunchSFX) {
+          const launchSFX = AudioManager.activeLaunchSFX;
+          if (!launchSFX.paused && !launchSFX.ended) {
+            launchSFX.addEventListener('ended', () => {
+              startMiiMusic();
+            }, { once: true });
+          } else {
+            startMiiMusic();
+          }
+        } else {
+          startMiiMusic();
+        }
+
         // Show gender selection first
         renderGenderSelection(container);
       };
@@ -20,10 +91,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- Asset Colors ---
-const SKINS = ['#feedcf', '#f7d3a0', '#edb278', '#d38b58', '#9d6343', '#834c31', '#512f1f'];
-const HAIRS = ['#1d1c1a', '#3f3123', '#663b21', '#85512b', '#7c6d66', '#a98059', '#b5a16d', '#bc9c65'];
-const EYES_COLORS = ['#3f3530', '#7a818c', '#533c30', '#837b2d', '#426899', '#5d8050'];
-const SHIRTS = ['#ff3333', '#ff6600', '#ffcc00', '#33cc33', '#3366ff', '#66ccff', '#9933cc', '#ff66cc', '#ffffff', '#888888', '#222222'];
+// --- Asset Colors (Aligned with standard Mii binary IDs) ---
+const SKINS = ['#f9c9b1', '#ebb88a', '#d29665', '#986a44', '#714022', '#3d251d'];
+const HAIRS = ['#080808', '#301810', '#502818', '#603018', '#805038', '#a07040', '#c09058', '#e8c898'];
+const EYES_COLORS = ['#080808', '#202020', '#402010', '#604020', '#3050a0', '#408040'];
+const SHIRTS = [
+  '#ff3030', // 0: Red
+  '#ff8030', // 1: Orange
+  '#ffee30', // 2: Yellow
+  '#b0ee30', // 3: Lime
+  '#30a030', // 4: Green
+  '#3050ee', // 5: Blue
+  '#30b0ee', // 6: Cyan
+  '#ff70a0', // 7: Pink
+  '#9030ee', // 8: Purple
+  '#704020', // 9: Brown
+  '#ffffff', // 10: White
+  '#111111'  // 11: Black
+];
 
 // --- Category Definitions ---
 const CATEGORIES = [
@@ -55,22 +140,27 @@ const FACE_STYLES = makeStyles(11);
 
 let miiInstance = null;
 let currentGLBModel = null;
+let questProgress = {
+  face: false, hair: false, eyebrows: false, eyes: false,
+  nose: false, mouth: false, body: false, profile: false
+};
+let isQuestActive = false;
 
 /**
  * Render the gender selection screen
  */
 function renderGenderSelection(container) {
   container.innerHTML = `
-    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #2a2a4a 0%, #1a1a2e 100%); color: white; border-radius: 20px; overflow: hidden; position: relative; font-family: 'Outfit', sans-serif;">
+    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(180, 255, 220, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%); backdrop-filter: blur(20px); color: #005a22; border-radius: 20px; overflow: hidden; position: relative; font-family: 'Outfit', sans-serif;">
       <h2 style="font-size: 32px; margin-bottom: 40px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); animation: fadeInDown 0.8s ease-out;">Choisissez le genre</h2>
       <div style="display: flex; gap: 40px; animation: fadeInUp 0.8s ease-out;">
-        <button id="select-male" style="background: rgba(255,255,255,0.1); border: 4px solid #7ec4ff; border-radius: 30px; padding: 30px; cursor: pointer; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+        <button id="select-male" style="background: #b3dbff; border: 4px solid #7ec4ff; border-radius: 30px; padding: 30px; cursor: pointer; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; flex-direction: column; align-items: center; gap: 15px;">
           <img src="assets/icons/caté/gars.png" style="width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
-          <span style="font-size: 20px; font-weight: 800; color: #7ec4ff;">Homme</span>
+          <span style="font-size: 20px; font-weight: 800; color: #004a99;">Homme</span>
         </button>
-        <button id="select-female" style="background: rgba(255,255,255,0.1); border: 4px solid #ff7eb3; border-radius: 30px; padding: 30px; cursor: pointer; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+        <button id="select-female" style="background: #ffcce0; border: 4px solid #ffb6c1; border-radius: 30px; padding: 30px; cursor: pointer; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; flex-direction: column; align-items: center; gap: 15px;">
           <img src="assets/icons/caté/meuf.png" style="width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));">
-          <span style="font-size: 20px; font-weight: 800; color: #ff7eb3;">Femme</span>
+          <span style="font-size: 20px; font-weight: 800; color: #990044;">Femme</span>
         </button>
       </div>
       <style>
@@ -98,6 +188,15 @@ async function initMiiMaker(container, gender = 0) {
     return;
   }
 
+  // Initialize Quest if forced creation
+  const user = window.Auth ? window.Auth.getCurrentUser() : null;
+  const hasMii = user ? await window.Auth.hasMii(user) : true;
+  isQuestActive = !hasMii;
+
+  if (isQuestActive) {
+    Object.keys(questProgress).forEach(k => questProgress[k] = false);
+  }
+
   // Build category buttons HTML
   const catBtns = CATEGORIES.map((c, i) => {
     const isImage = c.icon.includes('.png');
@@ -109,26 +208,134 @@ async function initMiiMaker(container, gender = 0) {
     <div class="mii-topbar">
       <div class="mii-topbar-title">Mii Maker</div>
       ${catBtns}
-      <div class="mii-topbar-spacer"></div>
-      <button class="mii-music-toggle" id="mii-music-toggle" title="Couper/Activer la musique" style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:2px solid #2a2a4a;background:#22223a;color:#7eb8ff;font-size:18px;cursor:pointer;margin-right:8px;transition:all 0.15s;">🔊</button>
-      <button class="mii-close-btn" title="Close">✕</button>
+      <div class="mii-topbar-controls">
+        <button class="mii-music-toggle" id="mii-music-toggle" title="Couper/Activer la musique" style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:2px solid #2a2a4a;background:#22223a;color:#7eb8ff;font-size:18px;cursor:pointer;transition:all 0.15s;">🔊</button>
+        <button class="mii-close-btn" title="Close">✕</button>
+      </div>
     </div>
     <div class="mii-body">
+      <div id="mii-quest-log" class="mii-quest-log" style="display: none;">
+        <div class="quest-log-header">Journal de Quête</div>
+        <div class="quest-log-list" id="quest-list"></div>
+      </div>
+      <div id="quest-popup-container" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 2000; pointer-events: none;"></div>
       <div class="mii-canvas-area" id="mii-canvas-container" style="background: transparent;">
         <div id="mii-loading-overlay">Loading Preview...</div>
-        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 100px; left: 52.5%; transform: translateX(-50%); background: linear-gradient(to bottom, #7ee8ff 0%, #4facfe 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: 800; font-size: 13px; box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none; transition: opacity 0.3s;">
-          <div id="mii-tutorial-text">Bienvenue ! ✨</div>
+        <div id="mii-tutorial-bubble" style="display: none; position: absolute; top: 100px; left: 52.5%; transform: translateX(-50%); background: linear-gradient(to bottom, #53ee8fff 0%, #00bd48ff 100%); color: white; padding: 10px 20px; border-radius: 25px; font-weight: 800; font-size: 13px; box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4); z-index: 1000; animation: bounce 2s infinite; border: 3px solid white; text-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none; transition: opacity 0.3s;">
+          <div id="mii-tutorial-text">Bienvenue !</div>
           <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: white transparent transparent transparent;"></div>
-          <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); border-width: 9px 9px 0; border-style: solid; border-color: #4facfe transparent transparent transparent;"></div>
+          <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); border-width: 9px 9px 0; border-style: solid; border-color: #00bd48ff transparent transparent transparent;"></div>
           <style>
             @keyframes bounce {
               0%, 100% { transform: translate(-50%, 0); }
               50% { transform: translate(-50%, -6px); }
             }
-            @keyframes shake {
-              0%, 100% { transform: translateX(0); }
-              25% { transform: translateX(-5px); }
-              75% { transform: translateX(5px); }
+            @keyframes questSuccess {
+              0% { transform: translate(-50%, 0) scale(1); background: #53ee8f; }
+              50% { transform: translate(-50%, -20px) scale(1.2); background: #fff500; }
+              100% { transform: translate(-50%, 0) scale(1); background: #53ee8f; }
+            }
+            @keyframes questError {
+              0%, 100% { transform: translate(-50%, 0); }
+              20%, 60% { transform: translate(-60%, 0); background: #ff4757; }
+              40%, 80% { transform: translate(-40%, 0); background: #ff4757; }
+            }
+            @keyframes starPop {
+              0% { transform: scale(0); opacity: 0; }
+              50% { transform: scale(1.5); opacity: 1; }
+              100% { transform: scale(1); opacity: 0; }
+            }
+            .quest-star {
+              position: absolute;
+              pointer-events: none;
+              font-size: 24px;
+              z-index: 1001;
+              animation: starPop 0.8s ease-out forwards;
+            }
+            .mii-save-btn.disabled {
+              background: #555 !important;
+              opacity: 0.6;
+              cursor: not-allowed !important;
+              box-shadow: none !important;
+              transform: none !important;
+            }
+            .mii-quest-log {
+              width: 220px;
+              background: rgba(180, 255, 220, 0.25);
+              backdrop-filter: blur(20px);
+              -webkit-backdrop-filter: blur(20px);
+              border-right: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 20px;
+              color: #005a22;
+              display: flex;
+              flex-direction: column;
+              gap: 15px;
+              animation: slideInLeft 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            }
+            @keyframes slideInLeft {
+              from { opacity: 0; transform: translateX(-50px); }
+              to { opacity: 1; transform: translateX(0); }
+            }
+            .quest-log-header {
+              font-weight: 900;
+              font-size: 16px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              border-bottom: 2px solid rgba(0, 90, 34, 0.2);
+              padding-bottom: 10px;
+              margin-bottom: 5px;
+            }
+            .quest-log-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              font-size: 15px;
+              font-weight: 700;
+              padding: 8px 0;
+              transition: all 0.3s;
+            }
+            .quest-check {
+              width: 22px;
+              height: 22px;
+              border: 2px solid rgba(0, 90, 34, 0.3);
+              border-radius: 6px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 14px;
+              background: rgba(255, 255, 255, 0.1);
+              transition: all 0.3s;
+            }
+            .quest-log-item.done {
+              color: #008a35;
+              transform: translateX(5px);
+            }
+            .quest-log-item.done .quest-check {
+              background: #00bd48;
+              border-color: #00bd48;
+              color: white;
+              box-shadow: 0 0 10px rgba(0, 189, 72, 0.4);
+            }
+            .quest-popup {
+              background: rgba(0, 90, 34, 0.85);
+              color: white;
+              padding: 12px 30px;
+              border-radius: 40px;
+              font-weight: 800;
+              font-size: 18px;
+              box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+              backdrop-filter: blur(10px);
+              border: 2px solid rgba(255,255,255,0.3);
+              animation: popupFade 1.5s forwards;
+              white-space: nowrap;
+              text-align: center;
+              min-width: 200px;
+            }
+            @keyframes popupFade {
+              0% { opacity: 0; transform: translateY(-20px) scale(0.8); }
+              15% { opacity: 1; transform: translateY(0) scale(1); }
+              80% { opacity: 1; transform: translateY(0) scale(1); }
+              100% { opacity: 0; transform: translateY(-10px) scale(0.9); }
             }
           </style>
         </div>
@@ -145,66 +352,6 @@ async function initMiiMaker(container, gender = 0) {
     </div>
   `;
 
-  // --- Mii Maker Music (crossfade with main music) ---
-  let miiMusic = null;
-  let mainMusicWasPlaying = false;
-
-  function startMiiMusic() {
-    miiMusic = new Audio('assets/audio/Mii Maker.mp3');
-    miiMusic.volume = 0.3;
-    miiMusic.loop = true;
-
-    if (typeof AudioManager !== 'undefined') {
-      AudioManager.isExternalMusicPlaying = true;
-      if (AudioManager.isPlayingMusic) {
-        mainMusicWasPlaying = true;
-        AudioManager.fadeOut(300).then(() => {
-          miiMusic.play().catch(() => { });
-        });
-        // Also start playing immediately but at low volume if possible, 
-        // or just start playing right after a short fade
-      } else {
-        mainMusicWasPlaying = false;
-        miiMusic.play().catch(() => { });
-      }
-    } else {
-      mainMusicWasPlaying = false;
-      miiMusic.play().catch(() => { });
-    }
-
-    // Set Mii Maker background video
-    const bgVideo = document.getElementById('bg-video');
-    if (bgVideo) {
-      bgVideo.src = 'assets/icons/video/miimakerBC.mp4';
-      bgVideo.style.opacity = '1';
-      bgVideo.play().catch(e => console.log('Video play error:', e));
-    }
-  }
-
-  function stopMiiMusic() {
-    if (typeof AudioManager !== 'undefined') {
-      AudioManager.isExternalMusicPlaying = false;
-    }
-    if (miiMusic) {
-      miiMusic.pause();
-      miiMusic.currentTime = 0;
-      miiMusic = null;
-    }
-    // Restore main music if it was playing before
-    if (mainMusicWasPlaying && typeof AudioManager !== 'undefined' && AudioManager.currentMusicAudio) {
-      AudioManager.fadeIn(800);
-    }
-  }
-
-  function playMiiSFX(name) {
-    const sfx = new Audio(`/assets/audio/${name}.wav`);
-    sfx.preload = "auto";
-    sfx.volume = 0.5;
-    sfx.play().catch(err => console.error(`Failed to play SFX: ${name}`, err));
-  }
-
-  // Start Mii music on open
-  startMiiMusic();
 
   // Mute/unmute toggle
   const musicToggle = container.querySelector('#mii-music-toggle');
@@ -233,7 +380,7 @@ async function initMiiMaker(container, gender = 0) {
     container.classList.add('closing');
     if (blinkTimeout) clearTimeout(blinkTimeout);
     if (miiSpeechTimeout) clearTimeout(miiSpeechTimeout);
-    
+
     // Restore main container visibility
     const mainContainer = document.getElementById('main-container');
     if (mainContainer) {
@@ -245,13 +392,19 @@ async function initMiiMaker(container, gender = 0) {
     setTimeout(() => { if (container.parentNode) container.parentNode.removeChild(container); }, 300);
   }
 
-  container.querySelector('.mii-close-btn').addEventListener('click', () => {
-    playMiiSFX('cancel');
-    if (isForcedCreation) {
-      alert("Veuillez d'abord créer et sauvegarder votre Mii !");
-      return;
+  container.querySelector('#btn-save').addEventListener('click', () => {
+    if (isQuestActive) {
+      const completed = Object.values(questProgress).filter(v => v).length;
+      const total = Object.keys(questProgress).length;
+      if (completed < total) {
+        const bubble = container.querySelector('#mii-tutorial-bubble');
+        bubble.style.animation = 'questError 0.5s ease-out';
+        setTimeout(() => { bubble.style.animation = 'bounce 2s infinite'; }, 500);
+        playMiiSFX('error');
+        return;
+      }
     }
-    closeMiiMaker();
+    saveMii();
   });
 
   // State
@@ -262,7 +415,7 @@ async function initMiiMaker(container, gender = 0) {
   let miiSpeechTimeout = null;
 
   const MII_MESSAGES = [
-    "Regarde mon nouveau look hehehe",
+    "Regarde mon nouveau look !",
     "Je me sens super bien aujourd'hui !",
     "Tu trouves que cette couleur me va ?",
     "On dirait presque mon jumeau !",
@@ -274,50 +427,138 @@ async function initMiiMaker(container, gender = 0) {
     "Clique sur les catégories pour m'ajuster !"
   ];
 
-  // --- TUTORIAL LOGIC ---
+  // --- TUTORIAL / QUEST LOGIC ---
   const tutorialBubble = container.querySelector('#mii-tutorial-bubble');
 
-  if (isForcedCreation) {
-    tutorialBubble.style.display = 'block';
+  function triggerStarExplosion() {
+    const bubble = container.querySelector('#mii-tutorial-bubble');
+    if (!bubble) return;
+    for (let i = 0; i < 8; i++) {
+      const star = document.createElement('div');
+      star.className = 'quest-star';
+      star.innerHTML = '⭐';
+      star.style.left = (Math.random() * 100) + '%';
+      star.style.top = (Math.random() * 100) + '%';
+      bubble.appendChild(star);
+      setTimeout(() => star.remove(), 800);
+    }
   }
 
-  function updateTutorialMessage() {
-    if (!isForcedCreation) return;
+  function updateTutorialMessage(catId) {
+    const questLog = container.querySelector('#mii-quest-log');
+    const questList = container.querySelector('#quest-list');
+    const bubble = container.querySelector('#mii-tutorial-bubble');
     const textEl = container.querySelector('#mii-tutorial-text');
-    if (!textEl) return;
+    if (!questLog || !questList) return;
 
-    const variants = {
-      welcome: ["Bienvenue ! ✨", "Salut ! On commence ? 👋", "C'est l'heure de créer votre Mii ! 🎨"],
-      face: ["Choisissez un joli visage ! 😊", "Quel teint vous va le mieux ? ✨", "La base de tout Mii ! 👤"],
-      hair: ["Une coiffure stylée ? 💇", "Quelle couleur vous préférez ? 🌈", "Changez de tête ! ✨"],
-      eyebrows: ["Des sourcils expressifs ! 🤨", "Ça change tout le regard ! ✨"],
-      eyes: ["Regardez-moi dans les yeux ! 👀", "Des yeux pétillants ? ✨"],
-      nose: ["Un petit pif ? 👃", "Chacun son nez ! 😄"],
-      mouth: ["Gardez le sourire ! 😁", "Une petite moue ? ✨"],
-      glasses: ["Besoin d'y voir plus clair ? 👓", "Le style intello ! 🤓"],
-      body: ["Ajustez votre taille ! 📏", "Quelle est votre couleur préférée ? 👕", "Un Mii à votre image ! ✨"],
-      profile: ["Presque fini ! Donnez-lui un nom ! 📝", "Dernière étape ! ✨"]
-    };
-
-    const getRand = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-    let msg = getRand(variants.welcome);
-    if (activeCategory === 'face') msg = getRand(variants.face);
-    else if (activeCategory === 'hair') msg = getRand(variants.hair);
-    else if (activeCategory === 'eyebrows') msg = getRand(variants.eyebrows);
-    else if (activeCategory === 'eyes') msg = getRand(variants.eyes);
-    else if (activeCategory === 'nose') msg = getRand(variants.nose);
-    else if (activeCategory === 'mouth') msg = getRand(variants.mouth);
-    else if (activeCategory === 'glasses') msg = getRand(variants.glasses);
-    else if (activeCategory === 'body') msg = getRand(variants.body);
-    else if (activeCategory === 'profile') msg = getRand(variants.profile);
-
-    if (activeCategory !== 'body' && activeCategory !== 'profile') {
-      if (activeSubtab === 'color') msg += " (Les couleurs ! 🎨)";
-      if (activeSubtab === 'position') msg += " (Ajustez bien ! 🎯)";
+    if (!isQuestActive) {
+      questLog.style.display = 'none';
+      if (bubble) bubble.style.display = 'none';
+      return;
     }
 
-    textEl.textContent = msg;
+    // Mark progression
+    if (catId && questProgress.hasOwnProperty(catId) && !questProgress[catId]) {
+      questProgress[catId] = true;
+      triggerStarExplosion();
+      if (bubble) {
+        bubble.style.animation = 'questSuccess 0.6s ease-out';
+        setTimeout(() => { bubble.style.animation = 'bounce 2s infinite'; }, 600);
+      }
+    }
+
+    // Render Quest List if empty or needs update
+    const categories = [
+      { id: 'face', name: 'Visage' },
+      { id: 'hair', name: 'Coiffure' },
+      { id: 'eyebrows', name: 'Sourcils' },
+      { id: 'eyes', name: 'Yeux' },
+      { id: 'nose', name: 'Nez' },
+      { id: 'mouth', name: 'Bouche' },
+      { id: 'body', name: 'Taille & Couleur' },
+      { id: 'profile', name: 'Profil & Nom' }
+    ];
+
+    questList.innerHTML = categories.map(c => {
+      const isDone = questProgress[c.id];
+      return `
+        <div class="quest-log-item ${isDone ? 'done' : ''}" id="quest-item-${c.id}">
+          <div class="quest-check">${isDone ? '✓' : ''}</div>
+          <div class="quest-text">${c.name}</div>
+        </div>
+      `;
+    }).join('');
+
+    questLog.style.display = 'flex';
+
+    // Handle bubble and save button
+    const completed = Object.values(questProgress).filter(v => v).length;
+    const total = Object.keys(questProgress).length;
+
+    if (completed < total) {
+      if (textEl) textEl.innerHTML = ` Quête : ${completed}/${total} étapes`;
+      container.querySelector('#btn-save').classList.add('disabled');
+    } else {
+      if (textEl) textEl.innerHTML = ` Quête accomplie !`;
+      container.querySelector('#btn-save').classList.remove('disabled');
+      if (bubble) bubble.style.background = 'linear-gradient(to bottom, #ffd700, #ffa500)';
+    }
+  }
+
+  // Intercept category clicks calls
+  container.querySelectorAll('.mii-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catId = btn.getAttribute('data-cat');
+      showQuestPopup(getQuestMessage(catId));
+      updateTutorialMessage(catId);
+    });
+  });
+
+  function getQuestMessage(catId) {
+    const msgs = {
+      face: "Choisis la forme de ton visage !",
+      hair: "Choisis ta coupe de cheveux !",
+      eyebrows: "Ajuste tes sourcils !",
+      eyes: "Choisis ton regard !",
+      nose: "Choisis ton nez !",
+      mouth: "Choisis ton sourire !",
+      glasses: "Besoin de lunettes ?",
+      body: "Ajuste ta taille et ta couleur !",
+      profile: "Donne un nom à ton Mii !"
+    };
+    return msgs[catId] || "Personnalise ton Mii !";
+  }
+
+  function showQuestPopup(text) {
+    if (!isQuestActive) return;
+    const containerPopup = container.querySelector('#quest-popup-container');
+    if (!containerPopup) return;
+    const popup = document.createElement('div');
+    popup.className = 'quest-popup';
+    popup.textContent = text;
+    containerPopup.innerHTML = ''; // Clear previous
+    containerPopup.appendChild(popup);
+    setTimeout(() => { if (popup.parentNode) popup.remove(); }, 1500);
+  }
+
+  // Initial call - mark initial category (Face) as started
+  if (isQuestActive) {
+    updateTutorialMessage(activeCategory);
+    setTimeout(() => showQuestPopup(getQuestMessage(activeCategory)), 500);
+  }
+
+  // Start music check
+  if (typeof AudioManager !== 'undefined' && AudioManager.activeLaunchSFX) {
+    const launchSFX = AudioManager.activeLaunchSFX;
+    if (!launchSFX.paused && !launchSFX.ended) {
+      launchSFX.addEventListener('ended', () => {
+        startMiiMusic();
+      }, { once: true });
+    } else {
+      startMiiMusic();
+    }
+  } else {
+    startMiiMusic();
   }
 
   // --- Profile Data & Mii Loader ---
@@ -379,6 +620,7 @@ async function initMiiMaker(container, gender = 0) {
       catButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeCategory = btn.dataset.cat;
+      if (isQuestActive) updateTutorialMessage(activeCategory);
       activeSubtab = 'type';
       container.querySelectorAll('.mii-subtab').forEach(s => s.classList.remove('active'));
       container.querySelector('.mii-subtab[data-sub="type"]').classList.add('active');
@@ -439,7 +681,7 @@ async function initMiiMaker(container, gender = 0) {
     items.forEach(item => {
       const btn = document.createElement('button');
       btn.className = 'mii-style-btn' + (miiInstance[stateKey] === item.v ? ' active' : '');
-      btn.style.cssText = 'padding:4px;display:flex;align-items:center;justify-content:center;min-height:80px;min-width:80px;';;
+      btn.style.cssText = 'padding:6px;display:flex;align-items:center;justify-content:center;min-height:90px;min-width:90px;';;
       btn.title = item.n;
 
       const tempMii = Object.assign(Object.create(Object.getPrototypeOf(miiInstance)), miiInstance);
@@ -477,9 +719,9 @@ async function initMiiMaker(container, gender = 0) {
       case 'hair': colors = HAIRS; stateKey = 'hairColor'; break;
       case 'eyebrows': colors = HAIRS; stateKey = 'eyebrowColor'; break;
       case 'eyes': colors = EYES_COLORS; stateKey = 'eyeColor'; break;
-      case 'mouth': colors = ['#de7e58', '#cc5544', '#e87070', '#d45e7e', '#c94040', '#a03030']; stateKey = 'mouthColor'; break;
+      case 'mouth': colors = ['#de7e58', '#cc5544', '#e87070', '#d45e7e', '#c94040']; stateKey = 'mouthColor'; break;
       case 'body': colors = SHIRTS; stateKey = 'favoriteColor'; break;
-      case 'glasses': colors = ['#222222', '#994433', '#4455aa', '#cc5555', '#ffffff', '#886644']; stateKey = 'glassesColor'; break;
+      case 'glasses': colors = ['#4b4b4b', '#7d4b2d', '#cc3232', '#3246cc', '#cc8c32', '#ffffff']; stateKey = 'glassesColor'; break;
       default:
         panel.innerHTML = '<div class="mii-section-label" style="color:#666;">No colors for this category.</div>';
         return;
@@ -808,12 +1050,12 @@ async function initMiiMaker(container, gender = 0) {
       currentExpression = 'blink';
       fetchMiiRender(true);
 
-      // Eye closed duration (very fast)
+      // Eye closed duration (faster)
       setTimeout(() => {
         currentExpression = 'normal';
         fetchMiiRender(true);
         scheduleBlink();
-      }, 100);
+      }, 70);
     }, interval);
   }
 
@@ -837,7 +1079,7 @@ async function initMiiMaker(container, gender = 0) {
         opacity: 0;
         transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         pointer-events: none;
-        border: 4px solid #4facfe;
+        border: 4px solid #4ffe6cff;
         transform: scale(0.8) rotate(-5deg);
         max-width: 280px;
         text-align: center;
@@ -849,21 +1091,21 @@ async function initMiiMaker(container, gender = 0) {
     const msg = MII_MESSAGES[Math.floor(Math.random() * MII_MESSAGES.length)];
     bubble.innerHTML = `${msg}
       <!-- Tail pointing to Mii -->
-      <div style="position: absolute; bottom: 15px; right: -25px; border-width: 15px 0 15px 30px; border-style: solid; border-color: transparent transparent transparent #4facfe; transform: rotate(-15deg);"></div>
-      <div style="position: absolute; bottom: 18px; right: -18px; border-width: 12px 0 12px 25px; border-style: solid; border-color: transparent transparent transparent white; transform: rotate(-15deg);"></div>`;
+      <div style="position: absolute; bottom: 25px; right: -20px; border-width: 12px 0 12px 25px; border-style: solid; border-color: transparent transparent transparent #4ffe6cff; transform: rotate(-10deg); z-index: -1;"></div>
+      <div style="position: absolute; bottom: 25px; right: -12px; border-width: 9px 0 9px 18px; border-style: solid; border-color: transparent transparent transparent white; transform: rotate(-10deg); z-index: 1;"></div>`;
 
     // Reset styles for immediate re-reveal
     bubble.style.transition = 'none';
     bubble.style.opacity = '0';
     bubble.style.transform = 'scale(0.5) translateY(20px)';
-    
+
     // Force reflow
     bubble.offsetHeight;
 
     bubble.style.transition = 'all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
     bubble.style.opacity = '1';
     bubble.style.transform = 'scale(1) translateY(0)';
-    
+
     playMiiSFX('SE_MII_UP');
 
     setTimeout(() => {

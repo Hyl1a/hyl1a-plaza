@@ -176,6 +176,7 @@ const AudioManager = {
     }
 
     this.currentMusicAudio.play().catch(() => { });
+    this.showNowPlaying(track.name);
 
     this.currentMusicAudio.onended = () => {
       this.playNextMusic();
@@ -239,9 +240,9 @@ const AudioManager = {
     
     // 2. Play the launch SFX
     if (sfKey && this.soundFiles[sfKey]) {
-      const sfx = new Audio(this.soundFiles[sfKey]);
-      sfx.volume = 0.5;
-      sfx.play().catch(() => {});
+      this.activeLaunchSFX = new Audio(this.soundFiles[sfKey]);
+      this.activeLaunchSFX.volume = 0.5;
+      this.activeLaunchSFX.play().catch(() => {});
     }
     
     // 3. Start new BGM if provided
@@ -289,5 +290,37 @@ const AudioManager = {
     setTimeout(() => {
       this.fadeIn(600);
     }, 100);
+  },
+
+  showNowPlaying: function (trackName) {
+    // Remove existing if any
+    const old = document.querySelector('.now-playing-container');
+    if (old) old.remove();
+
+    const container = document.createElement('div');
+    container.className = 'now-playing-container';
+    container.innerHTML = `
+      <div class="now-playing-bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="now-playing-text">
+        <div class="now-playing-label">Now Playing</div>
+        <div class="now-playing-title">${trackName}</div>
+      </div>
+    `;
+
+    document.body.appendChild(container);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      container.classList.add('active');
+    });
+
+    // Auto-remove after 5s
+    setTimeout(() => {
+      container.classList.add('exit');
+      container.classList.remove('active');
+      setTimeout(() => container.remove(), 1600);
+    }, 5000);
   }
 };
